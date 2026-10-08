@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { profileFit } from '../lib/profile-fit.ts';
+const startup = { kind:'startup', sector:'Manufacturing SaaS', stage:'Pre-product', fundingIntentINR:500000 };
+const investor = { kind:'investor', sector:'Other', stage:'Idea-stage', sectors:['Manufacturing SaaS'], stages:['Idea-stage','Pre-product'], checkRangeINR:[500000,1000000], validation:'Customer interviews' };
+assert.deepEqual(profileFit(startup,investor).slice(0,3).map(s=>s.status),['aligned','aligned','aligned']);
+assert.equal(profileFit({...startup,fundingIntentINR:1000000},investor)[2].status,'aligned');
+assert.equal(profileFit({...startup,fundingIntentINR:1000001},investor)[2].status,'different');
+assert.equal(profileFit({...startup,stage:'Early traction'},investor)[1].status,'different');
+assert.equal(profileFit({...startup,sector:'Other'},investor)[0].status,'unknown');
+assert.equal(profileFit({...startup,fundingIntentINR:0},investor)[2].status,'unknown');
+assert.equal(profileFit(startup,{...investor,checkRangeINR:undefined,fundingIntentINR:500000})[2].status,'unknown');
+assert.equal(profileFit(startup,{...investor,checkRangeINR:[1000000,500000]})[2].status,'unknown');
+assert.equal(profileFit(startup,{...investor,checkRangeINR:[NaN,1000000]})[2].status,'unknown');
+assert.equal(profileFit(startup,investor)[3].status,'unknown');
+assert.equal(profileFit(startup,investor)[4].status,'unknown');
+assert.equal(profileFit(startup,{...investor,sectors:[],stages:[],sector:'Manufacturing SaaS',stage:'Pre-product'})[0].status,'aligned');
+console.log('12 profile-fit checks passed.');

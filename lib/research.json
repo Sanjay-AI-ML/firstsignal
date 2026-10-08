@@ -1,0 +1,62 @@
+[
+  {
+    "id": "team-signals",
+    "category": "Primary research",
+    "title": "What makes an early-stage investor look closer?",
+    "sourceTitle": "Attracting Early-Stage Investors: Evidence from a Randomized Field Experiment",
+    "authors": "Bernstein, Korteweg & Laws",
+    "year": "2017",
+    "url": "https://onlinelibrary.wiley.com/doi/10.1111/jofi.12470",
+    "summary": "A randomized angel-outreach study found that founding-team information influenced initial investor interest.",
+    "limit": "Interest in learning more was measured; the study does not establish closed funding or prove that traction is irrelevant.",
+    "takeaway": "Show relevant founder capability alongside the problem and evidence."
+  },
+  {
+    "id": "india-signals",
+    "category": "Primary research · India",
+    "title": "Digital signals and Indian startup financing",
+    "sourceTitle": "Digital start-up access to venture capital financing: What signals quality?",
+    "authors": "Nigam, Benetti & Johan",
+    "year": "2020",
+    "url": "https://www.sciencedirect.com/science/article/pii/S1566014120300273",
+    "summary": "The study examines financing associations in a sample of 102 Indian startups that had already obtained funding.",
+    "limit": "An already-funded sample cannot establish a causal benefit for previously unfunded idea-stage founders.",
+    "takeaway": "Use online presence as context rather than a funding score."
+  },
+  {
+    "id": "network-access",
+    "category": "Primary research",
+    "title": "Can online visibility widen investor access?",
+    "sourceTitle": "Social Media Alleviates Venture Capital Funding Inequality for Women and Less Connected Entrepreneurs",
+    "authors": "Wang, Wu & Hitt",
+    "year": "2023 online / 2024 issue",
+    "url": "https://pubsonline.informs.org/doi/abs/10.1287/mnsc.2023.4728",
+    "summary": "Research using Twitter and Crunchbase suggests that online communication may support discovery for less-connected founders.",
+    "limit": "It concerns existing social platforms and selected venture populations. Its relevance to an Indian pre-product service remains unproven.",
+    "takeaway": "Make progress accessible, then measure whether relevant investors actually respond."
+  },
+  {
+    "id": "stage-fit",
+    "category": "Primary research · India",
+    "title": "Pre-seed and seed investors have different criteria",
+    "sourceTitle": "What differentiates angel investors in pre-seed versus seed-stage investments? Evidence from India",
+    "authors": "Annamalaisami",
+    "year": "2022 issue",
+    "url": "https://doi.org/10.1108/JIBR-01-2021-0024",
+    "summary": "Observational research on 732 investments by 405 investors examines differences across pre-seed and seed stages.",
+    "limit": "Completed-deal differences do not establish idea-only eligibility or demand for a new marketplace.",
+    "takeaway": "Match actual stage appetite, evidence requirements, and check size separately."
+  },
+  {
+    "id": "preproduct-alternative",
+    "category": "Existing alternative · India",
+    "title": "Pre-product investing already exists",
+    "sourceTitle": "Antler India",
+    "authors": "Antler",
+    "year": "Official offering checked in project research",
+    "url": "https://www.antler.co/location/india",
+    "summary": "Antler's India page welcomes pre-launch, pre-product, and pre-revenue teams through its selective investing and programme routes.",
+    "limit": "An advertised offering does not establish an applicant's funding probability or the health of any other platform.",
+    "takeaway": "Differentiate through useful discovery, investor fit, and ongoing relationships rather than claiming to invent funding before launch."
+  }
+]

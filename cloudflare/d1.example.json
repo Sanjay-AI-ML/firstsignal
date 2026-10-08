@@ -1,0 +1,13 @@
+{
+  "name": "firstsignal-database-admin",
+  "compatibility_date": "2026-05-15",
+  "account_id": "REPLACE_WITH_YOUR_CLOUDFLARE_ACCOUNT_ID",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "firstsignal-production",
+      "database_id": "REPLACE_WITH_CREATED_DATABASE_ID",
+      "migrations_dir": "../drizzle"
+    }
+  ]
+}

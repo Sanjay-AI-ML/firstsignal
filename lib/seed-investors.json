@@ -1,0 +1,41 @@
+[
+  {
+    "id": "aarav-shah",
+    "name": "Aarav Shah",
+    "role": "Operator angel · Demo",
+    "city": "Mumbai",
+    "thesis": "B2B software for overlooked operational workflows, led by founders who understand the customer from direct experience.",
+    "sectors": ["Manufacturing SaaS", "Supply-chain SaaS", "Logistics SaaS"],
+    "stages": ["Idea-stage", "Pre-product"],
+    "checkRangeINR": [500000, 1500000],
+    "requiredEvidence": "Relevant founder experience, customer interview notes, a narrow next milestone, and an itemised budget.",
+    "availability": "Illustrative mandate; no real review commitment",
+    "label": "Fictional investor · Not verified"
+  },
+  {
+    "id": "earlyworks",
+    "name": "Earlyworks Collective",
+    "role": "Micro-fund profile · Demo",
+    "city": "Bengaluru",
+    "thesis": "Technical founders developing focused tools for small-business finance and research operations, before a full product launch.",
+    "sectors": ["Finance operations SaaS", "Research operations SaaS"],
+    "stages": ["Pre-product"],
+    "checkRangeINR": [1000000, 2500000],
+    "requiredEvidence": "Prototype scope, workflow observations, clear data-handling assumptions, and at least one proposed pilot customer.",
+    "availability": "Illustrative mandate; no real review commitment",
+    "label": "Fictional investor · Not verified"
+  },
+  {
+    "id": "nisha-kulkarni",
+    "name": "Nisha Kulkarni",
+    "role": "Syndicate lead · Demo",
+    "city": "Pune",
+    "thesis": "Practical software for agribusiness and regional supply chains, with field access and a realistic adoption plan.",
+    "sectors": ["Agribusiness SaaS", "Supply-chain SaaS"],
+    "stages": ["Idea-stage", "Pre-product"],
+    "checkRangeINR": [1000000, 2000000],
+    "requiredEvidence": "Field observations, identifiable buyer and user roles, low-connectivity considerations, and a test that can disprove the idea.",
+    "availability": "Illustrative mandate; no real review commitment",
+    "label": "Fictional investor · Not verified"
+  }
+]

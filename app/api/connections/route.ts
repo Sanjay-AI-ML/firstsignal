@@ -29,7 +29,7 @@ export async function POST(request:Request){
  if(!parsed.success)return json({error:parsed.error.issues[0]?.message||'Check your input.'},400);
  const a=parsed.data, db=database(), owner=user.userId;
  if(a.action==='preferences'){
-  if(a.enabled&&(!user.email||!user.emailVerified))return json({error:'Verify your primary email in your sign-in account before enabling notifications.'},400);
+  if(a.enabled&&(!user.email||!user.emailVerified))return json({error:'Confirm your email address through sign-in before enabling email updates.'},400);
   await db.batch([db.prepare("UPDATE notifications SET status='skipped' WHERE owner=? AND status='pending'").bind(owner),db.prepare('INSERT INTO notification_preferences (owner,email,enabled) VALUES (?,?,?) ON CONFLICT(owner) DO UPDATE SET email=excluded.email,enabled=excluded.enabled').bind(owner,user.email,a.enabled?1:0)]);
   return json(await read(owner,null));
  }

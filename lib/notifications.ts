@@ -7,7 +7,7 @@ export async function dispatchNotifications(owner:string){
   const db=database(), e=config();
   const pref=await db.prepare('SELECT email,enabled FROM notification_preferences WHERE owner=?').bind(owner).first<{email:string;enabled:number}>();
   if(!pref?.enabled)return;
-  const rows=await db.prepare("SELECT * FROM notifications WHERE owner=? AND status='pending' AND created>? ORDER BY created LIMIT 3").bind(owner,new Date(Date.now()-86400000).toISOString()).all<{id:string;title:string}>();
+  const rows=await db.prepare("SELECT n.* FROM notifications n WHERE n.owner=? AND n.status='pending' AND n.created>? AND NOT EXISTS (SELECT 1 FROM introductions i JOIN member_blocks b ON (b.owner=i.sender AND b.target_owner=i.recipient) OR (b.owner=i.recipient AND b.target_owner=i.sender) WHERE i.id=n.introduction_id) ORDER BY n.created LIMIT 3").bind(owner,new Date(Date.now()-86400000).toISOString()).all<{id:string;title:string}>();
   for(const row of rows.results){
     try{
       const response=await fetch('https://api.resend.com/emails',{method:'POST',signal:AbortSignal.timeout(5000),headers:{Authorization:`Bearer ${e.RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':`firstsignal-${row.id}`},body:JSON.stringify({from:e.EMAIL_FROM,to:[pref.email],subject:row.title,text:`${row.title}\n\nOpen FirstSignal to review your private connection:\n${e.FIRSTSIGNAL_ORIGIN}/app#introductions\n\nNo message content or proposal terms are included in email. Proposals are non-binding. Manage email notifications in My profiles.`})});
@@ -20,5 +20,5 @@ export async function dispatchNotifications(owner:string){
 }
 export async function notify(owner:string|null,id:string,title:string){
   if(!owner)return;
-  try{await database().prepare("INSERT INTO notifications (id,owner,introduction_id,title,status,created) VALUES (?,?,?,?,'pending',?)").bind(crypto.randomUUID(),owner,id,title,new Date().toISOString()).run();await dispatchNotifications(owner);}catch{console.error('Connection notification could not be queued');}
+  try{await database().prepare("INSERT INTO notifications (id,owner,introduction_id,title,status,created) SELECT ?,?,?,?,'pending',? WHERE NOT EXISTS (SELECT 1 FROM introductions i JOIN member_blocks b ON (b.owner=i.sender AND b.target_owner=i.recipient) OR (b.owner=i.recipient AND b.target_owner=i.sender) WHERE i.id=?)").bind(crypto.randomUUID(),owner,id,title,new Date().toISOString(),id).run();await dispatchNotifications(owner);}catch{console.error('Connection notification could not be queued');}
 }

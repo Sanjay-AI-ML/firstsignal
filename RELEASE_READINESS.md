@@ -1,30 +1,38 @@
 # FirstSignal release status
 
-8 October 2026. The public website remains an authentication trial while production account configuration is pending.
+9 October 2026. The public Site is a working pilot with Clerk development authentication. It is not yet a fully activated production service.
 
 ## Implemented
 
-- Shorter sign-in, marketing, and workspace copy. Sample profiles remain explicitly labelled.
-- Clerk sign-in/sign-up/sign-out, server-verified sessions, exact hosted-origin checks, private account scoping, and mutual-consent conversations.
-- Authentication loading/retry states, sign-out failure feedback, bounded automatic session refresh, and page/service error recovery.
-- Private/no-store HTML and API responses, content-type protection, referrer policy, and restricted device/payment permissions.
-- A factual `/privacy` page describing current data visibility, storage, and controls. This is not a claim of legal compliance.
+- Guided founder/investor onboarding, private drafts or public listings, consent and profile-completion guidance.
+- Discovery, saved profiles, explainable suggestions and stated profile-fit comparison; no funding probability or independent verification claim.
+- Mutual-consent introductions, accepted conversations, a connections dashboard, private next-step notes/dates and versioned non-binding INR proposal discussions.
+- Dated founder progress updates and a saved-startup progress feed. Draft updates remain private; listed updates are public and labelled self-reported.
+- Profile reports and account blocking. Server checks prevent contact in both directions; existing conversation history remains readable by participants. Public listings remain visible when signed out.
+- Clerk sign-in/sign-up/sign-out, server-verified sessions, hosted-origin validation, account scoping, loading/retry states and sign-out failure feedback.
+- Private/no-store HTML/API responses, content-type protection, referrer policy and restricted device/payment permissions.
+- A factual `/privacy` page describing current visibility and controls; this is not a compliance certification.
+- In-app connection notifications, verified-primary-email opt-in and Resend integration. Live sending remains inactive pending a verified sender domain and runtime credentials.
 
-Validation: TypeScript and the production build pass. All 48 account/consent/persistence checks pass with real development Clerk sessions. Separate checks verify server recognition of a signed session cookie and malformed-token rejection. The built Worker returns private/no-store, nosniff, referrer and device-permission headers, and rejects forged identity headers. Mobile sign-in fits 390px without horizontal overflow. These checks do not establish hosted production OAuth behavior, full accessibility conformance, or a completed security audit.
+Validation: TypeScript and the production build pass. All 204 authenticated local workflow checks pass, covering consent, persistence, progress visibility, private notes, reports, bidirectional blocking and account isolation. Profile-fit (12), suggestion (28), notification-provider mocks and 202-profile D1 bounds checks pass. Founder/investor onboarding and 390px/320px layouts were checked in the browser. Local development-session checks do not establish hosted production OAuth behaviour, full accessibility conformance, a completed security audit or real-user Core Web Vitals.
 
 ## Production activation still required
 
-1. Owner claims a domain. None is owned or attached yet. Name.com's GitHub Student Pack offer includes eligible `.app`/`.dev` domains; check eligibility, first-year checkout, and renewal price. Availability of any proposed name has not been checked.
-2. Configure Clerk's production instance and DNS, production Google OAuth credentials, and production keys. Switch the runtime origin and keys together, then verify real browser sign-in/sign-out, reload, expiry, and cross-account access on that domain. The existing development label must not be hidden to simulate production readiness.
-3. Establish a support/contact and data-deletion process, operating terms, monitoring/alerts, abuse controls appropriate to traffic, and verify a database backup/restore. Existing introduction quotas, conversation limits, validation, and authorization do not replace broader edge abuse protection.
-4. If moving to the selected direct Cloudflare stack, deploy the source against the own-account D1 binding. Current Sites D1 and own-account D1 are separate. Transfer ownership only with an explicit identity mapping; never reassign by matching email alone.
+1. Choose and attach an owned domain. The owner deferred that decision; none has been purchased or attached by this work. Recheck student-benefit eligibility, checkout price and renewal cost when selecting one.
+2. Configure Clerk's production instance, DNS, production OAuth settings and keys. Switch origin and keys together, then verify browser sign-in/sign-out, reload, expiry and cross-account access on the chosen domain. Keep the development instance's truthful label until activation.
+3. Activate a verified sender domain and secure Resend runtime settings, then test a consenting real recipient, opt-out and provider failures. Confirming an account email is separate from checking investment or founder claims. See [EMAIL_SETUP.md](EMAIL_SETUP.md).
+4. Establish an operator and process for reviewing submitted reports, investigating abuse, responding to users and enforcing decisions. The current product records reports but has no administration UI or automatic moderation. Reporting does not automatically remove a listing, and blocking does not make an otherwise public listing private.
+5. Establish support/contact, data deletion, operating terms, monitoring/alerts and a tested database backup/restore. Pilot quotas, validation and account authorization do not replace a broader traffic-abuse response or independent release assessment.
+6. If moving to the selected direct Cloudflare stack, configure the own-account Worker, production secrets and D1 binding explicitly. Sites D1 and the owner's separate D1 database are distinct. Any identity/data transfer needs an explicit mapping; never reassign ownership by matching email alone.
 
-No domain was purchased, no paid service activated, and no data migration or privacy compliance certification was performed.
+No domain purchase, paid-service activation, live data migration, privacy certification or independent claim verification is part of this update.
 
-[Student Pack](https://education.github.com/pack) · [Clerk production guide](https://clerk.com/docs/deployments/overview)
+## Behaviour and limits to preserve
 
-## Private negotiations and notifications
+Private proposal amounts and terms are discussion records available only to accepted participants. An acknowledgement is not a signed contract, completed financing or funds received. The product does not run public investment auctions or process money.
 
-Private INR bids and counteroffers are available only after an introduction is accepted. Versioned D1 writes preserve proposal/decision history and reject stale updates. Participants can acknowledge interest, decline or withdraw; these are non-binding discussion records and do not execute investments or payments. In-app notifications cover introductions, messages and proposal changes. Email opt-in uses a verified Clerk primary email. Resend integration is implemented but live sending remains inactive pending a verified sender domain and runtime credentials; see EMAIL_SETUP.md. There is no background retry scheduler or delivery webhook.
+Each participant's next-step note and date stay private to that person. Dates do not schedule reminders. Saving a real startup follows its visible progress in the workspace; progress updates do not trigger email broadcasts.
 
-Validation: 91 local authenticated workflow checks passed, including outsider isolation, simultaneous proposal responses, persistence and decision permissions. Mocked provider checks passed for opt-in, missing configuration, failure handling and idempotent retries without sending real email.
+Connection emails contain generic event notices, not private message content or proposal terms. Provider acceptance is labelled submitted, not delivered. There is no background retry scheduler or delivery webhook. Blocks suppress further connection notifications between the accounts; historical notices and accepted conversation records remain account-scoped.
+
+Examples remain labelled fictional. Stock marketing photographs imply no member, partner or investor endorsement. Review this document alongside [HANDOFF.md](HANDOFF.md) when expanding advertised behaviour.

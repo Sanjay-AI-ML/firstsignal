@@ -15,6 +15,13 @@
       "when": 1791464866222,
       "tag": "0001_whole_king_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791487926985,
+      "tag": "0002_glossy_cable",
+      "breakpoints": true
     }
   ]
 }

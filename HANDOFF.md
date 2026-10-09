@@ -1,97 +1,76 @@
-# FirstSignal pilot
+# FirstSignal handoff
 
-Current release: public Clerk authentication trial. See `RELEASE_READINESS.md` for the copy cleanup, session/error handling, security headers, and remaining production activation work. Historical ChatGPT/private-access notes below do not describe the current release.
+Updated 9 October 2026. FirstSignal is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
 
-Built 8 October 2026 from the project success plan and design research. FirstSignal is a working-name choice, not a cleared trademark.
+Public URL: [FirstSignal](https://firstsignal-founder-network.divineridge.chatgpt.site). Reuse this existing Site for future updates. FirstSignal remains a working brand name, not a cleared trademark.
 
-## Working features
+## Product routes and design
 
-- Startup and investor discovery, text search, sector/stage filters, member-only filter, sorting, and evidence-detail panels.
-- Nine explicitly fictional examples: six startups and three investor mandates. They are not real members, investment opportunities, or verified evidence.
-- ChatGPT sign-in through Sites; account-scoped database records.
-- Saved opportunities that survive sessions.
-- One founder profile and one investor profile per account, editable as a private draft or a pilot listing.
-- Separate evidence date and profile-save timestamp.
-- Real member introduction requests, recipient acceptance/decline, sender withdrawal, and messages after acceptance.
-- Fictional-profile practice notes saved privately without a recipient or messaging.
-- Five source-linked research entries, four competitor comparisons, workflow explanation, and accurate pilot data disclosures.
-- Responsive layouts, keyboard focus, skip link, accessible component primitives, and reduced-motion support.
-- Optional browser agent tools for filtering and opening existing profiles. Neither contacts anyone.
+`/` is the marketing page; `/app` is the workspace. `/signin`, `/signup` and `/signout` use Clerk. `/privacy` describes current visibility and controls. Research documents remain internal development context; there is no Research & insights product screen.
 
-## Access and scope
+The selected design is the light lavender Stitch option C, with a generated logo, responsive application screens and a marketing page with three specialty cards and scroll effects. Reduced-motion and smaller-screen layouts disable nonessential rotation and sticky effects. Marketing photographs are stock images, not member endorsements; sources are in [MARKETING_ASSETS.md](MARKETING_ASSETS.md).
 
-The deployed website starts owner-private. It is a reviewable pilot, not an open investor network. Sharing to additional members is a separate access decision. The code supports consent between distinct accounts once those accounts can access the site.
+## Implemented workflows
 
-This version supports text evidence, not document uploads. It does not process investments, run bidding, send email notifications, independently verify claims, provide a public account system, or offer automated deletion. Establish the public operating model, privacy/support process, appropriate financing review, and real investor supply before widening the audience.
+| Workflow | Current behaviour |
+| --- | --- |
+| Account and role | Clerk sign-in/sign-up/sign-out. New members choose founder or investor, or explore first. An account may save one profile of each type; signing up alone does not assign an investment role. |
+| Profiles | Guided founder and investor forms, private drafts or public listings, explicit sharing consent and a completion checklist. Founders describe their problem, evidence, uncertainties, next milestone and INR budget. Investors can state multiple sectors/stages, evidence requirements and an optional INR check range. Completion measures filled fields, not investment quality. |
+| Discovery and suggestions | Search, sector/stage/member filters, saved profiles, detailed evidence panels and explainable opposite-role suggestions. Reasons describe stated sector, stage and budget alignment; unknown information remains explicit. There is no funding probability, automatic verification or investment recommendation score. |
+| Introductions | Real members request an introduction with consent. Recipients accept or decline; senders can withdraw pending requests. Messaging becomes available after acceptance. Fictional profiles create private practice notes and contact nobody. |
+| Connections | A dashboard brings together requests, accepted conversations, proposal status and private next steps. Each participant's note and optional date are visible only to that participant. Dates help surface follow-up in the dashboard; they do not schedule reminders or send messages. |
+| Proposals | Accepted participants can privately discuss non-binding INR bids and counteroffers, acknowledge interest, decline or withdraw. Versioned writes preserve history and reject stale responses. These records do not execute agreements, investments or payments. |
+| Progress | Owners can add or remove dated, self-reported updates on founder profiles. Updates follow the profile's sharing setting: draft updates stay private, listed updates are public. Saved real startups contribute to a recent-progress feed. Following does not broadcast progress emails. |
+| Reporting and blocking | Members can submit a profile report or block an account. Reports are stored with submitted status for manual operator review; submission does not automatically remove a profile. A block hides both accounts' profiles from each other's signed-in discovery, removes their reciprocal saves and prevents requests, responses, messages and proposals. Existing accepted history and each person's private notes remain available. Public listings can still be viewed while signed out. |
+| Notifications | In-app connection notices and optional verified-email opt-in. Confirming a Clerk account email is separate from checking founder or investor claims. Resend sending is implemented but inactive until sender-domain and runtime settings are configured. |
 
-Pilot limits: one profile of each type per account; discovery returns the newest 200 listings; workspace returns the latest 100 introductions with up to 100 messages per conversation; up to 200 saves; up to 20 introduction requests per account per day. Account-owned profiles are fetched separately from discovery. Closed or existing requests cannot be recreated for the same target in this version.
+Nine examples—six startups and three investor mandates—are explicitly fictional. Their evidence and updates are illustrative. Real member statements and progress are self-reported, not independently verified.
 
-## Validation completed
+## Identity, privacy and data
 
-- TypeScript type check passed.
-- Cloudflare-compatible production build passed.
-- 48 local built-Worker assertions passed: authentication, origin rejection, consent validation, draft isolation, persistence, updates, duplicate prevention, recipient permissions, accepted messaging, third-account isolation, and fictional-note handling.
-- Browser verification: search; evidence panel; founder draft form/save/preview; saving an opportunity; desktop discovery; mobile navigation; responsive discovery at 390 px and 320 px with no horizontal overflow.
-- Browser agent tools: registration, valid inputs, visible state read-back, and intentional invalid-input failures verified.
+Server/API account identity comes from verified Clerk sessions and is namespaced as `clerk:<user_id>`. Hosting identity headers do not grant account access. Hosted token validation enforces the configured origin, and writes require a same-origin request. Secrets belong in ignored local environment files or secure hosting runtime settings, never source or the hosting manifest.
 
-These checks do not certify full WCAG conformance, a security audit, or real-user performance. Core Web Vitals need field measurement after real use. The cross-origin test was rejected by Vinext before application handling with a non-JSON 503 in the local built preview; the application also checks the origin before every write. Same-origin normal flows passed.
+Public listings and their updates are readable by anonymous visitors. Draft profiles, saves, introduction messages, accepted conversations, private next steps, email preferences, block lists and submitted reports are account-scoped. Accepted participants share conversation and proposal history; their next-step notes remain separate. There are no uploaded-document rooms or per-document sharing permissions in this implementation.
 
-Local test records stay in ignored `.wrangler/state` and are not part of the deployment archive or production seed data.
+Old ChatGPT-owned records are retained under their old IDs. Do not transfer them by matching email. The owner's separately initialized Cloudflare D1 database is not the database serving the current Site. Source upload to GitHub does not deploy the app or move data.
 
-## Development
+## Pilot limits
 
-From this directory, use Node 22.13+ and the existing npm lockfile:
+- One founder and one investor profile per account; newest 200 eligible public listings in discovery.
+- Up to 200 saves, 20 introduction requests per account per rolling 24 hours and 100 messages per conversation.
+- Latest 100 introductions in the dashboard; an existing request for the same target cannot be recreated.
+- Up to 50 proposal-history versions per accepted connection.
+- Up to 20 progress updates per founder profile; remove an old update to add another.
+- Up to 100 blocked accounts and 10 reports per account per rolling 24 hours.
 
-```powershell
-npm run dev
-```
+These bounds and server authorization are pilot controls, not a complete traffic-abuse or moderation system.
 
-Open the exact URL printed by the server. Loopback preview simulates sign-in as the starter's Seedy account. It does not create a production account.
+## Local development and migrations
+
+Use Node.js 22.13+ and the committed lockfile. Follow [README.md](README.md) for a clean clone: install, copy the blank environment template, supply Clerk **development** keys, build, initialize local D1 and start the server. There is no mock sign-in bypass in the current account implementation.
 
 ```powershell
 node node_modules/typescript/bin/tsc --noEmit
-npm run build
+node scripts/run-framework.mjs build
+node scripts/run-framework.mjs dev
 ```
 
-Schema lives in `db/schema.ts`; checked migrations live in `drizzle/`. Keep applied migrations immutable. The Sites hosting manifest owns the real D1 binding; no credentials belong in source.
+The direct JavaScript entrypoints above are useful on this Windows host if an npm wrapper fails. The development server normally uses `http://127.0.0.1:5173`; keep `FIRSTSIGNAL_ORIGIN` and the opened URL consistent.
 
-For a fresh local database, build first, then apply the migration:
+Schema lives in `db/schema.ts`; SQL migrations live in `drizzle/`. Keep applied migrations immutable. A fresh local database needs all three migrations in order:
 
 ```powershell
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_majestic_ender_wiggin.sql
+node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_majestic_ender_wiggin.sql
+node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_whole_king_bedlam.sql
+node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_glossy_cable.sql
 ```
 
-The API test script uses test identity headers against the **local built Worker only**, where the real dispatcher is absent. Production identity headers are trusted only because the Sites dispatcher authenticates access and forwards them. Do not expose the bare Worker directly as a public server without a trusted identity boundary.
+Migration `0002_glossy_cable.sql` adds progress updates, member blocks/reports and private connection next steps. On an existing local database with `0000` and `0001` already applied, run only `0002`. These commands target local state; never substitute a live database or reset one to initialize development. Sites deployment owns the current live D1 binding and migration workflow.
 
-```powershell
-npm start -- --port 8787
-node scripts/verify-workflows.mjs
-```
+## Verification and remaining work
 
-On this host the Sites npm wrappers failed before installing/building. The unchanged npm installer and build script succeeded through direct JavaScript entrypoints. No dependency versions or lockfile inputs were changed to work around that.
+Release validation: 204 authenticated local workflow checks passed with verified Clerk development sessions. Profile-fit (12), suggestion (28), notification-provider mocks and the 202-profile D1 parameter/message bounds check passed. Founder and investor forms, range validation, consent and 390px/320px layouts were checked in the browser. TypeScript and the production build pass. [README.md](README.md) lists the type check, profile logic, notification-provider mock, build and authenticated workflow commands. The authenticated script creates and cleans up temporary users in the configured development Clerk instance, uses local D1 and rejects a non-loopback test origin. Local QA data stays in ignored `.wrangler/state` and is not deployed.
 
-## Clerk authentication update
+Passing local checks does not establish production OAuth behaviour, complete WCAG conformance, an independent security audit or field performance. Before a full production launch, activate production Clerk/domain settings, test real opted-in email delivery, establish support/deletion and manual report handling, add monitoring/alerts and verify backup/restore. There is no report administration UI, automatic moderation, background email retry scheduler or delivery webhook yet.
 
-The current implementation supersedes the historical ChatGPT authentication notes below. Clerk handles sign-in, sign-up, and sign-out. Server identity comes exclusively from verified Clerk sessions. Public sharing is requested by the owner for an authentication trial; the Clerk instance is still development, visibly labelled by Clerk. No production Clerk domain has been configured. Secrets are stored in ignored local environment files and Sites runtime settings, never the manifest. Existing ChatGPT account records are preserved under their old IDs and are not silently transferred to Clerk accounts.
-
-For local workflow checks, run `node scripts/verify-clerk-workflows.mjs` with `TEST_ORIGIN` set to the local runtime. It obtains and cleans up temporary development Clerk accounts, then checks 48 account isolation, consent, validation, and persistence assertions. Use local D1 only. The old mock-auth script does not verify the current authentication implementation.
-
-## Design choices
-
-Marketing homepage added 8 October 2026 at `/`. Product workspace moved to `/app`; founder CTAs preserve `/app#profiles` through sign-in. Existing root workspace hashes and profile query links are redirected to the corresponding app destination after hydration. The app has an About FirstSignal link back home. Sign-in defaults to the app and its research link uses `/app#research`.
-
-The light lavender homepage explains the product, founder/investor benefits, consent, sample data, and pilot access with native expandable FAQs. No invented results, testimonials, waitlist, or public onboarding are advertised. Existing owner-private Sites access is preserved, so the marketing homepage is not yet publicly accessible to anonymous visitors. TypeScript/build and 24 local auth assertions passed; browser founder entry, sample detail, FAQ, and mobile reflow were checked. Preview: `../design-options/marketing-homepage.png`.
-
-Sign-out integration updated 8 October 2026: the visible Sign out link delegates to the native Sites route and returns to `/signin?signed_out=1`. Confirmation is rendered only when the server sees no authenticated user; an active session instead gets a retry action. Restored browser pages reload to check current identity. Expired writes clear private workspace state and return through sign-in with the current destination preserved. No native authentication endpoints are implemented by this app.
-
-Validation: production build and TypeScript passed; 24 loopback mock-auth assertions and 48 local built-Worker workflow assertions passed. Browser sign-out and Back navigation showed an anonymous state. Screenshot: `../design-options/signout-fixed.png`. Hosted end-to-end authentication remains unverified because OpenAI's browser security verification blocked sign-in. Local tests do not establish hosted provider behavior.
-
-Run `node scripts/verify-local-auth.mjs` against the development preview on port 5173 to check mock cookie expiry, safe redirects, confirmation accuracy, and anonymous API behavior. Use a separate `.wrangler/qa-community` persistence directory for the built-Worker tests, so concurrent preview and QA processes do not share database state.
-
-Sign-in page added at `/signin`. Anonymous sign-in links now open this branded page, whose top-level Continue with ChatGPT link starts the dispatch-owned authentication flow. It preserves safe relative return paths; external and reserved sign-in destinations fall back to `/`. Signed-in visitors receive a Continue to workspace action. Local mock sign-in, return to Saved, signed-in state, external/loop redirect rejection, and mobile layout were checked. The production identity provider remains ChatGPT; no email/password or Google sign-in is claimed.
-
-Updated 8 October 2026: the user selected Stitch option C. The working app now uses white/lavender surfaces, violet actions, top navigation, sector interests, founder evidence/milestone feed cards, and an investor-thesis rail. Mobile retains the existing accessible sidebar drawer. Existing persistence and consent workflows are preserved. A generated transparent logo is used in the header, mobile menu, and favicon; its brief is in `public/LOGO_BRIEF.md`. Generated Stitch match percentages, invented evidence, and policy claims were not imported.
-
-The prior design described below is superseded by this selection.
-
-Warm neutral surfaces, dark teal actions, editorial serif headings, and a compact application sidebar implement the saved research direction. System Segoe UI/Arial and Georgia fonts keep this version independent of external font services. The brand and sample logos use typography and simple geometry; no fabricated customer logos, testimonials, or funding metrics are displayed.
+See [Clerk setup](cloudflare/CLERK_SETUP.md), [email activation](EMAIL_SETUP.md) and [release requirements](RELEASE_READINESS.md). Keep the actual financing operating model and advertised claims aligned with the scope assessed in the workspace's success plan.

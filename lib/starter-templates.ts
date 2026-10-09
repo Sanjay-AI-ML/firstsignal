@@ -13,7 +13,7 @@ export const starterTemplates: StarterTemplate[] = [
     sections: [
       { title: "Start with the problem", prompt: "Who faces it, how do they manage it today, and what have you observed?" },
       { title: "Separate evidence from assumptions", prompt: "What did you test, with whom and when? Untested is a useful answer too." },
-      { title: "Make the next step concrete", prompt: "What will you test next, and what result would change your view?" },
+      { title: "Make the next step concrete", prompt: "State an assumption, a test, a measurement and a decision criterion before testing." },
     ],
     markdown: `# Founder brief
 
@@ -42,12 +42,25 @@ What did you test, with whom, and when?
 What did you observe? Distinguish interest from commitments or paying customers.
 It is fine to say the idea has not been tested.
 - Evidence date: YYYY-MM-DD
+- Method and participant selection:
+- Sample size and relevant denominator:
+- Source or record reference, with sharing permission:
+- What the evidence cannot establish:
 
 ## What remains uncertain
 Which assumption matters most? What evidence would change your view?
 
 ## Next milestone
 Describe an observable next step, its time frame and what you hope to learn.
+
+## Next experiment
+- Assumption to test:
+- Method and consenting participants:
+- Measurement:
+- Decision criterion — choose before testing:
+- Planned date:
+- Status: Proposed / In progress / Completed / Inconclusive
+An interview count alone does not establish willingness to pay or investment readiness.
 
 ## Planning budget — optional
 - Estimated next-step cost in INR:
@@ -71,7 +84,7 @@ A planning budget is an estimate, not an investment offer.
     sections: [
       { title: "Describe the test", prompt: "What question did you investigate? Include the date, method and scope." },
       { title: "Share the learning", prompt: "Include negative or inconclusive results. Say what the test cannot tell you." },
-      { title: "Choose the next experiment", prompt: "What will you change or test next, by when, and why?" },
+      { title: "Choose the next experiment", prompt: "What assumption, measurement and decision criterion will guide your next test?" },
     ],
     markdown: `# Founder progress update
 
@@ -83,6 +96,9 @@ YYYY-MM-DD — when the activity happened
 
 ## What we tested
 What question did you investigate? Describe the people, method and scope.
+- Participant selection and sample size:
+- Measurement and decision criterion set before testing:
+- Source or record reference, with sharing permission:
 
 ## What we observed
 Report what happened, including negative or inconclusive results.
@@ -96,6 +112,10 @@ What can this test not tell you?
 
 ## Next step
 What will you test next, by when, and what would change your decision?
+- Assumption:
+- Method:
+- Measurement:
+- Decision criterion — choose before testing:
 
 ## Before sharing
 Remove confidential details. Check permission and profile visibility.

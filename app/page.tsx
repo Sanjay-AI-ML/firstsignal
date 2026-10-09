@@ -4,6 +4,7 @@ import MarketingSpecialties from "../components/marketing-specialties";
 import MarketingProductTour from "../components/marketing-product-tour";
 import MarketingEntry from "../components/marketing-entry";
 import MarketingTemplates from "../components/marketing-templates";
+import MarketingEvidenceBrief from "../components/marketing-evidence-brief";
 import { setupSignIn } from "../lib/onboarding-intent";
 import LegacyWorkspaceLinks from "../components/legacy-workspace-links";
 import "./marketing.css";
@@ -38,17 +39,7 @@ export default function Home() {
           <MarketingEntry />
           <div className="marketing-hero-footnote"><span>Idea</span><span>Pre-product</span><span>First prototype</span><span>Early traction</span></div>
         </div>
-        <div className="marketing-preview" aria-label="Fictional startup profile preview">
-          <div className="marketing-preview-top"><span><FileText size={16} aria-hidden="true" /> A signal worth exploring</span><span className="marketing-example-label">FICTIONAL EXAMPLE</span></div>
-          <article className="marketing-sample">
-            <div className="marketing-sample-head"><span className="marketing-sample-avatar" aria-hidden="true">T</span><div><strong>Tracegrid</strong><span>Bengaluru · Manufacturing SaaS</span></div><span className="marketing-chip">Pre-product</span></div>
-            <h2>Better handovers.<br />Fewer loose ends.</h2>
-            <div className="marketing-evidence"><span>CUSTOMER LEARNING</span><p>16 interviews. 6 factories.<br />A recurring problem to explore.</p><small>Fictional, founder-reported evidence</small></div>
-            <div className="marketing-milestone"><span>NEXT EXPERIMENT</span><p>Test an offline-capable prototype with two consenting factories.</p></div>
-            <a href="/app?profile=tracegrid#discover" className="marketing-profile-link">Explore this example</a>
-          </article>
-          <div className="marketing-connection"><span className="marketing-connection-icon"><Handshake size={23} aria-hidden="true" /></span><div><strong>Relevant interest. Mutual choice.</strong><p>A conversation opens after acceptance.</p></div></div>
-        </div>
+        <MarketingEvidenceBrief />
       </section>
       <div className="marketing-principles" aria-label="FirstSignal principles"><span>Show the learning.</span><span>Understand the fit.</span><span>Choose the conversation.</span><span>Keep moving forward.</span></div>
 

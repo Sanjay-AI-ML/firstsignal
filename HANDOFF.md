@@ -12,6 +12,8 @@ The selected design is the light lavender Stitch option C, with a generated logo
 
 ## Implemented workflows
 
+The marketing hero includes an interactive fictional evidence brief with Learning, Open questions and Next test views. It separates reported interviews, planned prototype use and untested paid use; exposes source/date/limitations; and gives a proposed test with a measurement and decision criterion. The example is unverified and saves nothing. External Strategyzer references explain the method without implying endorsement. Founder/progress worksheets now include source context, participant selection, measurements and criteria set before testing. This is a marketing demonstration and writing aid, not a new member verification service or a structured experiment database.
+
 The marketing hero switches between founder and investor starting points. Role-specific entry links preserve the preference through existing Clerk sign-in/sign-up redirects. After a successful workspace load, a missing profile opens an empty private editor; an existing profile is offered for explicit resume. The preference is consumed from the URL and does not assign account permissions or overwrite saved information. Failed workspace loads retain it for retry, and members can choose another role.
 
 The public Templates section provides original founder brief, progress update and investor preference worksheets. Preview, copy and Markdown downloads work without an account. Guided-form links preserve template/role intent; they never import fictional observations or save automatically. The progress template opens a blank composer for an existing founder, or starts founder setup first. Progress still follows profile visibility and requires explicit consent.

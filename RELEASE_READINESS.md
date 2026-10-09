@@ -4,6 +4,10 @@
 
 ## Implemented
 
+- Marketing evidence brief with keyboard-accessible Learning/Open questions/Next test tabs, fictional claim provenance and explicit untested assumptions. Updated writing worksheets support experiment planning; no independent startup validation or evidence review is claimed.
+
+Evidence-brief validation: TypeScript and production build passed. Browser checks covered all three views, arrow/Home/End keyboard focus, expanded method references, template navigation, desktop and 390px/320px layouts without horizontal overflow. Updated founder/progress Markdown endpoints returned 200 with the new prompts. No marketing console errors were observed. This checks presentation and interaction, not business demand or startup claims.
+
 - Role-specific marketing entry carried through sign-in/setup, preservation of existing profiles, role switching and three ungated writing worksheets with preview/copy/download actions.
 
 - Guided founder/investor onboarding, private drafts or public listings, consent and profile-completion guidance.

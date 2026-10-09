@@ -1,4 +1,4 @@
-import { ArrowUpRight, Check, FileText, Handshake, LockKeyhole, SlidersHorizontal } from "lucide-react";
+import { Check, FileText, Handshake, LockKeyhole, SlidersHorizontal } from "lucide-react";
 
 export default function MarketingSpecialties() {
   return <section className="marketing-specialties marketing-section" id="why-firstsignal" aria-labelledby="specialty-title">
@@ -6,7 +6,7 @@ export default function MarketingSpecialties() {
       <span className="marketing-kicker">THE FIRSTSIGNAL DIFFERENCE</span>
       <h2 id="specialty-title">A little earlier.<br/>A lot more context.</h2>
       <p>Your idea is the beginning. Give the right people something meaningful to explore.</p>
-      <a className="marketing-secondary" href="/app">Experience FirstSignal <ArrowUpRight size={17}/></a>
+      <a className="marketing-secondary" href="#how-it-works">See how it works</a>
       <div className="specialty-index" aria-hidden="true"><span>01 / Substance</span><span>02 / Relevance</span><span>03 / Choice</span></div>
     </div>
     <div className="specialty-stack">

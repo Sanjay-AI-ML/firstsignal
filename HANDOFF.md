@@ -74,3 +74,9 @@ Release validation: 204 authenticated local workflow checks passed with verified
 Passing local checks does not establish production OAuth behaviour, complete WCAG conformance, an independent security audit or field performance. Before a full production launch, activate production Clerk/domain settings, test real opted-in email delivery, establish support/deletion and manual report handling, add monitoring/alerts and verify backup/restore. There is no report administration UI, automatic moderation, background email retry scheduler or delivery webhook yet.
 
 See [Clerk setup](cloudflare/CLERK_SETUP.md), [email activation](EMAIL_SETUP.md) and [release requirements](RELEASE_READINESS.md). Keep the actual financing operating model and advertised claims aligned with the scope assessed in the workspace's success plan.
+
+## Marketing page update — 9 October 2026
+
+The light marketing page now includes a four-step interactive product walkthrough, separate founder and investor sections, stock photographs with visible credits, privacy/consent explanations and expanded FAQs. Founder and investor anchors have distinct vertical destinations; native anchor navigation, sticky-header offsets and active navigation feedback replace the previous ambiguous shared-row destination. Manrope is self-hosted under the SIL Open Font License.
+
+The walkthrough uses explicitly fictional data and local React state only. Its visibility toggle, stage comparison and counteroffer preview do not save records, send proposals or contact members. Its tabs support arrow keys, Home/End and one keyboard tab stop. The real workspace entry remains linked separately. This marketing update does not change account APIs, D1 schema, auth configuration or email activation.

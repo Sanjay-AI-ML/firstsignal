@@ -9,10 +9,15 @@ export default function MarketingMotion() {
     let observer: IntersectionObserver | undefined;
     let frame = 0;
     const specialties = root.querySelector<HTMLElement>(".marketing-specialties");
+    const navLinks = [...root.querySelectorAll<HTMLAnchorElement>('.marketing-nav nav a[href^="#"]')];
+    const sections = navLinks.map(link => document.getElementById(link.hash.slice(1)));
     const update = () => {
       frame = 0;
       const distance = document.documentElement.scrollHeight - innerHeight;
       root.style.setProperty("--reading-progress", String(distance > 0 ? Math.min(1, Math.max(0, scrollY / distance)) : 0));
+      let current = -1;
+      sections.forEach((section, index) => { if (section && section.getBoundingClientRect().top <= 180) current = index; });
+      navLinks.forEach((link, index) => { if (index === current) link.setAttribute("aria-current", "location"); else link.removeAttribute("aria-current"); });
       if (specialties && !preference.matches && innerWidth > 1000) {
         const bounds = specialties.getBoundingClientRect();
         const progress = Math.min(1, Math.max(0, (innerHeight - bounds.top) / (innerHeight + bounds.height)));
@@ -32,7 +37,7 @@ export default function MarketingMotion() {
           if (entry.isIntersecting) { entry.target.classList.add("scroll-reveal"); observer?.unobserve(entry.target); }
         });
       }, { threshold: 0.12 });
-      root.querySelectorAll(".marketing-section-heading, .marketing-audiences > article, .marketing-trust > div, .marketing-closing, .specialty-heading").forEach(el => observer!.observe(el));
+      root.querySelectorAll(".marketing-reveal, .marketing-section-heading, .marketing-closing, .specialty-heading").forEach(el => observer!.observe(el));
     };
     configure();
     update();

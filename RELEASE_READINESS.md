@@ -36,3 +36,7 @@ Each participant's next-step note and date stay private to that person. Dates do
 Connection emails contain generic event notices, not private message content or proposal terms. Provider acceptance is labelled submitted, not delivered. There is no background retry scheduler or delivery webhook. Blocks suppress further connection notifications between the accounts; historical notices and accepted conversation records remain account-scoped.
 
 Examples remain labelled fictional. Stock marketing photographs imply no member, partner or investor endorsement. Review this document alongside [HANDOFF.md](HANDOFF.md) when expanding advertised behaviour.
+
+## Marketing experience — 9 October 2026
+
+The public landing page now demonstrates profile drafting/listing, stated stage fit, saved-startup progress and non-binding proposal versions through a clearly labelled local example. Founder and investor navigation targets separate sections. Marketing copy describes implemented controls; it does not claim guaranteed funding, verified investment quality, email delivery, automatic report resolution or scheduled reminders. The self-hosted Manrope font includes its license in `public/fonts/Manrope-OFL.txt`.

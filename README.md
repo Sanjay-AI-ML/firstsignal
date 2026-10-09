@@ -12,6 +12,9 @@ A founder–investor discovery platform for early startup ideas. Built with Reac
 - Profile reporting and account blocking with server-enforced contact restrictions.
 - In-app notifications and optional verified-email notifications through Resend.
 - Responsive marketing pages and reduced-motion support.
+- Founder/investor entry paths that preserve the selected setup through sign-in, plus three public starter worksheets with preview, copy and Markdown downloads.
+
+Marketing templates are writing prompts, not imported fictional evidence. A new founder or investor entry opens an empty private form; an existing profile is offered for explicit resume. Progress-template entry opens a blank update composer on an existing founder profile, or starts founder setup first. The account can still hold both roles. No template action saves or publishes a record by itself.
 
 Sample profiles are labelled, and real member claims/updates are self-reported. This pilot does not process investments, payments or binding agreements. Follow-up dates do not send reminders, progress updates do not broadcast emails, and submitted reports require manual operator handling. Production Clerk/domain activation, live email configuration and operational work remain pending; see [release status](RELEASE_READINESS.md).
 

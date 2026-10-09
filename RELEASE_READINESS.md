@@ -4,6 +4,8 @@
 
 ## Implemented
 
+- Role-specific marketing entry carried through sign-in/setup, preservation of existing profiles, role switching and three ungated writing worksheets with preview/copy/download actions.
+
 - Guided founder/investor onboarding, private drafts or public listings, consent and profile-completion guidance.
 - Discovery, saved profiles, explainable suggestions and stated profile-fit comparison; no funding probability or independent verification claim.
 - Mutual-consent introductions, accepted conversations, a connections dashboard, private next-step notes/dates and versioned non-binding INR proposal discussions.
@@ -17,6 +19,8 @@
 Validation: TypeScript and the production build pass. All 204 authenticated local workflow checks pass, covering consent, persistence, progress visibility, private notes, reports, bidirectional blocking and account isolation. Profile-fit (12), suggestion (28), notification-provider mocks and 202-profile D1 bounds checks pass. Founder/investor onboarding and 390px/320px layouts were checked in the browser. Local development-session checks do not establish hosted production OAuth behaviour, full accessibility conformance, a completed security audit or real-user Core Web Vitals.
 
 ## Production activation still required
+
+Marketing update validation: TypeScript passed; template endpoints returned all three Markdown downloads and unknown IDs returned 404. The actual browser copy/download actions, desktop and 390px/320px layouts, role-selector keyboard controls and modal dismissal were checked. Isolated local component fixtures checked new founder/investor setup, existing-profile resume, cancellation/role switching, load failure/retry, progress-template entry and explicit private-save consent. The fixture route was removed before the production build. These fixture checks do not establish production OAuth behaviour or conversion gains. Genuine permissioned pilot stories and outcome measurement remain future work.
 
 1. Choose and attach an owned domain. The owner deferred that decision; none has been purchased or attached by this work. Recheck student-benefit eligibility, checkout price and renewal cost when selecting one.
 2. Configure Clerk's production instance, DNS, production OAuth settings and keys. Switch origin and keys together, then verify browser sign-in/sign-out, reload, expiry and cross-account access on the chosen domain. Keep the development instance's truthful label until activation.

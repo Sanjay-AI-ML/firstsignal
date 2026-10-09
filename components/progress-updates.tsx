@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { formatDate, type Profile } from "@/lib/data";
 
-export default function ProgressUpdates({ profile, busy, onWrite }: {
-  profile: Profile; busy: boolean; onWrite: (payload: unknown) => Promise<unknown>;
+export default function ProgressUpdates({ profile, busy, onWrite, starter = false }: {
+  profile: Profile; busy: boolean; onWrite: (payload: unknown) => Promise<unknown>; starter?: boolean;
 }) {
+  const titleInput = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (starter) titleInput.current?.focus(); }, [starter]);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -25,8 +27,9 @@ export default function ProgressUpdates({ profile, busy, onWrite }: {
   };
   return <section className="progress-editor"><div className="progress-editor-heading"><div><p className="eyebrow">FOUNDER PROGRESS</p><h2>A reason to come back.</h2></div><span className="tag">{profile.listed ? "Public with your profile" : "Private draft"}</span></div>
     <p className="subtle">Share what you learned, what changed and the next experiment. Investors who save your listed profile can return to these updates.</p>
-    <details><summary>Add a progress update</summary><form className="dialog-form" onSubmit={event => void submit(event)}>
-      <div className="form-grid"><div className="field"><label htmlFor="progress-title">Update title</label><input id="progress-title" required minLength={3} maxLength={100} value={title} onChange={e => setTitle(e.target.value)} placeholder="What we learned from five customer interviews" /></div><div className="field"><label htmlFor="progress-date">When did this happen?</label><input id="progress-date" type="date" required value={date} max={new Date().toISOString().slice(0, 10)} onChange={e => setDate(e.target.value)} /></div></div>
+    <details open={starter || undefined}><summary>Add a progress update</summary><form className="dialog-form" onSubmit={event => void submit(event)}>
+      {starter ? <div className="notice"><strong>Your progress worksheet</strong><p>Describe the test, what you observed, what changed, what remains uncertain and your next step. Use your own learning; leave untested claims out.</p></div> : null}
+      <div className="form-grid"><div className="field"><label htmlFor="progress-title">Update title</label><input ref={titleInput} id="progress-title" required minLength={3} maxLength={100} value={title} onChange={e => setTitle(e.target.value)} placeholder="What we learned from five customer interviews" /></div><div className="field"><label htmlFor="progress-date">When did this happen?</label><input id="progress-date" type="date" required value={date} max={new Date().toISOString().slice(0, 10)} onChange={e => setDate(e.target.value)} /></div></div>
       <div className="field"><label htmlFor="progress-body">Learning and next step</label><textarea id="progress-body" required minLength={20} maxLength={2000} rows={4} value={body} onChange={e => setBody(e.target.value)} placeholder="What did you observe? What surprised you? What will you test next? Distinguish interest from paying customers." /></div>
       <label className="consent"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} /><span>{profile.listed ? "Publish this update with my listed profile." : "Save this update privately. It will become public if I list this profile later."} I have permission to share it.</span></label>
       <button type="submit" className="primary-button" disabled={busy}>{busy ? "Saving…" : profile.listed ? "Publish update" : "Save private update"}</button>

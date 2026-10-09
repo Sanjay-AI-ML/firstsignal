@@ -12,6 +12,12 @@ The selected design is the light lavender Stitch option C, with a generated logo
 
 ## Implemented workflows
 
+The marketing hero switches between founder and investor starting points. Role-specific entry links preserve the preference through existing Clerk sign-in/sign-up redirects. After a successful workspace load, a missing profile opens an empty private editor; an existing profile is offered for explicit resume. The preference is consumed from the URL and does not assign account permissions or overwrite saved information. Failed workspace loads retain it for retry, and members can choose another role.
+
+The public Templates section provides original founder brief, progress update and investor preference worksheets. Preview, copy and Markdown downloads work without an account. Guided-form links preserve template/role intent; they never import fictional observations or save automatically. The progress template opens a blank composer for an existing founder, or starts founder setup first. Progress still follows profile visibility and requires explicit consent.
+
+Template downloads are served at `/templates/founder-brief`, `/templates/progress-update` and `/templates/investor-preferences`. Unknown templates return 404. No database migration or authentication-provider change was needed for this update. Real pilot testimonials, outcome statistics and marketing analytics are not implemented by these changes.
+
 | Workflow | Current behaviour |
 | --- | --- |
 | Account and role | Clerk sign-in/sign-up/sign-out. New members choose founder or investor, or explore first. An account may save one profile of each type; signing up alone does not assign an investment role. |

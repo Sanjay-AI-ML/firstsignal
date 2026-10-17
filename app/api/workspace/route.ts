@@ -10,16 +10,28 @@ type RequestRow={id:string;sender:string;recipient:string|null;profile_id:string
 type Progress={id:string;profile_id:string;date:string;title:string;body:string;created:string};
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 function profile(row:Stored,userId?:string,updates:Profile['updates']=[]):Profile{const data=JSON.parse(row.data);return {...data,id:row.id,kind:row.kind,updates,demo:false,mine:row.owner===userId,listed:!!row.listed,updated:row.updated,evidenceDate:data.evidenceDate??''};}
-async function state(userId?:string){
+async function state(userId?:string,requestedProfileId?:string){
  const db=database();
  const rows=await (userId?db.prepare('SELECT p.* FROM profiles p WHERE listed=1 AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.owner=? AND b.target_owner=p.owner) OR (b.owner=p.owner AND b.target_owner=?)) ORDER BY updated DESC LIMIT 200').bind(userId,userId):db.prepare('SELECT * FROM profiles WHERE listed=1 ORDER BY updated DESC LIMIT 200')).all<Stored>();
  const owned=userId?await db.prepare('SELECT * FROM profiles WHERE owner=? ORDER BY updated DESC').bind(userId).all<Stored>():{results:[]};
- const visibleIds=[...new Set([...rows.results,...owned.results].map(r=>r.id))];
+ // A shortlist must survive a profile falling outside the recent discovery window.
+ // Join against the bounded saved set instead of constructing an unbounded IN list.
+ // A saved ID never grants access to another member's private or blocked profile.
+ const savedRows=userId?await db.prepare(`SELECT p.* FROM profiles p INNER JOIN saves s ON s.profile_id=p.id
+ WHERE s.owner=? AND (p.listed=1 OR p.owner=?)
+ AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.owner=? AND b.target_owner=p.owner) OR (b.owner=p.owner AND b.target_owner=?))
+ ORDER BY s.created DESC LIMIT 200`).bind(userId,userId,userId,userId).all<Stored>():{results:[]};
+ // Shared profile links are independent of discovery recency and shortlist state.
+ // The same visibility and bilateral-block checks still apply to a direct link.
+ const requestedRows=requestedProfileId?await (userId?db.prepare(`SELECT p.* FROM profiles p WHERE p.id=? AND (p.listed=1 OR p.owner=?)
+ AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.owner=? AND b.target_owner=p.owner) OR (b.owner=p.owner AND b.target_owner=?)) LIMIT 1`).bind(requestedProfileId,userId,userId,userId):db.prepare('SELECT * FROM profiles WHERE id=? AND listed=1 LIMIT 1').bind(requestedProfileId)).all<Stored>():{results:[]};
+ const accessibleRows=[...new Map([...rows.results,...savedRows.results,...requestedRows.results].map(row=>[row.id,row])).values()];
+ const visibleIds=[...new Set([...accessibleRows,...owned.results].map(r=>r.id))];
  const progressQueries=[];
  for(let offset=0;offset<visibleIds.length;offset+=100){const ids=visibleIds.slice(offset,offset+100);progressQueries.push(db.prepare(`SELECT id,profile_id,date,title,body,created FROM progress_updates WHERE profile_id IN (${ids.map(()=>'?').join(',')}) ORDER BY date DESC,created DESC LIMIT 2000`).bind(...ids));}
  const progress=progressQueries.length?(await db.batch<Progress>(progressQueries)).flatMap(result=>result.results):[];
  const updates=(id:string)=>progress.filter(p=>p.profile_id===id).map(({id,date,title,body,created})=>({id,date,title,body,created}));
- const all=rows.results.map(r=>profile(r,userId,updates(r.id)));
+ const all=accessibleRows.map(r=>profile(r,userId,updates(r.id)));
  if(!userId)return {profiles:[...all,...seedProfiles],savedIds:[],myProfiles:[],requests:[],blockedProfiles:[],reports:[]};
  const [saved,requests,blocked,reports]=await Promise.all([
  db.prepare('SELECT profile_id FROM saves WHERE owner=?').bind(userId).all<{profile_id:string}>(),
@@ -34,7 +46,7 @@ async function state(userId?:string){
  const notes=requestIds.length?await db.prepare(`SELECT id,introduction_id,sender,sender_name,body,created FROM messages WHERE introduction_id IN (${requestIds.map(()=>'?').join(',')}) ORDER BY created ASC LIMIT 10000`).bind(...requestIds).all<{id:string;introduction_id:string;sender:string;sender_name:string;body:string;created:string}>():{results:[]};
  return {profiles:[...all,...seedProfiles],myProfiles:owned.results.map(r=>profile(r,userId,updates(r.id))),savedIds:saved.results.map(r=>r.profile_id),blockedProfiles:blocked.results.map(r=>({profileId:r.profile_id,name:r.target_name,created:r.created})),reports:reports.results.map(r=>({id:r.id,profileId:r.profile_id,reason:r.reason,status:r.status,created:r.created})),requests:requests.results.map(r=>({id:r.id,profileId:r.profile_id,targetName:r.target_name,senderName:r.sender_name,message:r.message,status:r.status,created:r.created,updated:r.activity??r.updated,blocked:!!r.blocked,proposal:r.proposal_status?{status:r.proposal_status,amount:r.proposal_amount,mine:r.proposal_author===userId,version:r.proposal_version}:undefined,nextStep:r.next_note||r.next_date?{note:r.next_note??'',date:r.next_date??''}:undefined,direction:r.recipient===userId?'incoming':'outgoing',messages:notes.results.filter(m=>m.introduction_id===r.id).map(m=>({id:m.id,body:m.body,senderName:m.sender_name,created:m.created,mine:m.sender===userId}))}))};
 }
-export async function GET(){try{const user=await getAppUser();return json(await state(user?.userId));}catch(e){console.error('Workspace read failed',e);return json({error:"We couldn't load your workspace. Please retry."},503);}}
+export async function GET(request?:Request){try{const user=await getAppUser();const id=request?new URL(request.url).searchParams.get('profile'):null;const requestedProfileId=id&&id.length>=2&&id.length<=100?id:undefined;return json(await state(user?.userId,requestedProfileId));}catch(e){console.error('Workspace read failed',e);return json({error:"We couldn't load your workspace. Please retry."},503);}}
 export async function POST(request:Request){
  let user;try{user=await getAppUser();}catch{console.error('Authentication service unavailable');return json({error:'Sign-in is temporarily unavailable. Please retry.'},503);}if(!user)return json({error:'Sign in to save changes.'},401);
  if(request.headers.get('origin')!==new URL(request.url).origin)return json({error:"This request couldn't be verified. Reload and try again."},403);
@@ -115,6 +127,6 @@ export async function POST(request:Request){
    const result=await db.prepare("INSERT INTO messages (id,introduction_id,sender,sender_name,body,created) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM messages WHERE introduction_id=?)<100 AND NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))").bind(crypto.randomUUID(),a.id,owner,user.displayName.slice(0,120),a.body,now,a.id,owner,other,other,owner).run();if(!result.meta.changes)return json({error:'Messaging is unavailable or this conversation has reached its message limit.'},400);await notify(other,a.id,'You have a new connection message');
   }
  }
- return json(await state(owner));
+ return json(await state(owner,a.action==='save'||a.action==='request'?a.profileId:undefined));
  }catch(e){console.error('Workspace write failed',e);return json({error:"We couldn't save that change. Your input is still here; please retry."},503);}
 }

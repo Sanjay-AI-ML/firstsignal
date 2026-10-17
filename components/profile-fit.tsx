@@ -5,7 +5,7 @@ import { profileFit } from '@/lib/profile-fit';
 
 export default function ProfileFit({ profile, candidates }: { profile: Profile; candidates: Profile[] }) {
   const choices = [...new Map(candidates.filter(p => p.kind !== profile.kind).map(p => [p.id, p])).values()];
-  const [selected, setSelected] = useState('');
+  const [selected, setSelected] = useState(() => choices.find(choice => choice.mine)?.id ?? '');
   const counterpart = choices.find(p => p.id === selected);
   const signals = counterpart ? profileFit(profile.kind === 'startup' ? profile : counterpart, profile.kind === 'investor' ? profile : counterpart) : [];
   return <section className="profile-fit" aria-labelledby="profile-fit-title">

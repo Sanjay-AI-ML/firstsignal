@@ -4,6 +4,10 @@
 
 ## Implemented
 
+- Research-led decision workspace: role-aware discovery and action overview, URL-restored filters/clean share links, two/three-profile comparison with a dedicated phone layout, visible budgets and removable filters, existing-request actions, own-profile fit defaults and unsaved-edit protection. Saved and direct-linked accessible profiles survive the newest-results cutoff; private/block controls and D1 query bounds remain enforced. No browser-storage draft saving, email reminder scheduler or investment ranking was added.
+
+Workbench validation: TypeScript, production build, new helper checks, real SQLite saved/direct-link access and lifecycle checks, 402-profile D1 bounds, existing profile policy/required-solution, sector, fit and suggestion checks passed. Actual-browser local checks covered both role defaults, action counts, pending/accepted relationships, automatic own-profile fit, navigation/reload filters, unavailable-save removal, keep/discard edits, two/three-profile startup/investor comparison, clean copied links and desktop/narrow-phone layouts. A fresh browser pass had no client errors after development hot reload. The temporary fixture was removed before the production build. Isolated fixtures do not establish hosted production authentication or business conversion gains.
+
 - Founder form changes: Ideology label, required Proposed solution and removal of the evidence-date input. Validation enforces the founder solution requirement, investor interests remain optional, historical dates stay intact and learning completion does not depend on a date.
 
 Founder-field validation: TypeScript and production build passed. API/SQLite checks covered missing, blank and short founder solutions, saving without an evidence date, preservation of historical dates and optional investor interests. Completion checks accept learning text without a date. The actual local editor blocked an empty solution, focused the required field and advanced after valid input; no date input or browser errors were observed. The isolated fixture was removed before building; no real account data was changed.

@@ -13,13 +13,13 @@ const profileEntry = "/signin?return_to=%2Fapp%23profiles";
 const founderEntry = setupSignIn("founder");
 const investorEntry = setupSignIn("investor");
 const questions = [
-  { q: "Is FirstSignal only for software startups?", a: "No. Founders from any industry can create a profile, including food, healthcare, education, consumer products, hardware and services. Choose a sector, or select Other and enter your own. Investors choose the industries they want to explore." },
+  { q: "Is FindIn only for software startups?", a: "No. Founders from any industry can create a profile, including food, healthcare, education, consumer products, hardware and services. Choose a sector, or select Other and enter your own. Investors choose the industries they want to explore." },
   { q: "Do I need a finished product?", a: "No. Start with an idea, a prototype or early traction. Explain what you know, what remains uncertain and what you will test next." },
   { q: "Do I sign up as a founder or an investor?", a: "Choose one when you create your profile. Each account can have one founder or investor profile. Your role is set when you first save; you can edit the profile details and sharing settings later." },
   { q: "What happens after an introduction?", a: "The recipient accepts or declines. Acceptance opens private messaging and non-binding proposals. Each participant can also keep a private next-step note." },
   { q: "Can I follow a startup before connecting?", a: "Yes. Save a listed startup to revisit its profile and recent progress updates in your shortlist. Saving does not contact the founder or send progress emails." },
-  { q: "Does FirstSignal guarantee funding or verify startup claims?", a: "No. Member claims are self-reported. FirstSignal supports discovery and discussion; investment decisions, due diligence and formal agreements happen separately." },
-  { q: "Are the examples on this page real?", a: "The product examples are fictional and labelled. The walkthrough changes only this page; it saves no records and contacts nobody. Stock photographs do not depict FirstSignal members or endorsements." },
+  { q: "Does FindIn guarantee funding or verify startup claims?", a: "No. Member claims are self-reported. FindIn supports discovery and discussion; investment decisions, due diligence and formal agreements happen separately." },
+  { q: "Are the examples on this page real?", a: "The product examples are fictional and labelled. The walkthrough changes only this page; it saves no records and contacts nobody. Stock photographs do not depict FindIn members or endorsements." },
   { q: "Can I use the templates without signing up?", a: "Yes. Preview, copy and download all three worksheets without an account. The guided profile form needs sign-in and starts with your own information. A template never fills your profile with fictional evidence." },
 ];
 
@@ -27,7 +27,7 @@ export default function Home() {
   return <div className="marketing">
     <LegacyWorkspaceLinks /><MarketingMotion />
     <header className="marketing-nav">
-      <a className="marketing-brand" href="/" aria-label="FirstSignal home"><img src="/firstsignal-logo.png" width="38" height="38" alt="" />FirstSignal</a>
+      <a className="marketing-brand" href="/" aria-label="FindIn home"><img src="/findin-logo.png" width="38" height="38" alt="" />FindIn</a>
       <nav aria-label="Main navigation"><a href="#how-it-works">Product</a><a href="#templates">Templates</a><a href="#founders">Founders</a><a href="#investors">Investors</a></nav>
       <a className="marketing-nav-cta" href="/app">Open workspace</a>
     </header>
@@ -42,7 +42,7 @@ export default function Home() {
         </div>
         <MarketingEvidenceBrief />
       </section>
-      <div className="marketing-principles" aria-label="FirstSignal principles"><span>Show the learning.</span><span>Understand the fit.</span><span>Choose the conversation.</span><span>Keep moving forward.</span></div>
+      <div className="marketing-principles" aria-label="FindIn principles"><span>Show the learning.</span><span>Understand the fit.</span><span>Choose the conversation.</span><span>Keep moving forward.</span></div>
 
       <MarketingSpecialties />
       <MarketingProductTour />
@@ -77,6 +77,6 @@ export default function Home() {
       <section className="marketing-faq marketing-section" aria-labelledby="faq-title"><div className="marketing-section-heading"><span className="marketing-kicker">A LITTLE CLARITY</span><h2 id="faq-title">Before your<br />first hello.</h2></div><div>{questions.map(({ q, a }) => <details key={q}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></section>
       <section className="marketing-closing"><span className="marketing-kicker">BUILD SOMETHING WORTH A CONVERSATION</span><h2>The product can come later.<br /><em>The first signal starts here.</em></h2><p>Bring what you know. Be clear about what comes next.</p><div className="marketing-actions"><a className="marketing-primary" href={profileEntry}>Create your profile</a><a className="marketing-secondary" href="/app#discover">Explore the network</a></div></section>
     </main>
-    <footer className="marketing-footer"><div><a className="marketing-brand" href="/"><img src="/firstsignal-logo.png" width="32" height="32" alt="" />FirstSignal</a><p>Early ideas. Meaningful connections.</p></div><nav aria-label="Footer navigation"><a href="#templates">Starter templates</a><a href="#how-it-works">Inside the product</a><a href="#founders">For founders</a><a href="#investors">For investors</a><a href="/signin?return_to=%2Fapp">Sign in</a><a href="/privacy">Privacy</a></nav><small>© {new Date().getFullYear()} FirstSignal · Discovery and discussion. No funding guarantee.</small></footer>
+    <footer className="marketing-footer"><div><a className="marketing-brand" href="/"><img src="/findin-logo.png" width="32" height="32" alt="" />FindIn</a><p>Early ideas. Meaningful connections.</p></div><nav aria-label="Footer navigation"><a href="#templates">Starter templates</a><a href="#how-it-works">Inside the product</a><a href="#founders">For founders</a><a href="#investors">For investors</a><a href="/signin?return_to=%2Fapp">Sign in</a><a href="/privacy">Privacy</a></nav><small>© {new Date().getFullYear()} FindIn · Discovery and discussion. No funding guarantee.</small></footer>
   </div>;
 }

@@ -1,10 +1,12 @@
-# FirstSignal handoff
+# FindIn handoff
 
-Updated 17 October 2026. FirstSignal is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
+Updated 17 October 2026. FindIn is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
 
-Public URL: [FirstSignal](https://firstsignal-founder-network.divineridge.chatgpt.site). Reuse this existing Site for future updates. FirstSignal remains a working brand name, not a cleared trademark.
+Public URL: [FindIn](https://firstsignal-founder-network.divineridge.chatgpt.site). Reuse this existing Site for future updates. FindIn remains a working brand name, not a cleared trademark.
 
 ## Product routes and design
+
+The user selected the brand FindIn on 17 October 2026. The lavender abstract F mark remains appropriate and is served as `findin-logo.png`. Visible website/authentication titles, privacy text, worksheet filenames and notification body use FindIn. Existing hosting URL, repository identity, `FIRSTSIGNAL_ORIGIN`, session refresh key and notification idempotency prefix remain stable for compatibility; they are not user-facing brand names.
 
 `/` is the marketing page; `/app` is the workspace. `/signin`, `/signup` and `/signout` use Clerk. `/privacy` describes current visibility and controls. Research documents remain internal development context; there is no Research & insights product screen.
 

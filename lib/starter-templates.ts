@@ -119,7 +119,7 @@ What will you test next, by when, and what would change your decision?
 
 ## Before sharing
 Remove confidential details. Check permission and profile visibility.
-Updates on a listed FirstSignal profile are public with that profile.
+Updates on a listed FindIn profile are public with that profile.
 `,
   },
   {

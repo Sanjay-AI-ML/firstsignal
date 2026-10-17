@@ -35,7 +35,7 @@ export default function MarketingProductTour() {
           <span className="marketing-tour-number">0{index + 1}</span><span><strong>{title}</strong><small>{description}</small></span><Icon size={20} aria-hidden="true" />
         </button>)}
       </div><a className="marketing-tour-entry" href="/app#discover">Try the real workspace</a></div>
-      <div className="marketing-tour-stage"><div className="marketing-tour-chrome"><span><span className="marketing-tour-mark" aria-hidden="true">f.</span> FirstSignal / Product walkthrough</span><span className="marketing-example-label">FICTIONAL DATA</span></div>
+      <div className="marketing-tour-stage"><div className="marketing-tour-chrome"><span><span className="marketing-tour-mark" aria-hidden="true">f.</span> FindIn / Product walkthrough</span><span className="marketing-example-label">FICTIONAL DATA</span></div>
         <div className="marketing-tour-panel" key={active} role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-tab-${active}`} tabIndex={0}>
           {active === 0 ? <>
             <div className="tour-panel-heading"><div><span className="marketing-kicker">PROFILE / TRACEGRID</span><h3>Start with what you know.</h3></div><span className="tour-status"><LockKeyhole size={14} aria-hidden="true" />{listed ? "Listed example" : "Private draft example"}</span></div>

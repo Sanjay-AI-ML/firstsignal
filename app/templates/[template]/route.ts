@@ -6,7 +6,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tem
   if (!template) return new Response("Template not found.", { status: 404 });
   return new Response(template.markdown, { headers: {
     "Content-Type": "text/markdown; charset=utf-8",
-    "Content-Disposition": `attachment; filename="firstsignal-${template.id}.md"`,
+    "Content-Disposition": `attachment; filename="findin-${template.id}.md"`,
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "public, max-age=3600",
   } });

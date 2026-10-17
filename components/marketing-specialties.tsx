@@ -3,7 +3,7 @@ import { Check, FileText, Handshake, LockKeyhole, SlidersHorizontal } from "luci
 export default function MarketingSpecialties() {
   return <section className="marketing-specialties marketing-section" id="why-firstsignal" aria-labelledby="specialty-title">
     <div className="specialty-heading">
-      <span className="marketing-kicker">THE FIRSTSIGNAL DIFFERENCE</span>
+      <span className="marketing-kicker">THE FINDIN DIFFERENCE</span>
       <h2 id="specialty-title">A little earlier.<br/>A lot more context.</h2>
       <p>Your idea is the beginning. Give the right people something meaningful to explore.</p>
       <a className="marketing-secondary" href="#how-it-works">See how it works</a>

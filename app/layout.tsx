@@ -6,11 +6,11 @@ import { clerkPublishableKey, getAppUser } from "./auth";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "FirstSignal — Meet the next generation of founders",
+  title: "FindIn — Meet the next generation of founders",
   description: "Discover early-stage founders through their progress, evidence, and ambition. An India-first founder–investor pilot.",
   icons: {
-    icon: "/firstsignal-logo.png",
-    shortcut: "/firstsignal-logo.png",
+    icon: "/findin-logo.png",
+    shortcut: "/findin-logo.png",
   },
 };
 

@@ -20,7 +20,7 @@ export default function ProfileFit({ profile, candidates }: { profile: Profile; 
     {counterpart ? <div aria-live="polite">
       {profile.demo || counterpart.demo ? <p className="fit-sample">Illustrative comparison: includes a fictional sample profile.</p> : null}
       <ul>{signals.map(s => <li key={s.label}><div><strong>{s.label}</strong><span className={`fit-status ${s.status}`}>{s.status === 'aligned' ? 'Matches' : s.status === 'different' ? 'Different' : 'Ask about this'}</span></div><p>{s.explanation}</p></li>)}</ul>
-      <p className="fit-caption">Based on self-reported profile information. A match does not mean FirstSignal recommends an investment or that funding is likely.</p>
+      <p className="fit-caption">Based on self-reported profile information. A match does not mean FindIn recommends an investment or that funding is likely.</p>
     </div> : <p className="fit-caption">You can compare listed profiles and your own private drafts. No information is sent to the other person.</p>}
   </section>;
 }

@@ -1,8 +1,12 @@
-# FirstSignal release status
+# FindIn release status
 
 17 October 2026. The public Site is a working pilot with Clerk development authentication. It is not yet a fully activated production service.
 
 ## Implemented
+
+- FindIn product branding across marketing, workspace, account screens, page titles, privacy copy, notification body and worksheet downloads. The abstract F icon is reused with a FindIn asset path. Hosting, accounts, stored profiles and configuration identities are preserved.
+
+Rename validation: TypeScript and the production build passed. Homepage, workspace, sign-in, sign-up and privacy titles returned FindIn with HTTP 200; the new logo asset and FindIn worksheet content/download filename returned successfully. Local browser checks confirmed homepage branding and Clerk's FindIn sign-in/sign-up headings. No account was created or changed during these checks.
 
 - Broad startup industries and named custom sectors through Other, for both founders and investor interests. Custom names appear in profile/review, search and category filters. Comparisons use explicit names with case/whitespace normalization; legacy SaaS preferences retain their specificity. Validation checks custom names and consistent investor preferences. Profile JSON storage needs no migration.
 

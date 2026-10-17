@@ -1,4 +1,4 @@
-# FirstSignal
+# FindIn
 
 A founder–investor discovery platform for early startup ideas. Built with React, Vinext, Clerk authentication and Cloudflare D1.
 

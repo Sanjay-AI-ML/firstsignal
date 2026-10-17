@@ -5,7 +5,8 @@ const {sectors,legacySectors,profileSectorNames,sectorName,matchesSector,sectorF
 const {profileSchema}=await load('lib/validation.ts');
 const {profileFit}=await load('lib/profile-fit.ts');
 const {profileSuggestions}=await load('lib/profile-suggestions.ts');
-const base={kind:'startup',id:'founder',name:'Sector test',founder:'Test Founder',city:'Chennai',sector:'Education',stage:'Idea-stage',tagline:'Local test of all startup industries',problem:'Testing profile sectors across different industries.',fundingIntentINR:0};
+const {getProfileCompletion}=await load('lib/profile-completion.ts');
+const base={kind:'startup',id:'founder',name:'Sector test',founder:'Test Founder',city:'Chennai',sector:'Education',stage:'Idea-stage',tagline:'Local test of all startup industries',problem:'Testing profile sectors across different industries.',solution:'A proposed service to test with early customers.',fundingIntentINR:0};
 for(const sector of [...sectors.filter(s=>s!=='Other'),...legacySectors])assert.ok(profileSchema.safeParse({...base,sector}).success,sector);
 const custom={...base,sector:'Other',customSector:'  Textile   Recycling '};
 const saved=profileSchema.parse(custom);assert.equal(saved.customSector,'Textile Recycling');assert.equal(sectorName(saved),'Textile Recycling');
@@ -26,4 +27,5 @@ assert.equal(profileFit({...base,sector:'Manufacturing SaaS'},{...investor,secto
 assert.equal(profileFit({...base,sector:'Education'},{...investor,sectors:['Education','Other'],customSector:''})[0].status,'aligned','A known matching preference remains useful');
 assert.equal(profileSuggestions(saved,[investor]).matches[0].profile.id,'investor');
 assert.equal(profileSuggestions({...saved,customSector:'Pet Care'},[investor]).mode,'none');
+assert.ok(getProfileCompletion({...base,validation:'Feedback from early customer interviews.',evidenceDate:''}).items.find(item=>item.id==='learning').complete,'Learning checklist must not depend on the removed date field');
 console.log('Passed: broad/legacy sectors; custom required/length/Unicode validation; filter inclusion and counts; normalized exact comparisons; suggestions and legacy specificity.');

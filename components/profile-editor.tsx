@@ -24,7 +24,7 @@ type ProfileEditorProps = {
 };
 
 type TextField = "name" | "founder" | "city" | "tagline" | "problem" | "solution" |
-  "experience" | "validation" | "evidenceDate" | "uncertainty" | "nextMilestone" |
+  "experience" | "validation" | "uncertainty" | "nextMilestone" |
   "budget" | "productStatus" | "revenueStatus" | "incorporationStatus" | "requiredEvidence" | "customSector";
 type FieldIssue = { field: string; message: string };
 
@@ -63,7 +63,7 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
     : ["Start with a clear introduction.", "Explain what you have learned and what you still need to test.", "Make the next step easy to understand.", "Choose what to share, then save."];
   const groups = investor
     ? [["name", "founder", "city", "tagline", "solution"], ["sector", "customSector", "stage", "sectors", "stages", "experience", "validation", "requiredEvidence", "role"], ["fundingIntentINR", "checkRangeINR", "uncertainty", "budget", "nextMilestone"], []]
-    : [["name", "founder", "city", "tagline", "sector", "customSector", "stage"], ["problem", "solution", "experience", "validation", "evidenceDate", "uncertainty"], ["nextMilestone", "fundingIntentINR", "budget", "productStatus", "revenueStatus", "incorporationStatus"], []];
+    : [["name", "founder", "city", "tagline", "sector", "customSector", "stage"], ["problem", "solution", "experience", "validation", "uncertainty"], ["nextMilestone", "fundingIntentINR", "budget", "productStatus", "revenueStatus", "incorporationStatus"], []];
   const completion = getProfileCompletion(form);
   const selectedSectors = form.sectors?.length ? form.sectors : form.sector ? [form.sector] : [];
   const [legacyChoices] = useState(() => legacySectors.filter(value => value === form.sector || form.sectors?.includes(value)));
@@ -174,13 +174,12 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
         {needsCustomSector ? field("Your other sector or service", "customSector", { required: true, max: 80, full: true, placeholder: "For example: pet care or textile recycling", help: "Name one additional industry or service in 2–80 characters. It will appear in your interests." }) : null}
         {preference("stages", "Stages you consider", stages, selectedStages)}
       </> : <>
-        {field("What problem are you solving?", "problem", { required: true, multiline: true, full: true, max: 1500, placeholder: "Who faces the problem, how they manage it today, and why that is difficult.", help: "Use at least 10 characters. Describe a problem you have seen or heard about." })}
-        {field("Proposed solution", "solution", { multiline: true, full: true, max: 1500, placeholder: "What you plan to build and how it would help.", help: "An idea is enough. Say what is already built and what is still proposed." })}
+        {field("Ideology", "problem", { required: true, multiline: true, full: true, max: 1500, placeholder: "The idea behind your startup, why it matters, and the change you want to make.", help: "Use at least 10 characters to explain the purpose behind your idea." })}
+        {field("Proposed solution", "solution", { required: true, multiline: true, full: true, max: 1500, placeholder: "What you plan to build or offer, how it works, and who it helps.", help: "Use at least 10 characters. Say what is already built and what is still planned." })}
       </>}
       {field(investor ? "Your investing role and background" : "Your experience and skills", "experience", { multiline: true, full: true, max: 1000, placeholder: investor ? "Operator angel, independent investor or fund team. Share relevant experience." : "Your relevant skills, domain experience and what your team can deliver.", help: "Describe your own experience. FindIn does not independently verify it." })}
       {field(investor ? "What do you want to see from founders?" : "What you have learned so far", investor ? "requiredEvidence" : "validation", { multiline: true, full: true, max: 1500, placeholder: investor ? "For example: customer interviews, technical prototype or founder experience." : "For example: interviewed 12 shop owners; 8 described the same order-tracking problem.", help: investor ? "Help founders decide whether a conversation is relevant." : "Share what happened, when, and what you learned. It is fine to say you have not tested the idea yet." })}
       {!investor ? <>
-        <div className="field" data-field="evidenceDate"><div className="field-label-row"><label htmlFor={`${prefix}-evidenceDate`}>When did you learn this?<span className="sr-only"> (optional)</span></label><OptionalMark label="When did you learn this?" /></div><input id={`${prefix}-evidenceDate`} type="date" value={form.evidenceDate} max={new Date().toISOString().slice(0, 10)} aria-invalid={issues.some(item => item.field === "evidenceDate") || undefined} aria-describedby={`${prefix}-date-help`} onChange={event => update("evidenceDate", event.target.value)} /><p id={`${prefix}-date-help`} className="guided-field-help">Use the date of your observation, today or earlier.</p>{issues.filter(item => item.field === "evidenceDate").map(item => <p className="guided-field-error" key={item.field}>{item.message}</p>)}</div>
         {field("What remains uncertain", "uncertainty", { multiline: true, full: true, max: 1000, placeholder: "For example: will customers pay, and does the workflow work outside our first interviews?", help: "Say what you still need to find out." })}
       </> : null}
     </div> : null}

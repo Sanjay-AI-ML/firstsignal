@@ -9,9 +9,9 @@ export const starterTemplates: StarterTemplate[] = [
   {
     id: "founder-brief", role: "founder", title: "Founder brief",
     description: "Turn an early idea into a story someone can understand.",
-    outcome: "The problem. The learning. The next experiment.",
+    outcome: "The ideology. The solution. The next experiment.",
     sections: [
-      { title: "Start with the problem", prompt: "Who faces it, how do they manage it today, and what have you observed?" },
+      { title: "Start with your ideology", prompt: "What is the idea behind your startup, why does it matter, and what change do you want to make?" },
       { title: "Separate evidence from assumptions", prompt: "What did you test, with whom and when? Untested is a useful answer too." },
       { title: "Make the next step concrete", prompt: "State an assumption, a test, a measurement and a result needed to continue before testing." },
     ],
@@ -28,10 +28,10 @@ Keep confidential information and personal customer details out of public summar
 - Stage: Idea-stage / Pre-product / Prototype / Early traction
 - One-line idea: We help [customer] do [task] by [approach].
 
-## The problem
-Who faces it? How do they handle it today? What have you observed?
+## Ideology
+Describe the idea behind your startup, why it matters, and the change you want to make.
 
-## Proposed solution
+## Proposed solution — required in your profile
 What will you build? Say what exists today and what is still proposed.
 
 ## Relevant background
@@ -41,7 +41,6 @@ What skills, experience or customer access can your team bring?
 What did you test, with whom, and when?
 What did you observe? Distinguish interest from commitments or paying customers.
 It is fine to say the idea has not been tested.
-- Evidence date: YYYY-MM-DD
 - Method and participant selection:
 - How many people took part, and how many gave each response:
 - Source or record reference, with sharing permission:

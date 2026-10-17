@@ -36,7 +36,7 @@ const route = await load('app/api/workspace/route.ts', {
   '@/lib/database': {database:()=>db}, '@/lib/data':data, '@/lib/validation':validation,
   '@/lib/member-safety': {membersBlocked:async()=>false}
 });
-const base = {kind:'startup', name:'Profile policy test', founder:'Test Founder', city:'Chennai', sector:data.sectors[0], stage:data.stages[0], tagline:'A profile used only in local tests', problem:'Testing one profile per account without touching real data.', fundingIntentINR:0};
+const base = {kind:'startup', name:'Profile policy test', founder:'Test Founder', city:'Chennai', sector:data.sectors[0], stage:data.stages[0], tagline:'A profile used only in local tests', problem:'Testing one profile per account without touching real data.', solution:'A proposed service to test with early customers.',fundingIntentINR:0};
 async function save(owner, profile, extras={}) {
   const request = new Request('http://localhost/api/workspace',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({action:'profile',profile,listed:false,consent:true,...extras})});
   const response = await auth.run(owner?{userId:owner,displayName:'Test Owner'}:null,()=>route.POST(request));
@@ -73,5 +73,10 @@ try {
   assert.equal(customInvestor.status,200);assert.deepEqual(customInvestor.body.myProfiles[0].sectors,['Healthcare & Life Sciences','Other']);assert.equal(customInvestor.body.myProfiles[0].customSector,'Pet Care');
   assert.equal((await save('blank-custom',{...base,sector:'Other',customSector:' '})).status,400);
   assert.equal((await save('long-custom',{...base,sector:'Other',customSector:'x'.repeat(81)})).status,400);
-  console.log('Passed: account/profile policy, ownership and legacy preservation; custom founder/investor sector persistence, edits and validation.');
+  for(const solution of [undefined,'','   ','Too short'])assert.equal((await save('missing-solution',{...base,solution})).status,400);
+  const noDate=await save('without-date',{...base,evidenceDate:undefined});assert.equal(noDate.status,200);assert.equal(noDate.body.myProfiles[0].evidenceDate,'');
+  const dated=await save('historical-date',{...base,evidenceDate:'2026-10-01'});assert.equal(dated.status,200);
+  const datedEdit=await save('historical-date',{...dated.body.myProfiles[0],name:'Updated ideology profile'});assert.equal(datedEdit.status,200);assert.equal(datedEdit.body.myProfiles[0].evidenceDate,'2026-10-01');
+  const investorWithoutSolution=await save('optional-investor-interests',{...base,kind:'investor',solution:undefined});assert.equal(investorWithoutSolution.status,200);
+  console.log('Passed: profile policy/custom sectors; required founder solution; date-free saving and historical-date preservation; optional investor interests.');
 } finally { sqlite.close(); }

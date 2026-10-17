@@ -18,9 +18,9 @@ export function getProfileCompletion(profile: Profile) {
     ? [
         { id: "identity", label: "Name and location", complete: identity, step: 0 },
         { id: "summary", label: "One-line idea, sector and stage", complete: has(profile.tagline) && sectorComplete && !!profile.stage, step: 0 },
-        { id: "idea", label: "Problem and proposed solution", complete: has(profile.problem, 10) && has(profile.solution, 10), step: 1 },
+        { id: "idea", label: "Ideology and proposed solution", complete: has(profile.problem, 10) && has(profile.solution, 10), step: 1 },
         { id: "background", label: "Your experience and skills", complete: has(profile.experience, 10), step: 1 },
-        { id: "learning", label: "What you learned and when", complete: has(profile.validation, 10) && !!profile.evidenceDate, step: 1 },
+        { id: "learning", label: "What you have learned so far", complete: has(profile.validation, 10), step: 1 },
         { id: "uncertainty", label: "An assumption still to test", complete: has(profile.uncertainty, 10), step: 1 },
         { id: "milestone", label: "Your next step", complete: has(profile.nextMilestone, 10), step: 2 },
         { id: "budget", label: "Planning budget and assumptions", complete: profile.fundingIntentINR > 0 && has(profile.budget, 10), step: 2 },

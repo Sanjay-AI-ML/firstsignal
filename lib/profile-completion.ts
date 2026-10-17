@@ -13,10 +13,11 @@ const has = (value: string | undefined, minimum = 2) =>
 /** A writing checklist, never a measure of investability or verified claims. */
 export function getProfileCompletion(profile: Profile) {
   const identity = has(profile.name) && has(profile.founder) && has(profile.city);
+  const sectorComplete = !!profile.sector && (!(profile.sector === "Other" || profile.sectors?.includes("Other")) || has(profile.customSector));
   const items: ProfileCompletionItem[] = profile.kind === "startup"
     ? [
         { id: "identity", label: "Name and location", complete: identity, step: 0 },
-        { id: "summary", label: "One-line idea, sector and stage", complete: has(profile.tagline) && !!profile.sector && !!profile.stage, step: 0 },
+        { id: "summary", label: "One-line idea, sector and stage", complete: has(profile.tagline) && sectorComplete && !!profile.stage, step: 0 },
         { id: "idea", label: "Problem and proposed solution", complete: has(profile.problem, 10) && has(profile.solution, 10), step: 1 },
         { id: "background", label: "Your experience and skills", complete: has(profile.experience, 10), step: 1 },
         { id: "learning", label: "What you learned and when", complete: has(profile.validation, 10) && !!profile.evidenceDate, step: 1 },
@@ -27,7 +28,7 @@ export function getProfileCompletion(profile: Profile) {
     : [
         { id: "identity", label: "Name and location", complete: identity, step: 0 },
         { id: "thesis", label: "Investment interests", complete: has(profile.tagline) && has(profile.solution, 10), step: 0 },
-        { id: "preferences", label: "Sector and stage interests", complete: !!(profile.sectors?.length || profile.sector) && !!(profile.stages?.length || profile.stage), step: 1 },
+        { id: "preferences", label: "Sector and stage interests", complete: sectorComplete && !!(profile.stages?.length || profile.stage), step: 1 },
         { id: "background", label: "Investing role and background", complete: has(profile.experience, 10), step: 1 },
         { id: "evidence", label: "Evidence sought from founders", complete: has(profile.requiredEvidence || profile.validation, 10), step: 1 },
         { id: "range", label: "Preferred investment range", complete: profile.checkRangeINR?.length === 2 && profile.checkRangeINR[0] > 0 && profile.checkRangeINR[0] <= profile.checkRangeINR[1], step: 2 },

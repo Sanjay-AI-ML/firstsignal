@@ -24,11 +24,13 @@ async function load(file, modules) {
   const context = {module:{exports:{}},exports:{},require:id=>{assert.ok(id in modules, `Unexpected dependency: ${id}`);return modules[id];},Response,Request,URL,crypto,console};
   vm.runInNewContext(code,context); return context.module.exports;
 }
+const sectorModule = await load('lib/sectors.ts', {});
 const data = await load('lib/data.ts', {
+  './sectors': sectorModule,
   './seed-startups.json': JSON.parse(await fs.readFile('lib/seed-startups.json','utf8')),
   './seed-investors.json': JSON.parse(await fs.readFile('lib/seed-investors.json','utf8'))
 });
-const validation = await load('lib/validation.ts', {zod:{z}, './data':data});
+const validation = await load('lib/validation.ts', {zod:{z}, './data':data, './sectors':sectorModule});
 const route = await load('app/api/workspace/route.ts', {
   '../../auth': {getAppUser: async()=>auth.getStore()}, '@/lib/notifications': {notify:async()=>{}},
   '@/lib/database': {database:()=>db}, '@/lib/data':data, '@/lib/validation':validation,
@@ -62,5 +64,14 @@ try {
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM profiles WHERE owner=?').get('same').n,1);
   for(const kind of ['startup','investor'])sqlite.prepare('INSERT INTO profiles(id,owner,kind,data,listed,updated) VALUES(?,?,?,?,?,?)').run(`legacy-${kind}`,'legacy',kind,JSON.stringify({...base,kind}),0,'2026-10-01');
   for(const kind of ['startup','investor']){const result=await save('legacy',{...base,kind,name:`Edited ${kind}`});assert.equal(result.status,200);assert.equal(result.body.myProfiles.length,2);assert.equal(result.body.myProfiles.find(p=>p.kind===kind).id,`legacy-${kind}`);}
-  console.log('Passed: auth and consent; second-role rejection in both directions; simultaneous different-role and same-role saves; stable IDs, ownership and progress; legacy profile preservation.');
+  const customFounder=await save('custom-founder',{...base,sector:'Other',customSector:'  Textile   Recycling  '});
+  assert.equal(customFounder.status,200);assert.equal(customFounder.body.myProfiles[0].customSector,'Textile Recycling');
+  const customId=customFounder.body.myProfiles[0].id;
+  const editedCustom=await save('custom-founder',{...base,sector:'Other',customSector:'Textile Recycling',name:'Edited custom founder'});
+  assert.equal(editedCustom.body.myProfiles[0].id,customId);assert.equal(editedCustom.body.myProfiles[0].customSector,'Textile Recycling');
+  const customInvestor=await save('custom-investor',{...base,kind:'investor',sector:'Healthcare & Life Sciences',sectors:['Healthcare & Life Sciences','Other'],customSector:'Pet Care'});
+  assert.equal(customInvestor.status,200);assert.deepEqual(customInvestor.body.myProfiles[0].sectors,['Healthcare & Life Sciences','Other']);assert.equal(customInvestor.body.myProfiles[0].customSector,'Pet Care');
+  assert.equal((await save('blank-custom',{...base,sector:'Other',customSector:' '})).status,400);
+  assert.equal((await save('long-custom',{...base,sector:'Other',customSector:'x'.repeat(81)})).status,400);
+  console.log('Passed: account/profile policy, ownership and legacy preservation; custom founder/investor sector persistence, edits and validation.');
 } finally { sqlite.close(); }

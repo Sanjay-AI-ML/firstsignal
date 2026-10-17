@@ -4,6 +4,8 @@ A founder–investor discovery platform for early startup ideas. Built with Reac
 
 ## Features
 
+- All startup industries, with broad sector choices and an Other field for a named custom sector or service. Custom sectors are saved, displayed and searchable; investors can add a custom interest alongside listed sectors. Existing SaaS categories retain their meaning.
+
 - Guided founder and investor profiles, completion checklists and private/public sharing controls.
 - Discovery, saved opportunities and explainable suggestions using stated sector, stage and check-size preferences.
 - Mutual-consent introductions, private messaging and a connections dashboard with private follow-up notes/dates.

@@ -1,12 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
+import { build } from 'esbuild';
 
-// Load the same TypeScript helper while resolving its runtime import for native Node.
-const source = await readFile(new URL('../lib/profile-suggestions.ts', import.meta.url), 'utf8');
-const javascript = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
-  .replace("'./profile-fit'", JSON.stringify(new URL('../lib/profile-fit.ts', import.meta.url).href));
-const { profileSuggestions } = await import(`data:text/javascript;base64,${Buffer.from(javascript).toString('base64')}`);
+const compiled = await build({entryPoints:['lib/profile-suggestions.ts'],bundle:true,write:false,platform:'node',format:'esm'});
+const { profileSuggestions } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`);
 let checks = 0;
 const check = (actual, expected) => { assert.deepEqual(actual, expected); checks += 1; };
 const founder = { id: 'mine', kind: 'startup', name: 'My company', sector: 'Manufacturing SaaS', stage: 'Pre-product', fundingIntentINR: 500000, mine: true };

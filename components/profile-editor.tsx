@@ -7,6 +7,7 @@ import { profileSchema } from "@/lib/validation";
 import { getProfileCompletion } from "@/lib/profile-completion";
 import BudgetInput from "./budget-input";
 import { RequiredMark, OptionalMark } from "./field-marker";
+import { legacySectors, profileSectorNames, sectorName } from "@/lib/sectors";
 import "./profile-editor.css";
 
 type ProfileEditorProps = {
@@ -24,7 +25,7 @@ type ProfileEditorProps = {
 
 type TextField = "name" | "founder" | "city" | "tagline" | "problem" | "solution" |
   "experience" | "validation" | "evidenceDate" | "uncertainty" | "nextMilestone" |
-  "budget" | "productStatus" | "revenueStatus" | "incorporationStatus" | "requiredEvidence";
+  "budget" | "productStatus" | "revenueStatus" | "incorporationStatus" | "requiredEvidence" | "customSector";
 type FieldIssue = { field: string; message: string };
 
 function RangeAmount({ id, value, onChange, invalid, description }: {
@@ -61,10 +62,13 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
     ? ["Start with a clear introduction.", "Help founders see whether your interests match.", "Set expectations before the first conversation.", "Choose what to share, then save."]
     : ["Start with a clear introduction.", "Explain what you have learned and what you still need to test.", "Make the next step easy to understand.", "Choose what to share, then save."];
   const groups = investor
-    ? [["name", "founder", "city", "tagline", "solution"], ["sector", "stage", "sectors", "stages", "experience", "validation", "requiredEvidence", "role"], ["fundingIntentINR", "checkRangeINR", "uncertainty", "budget", "nextMilestone"], []]
-    : [["name", "founder", "city", "tagline", "sector", "stage"], ["problem", "solution", "experience", "validation", "evidenceDate", "uncertainty"], ["nextMilestone", "fundingIntentINR", "budget", "productStatus", "revenueStatus", "incorporationStatus"], []];
+    ? [["name", "founder", "city", "tagline", "solution"], ["sector", "customSector", "stage", "sectors", "stages", "experience", "validation", "requiredEvidence", "role"], ["fundingIntentINR", "checkRangeINR", "uncertainty", "budget", "nextMilestone"], []]
+    : [["name", "founder", "city", "tagline", "sector", "customSector", "stage"], ["problem", "solution", "experience", "validation", "evidenceDate", "uncertainty"], ["nextMilestone", "fundingIntentINR", "budget", "productStatus", "revenueStatus", "incorporationStatus"], []];
   const completion = getProfileCompletion(form);
-  const selectedSectors = form.sectors?.length ? form.sectors : [form.sector];
+  const selectedSectors = form.sectors?.length ? form.sectors : form.sector ? [form.sector] : [];
+  const [legacyChoices] = useState(() => legacySectors.filter(value => value === form.sector || form.sectors?.includes(value)));
+  const sectorChoices = [...sectors.filter(value => value !== "Other"), ...legacyChoices, "Other"];
+  const needsCustomSector = investor ? selectedSectors.includes("Other") : form.sector === "Other";
   const selectedStages = form.stages?.length ? form.stages : [form.stage];
   const range = form.checkRangeINR ?? [0, 0];
   const hasRange = form.checkRangeINR?.length === 2 && range[0] > 0 && range[1] >= range[0];
@@ -83,7 +87,7 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
   };
   const allIssues = () => {
     const result = profileSchema.safeParse(form);
-    return result.success ? [] : result.error.issues.map(issue => ({ field: String(issue.path[0]), message: issue.message }));
+    return result.success ? [] : result.error.issues.map(issue => ({ field: investor && issue.path[0] === "sector" ? "sectors" : String(issue.path[0]), message: issue.message }));
   };
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -130,15 +134,17 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
   const preference = (name: "sectors" | "stages", label: string, values: string[], selected: string[]) => (
     <fieldset className="guided-preferences full" data-field={name}>
       <legend>{label} <RequiredMark /></legend>
-      <p className="guided-field-help">Choose all that fit. At least one stays selected.</p>
+      <p className="guided-field-help">{name === "sectors" ? "Choose the industries you consider. Select Other to name a sector or service." : "Choose all that fit. At least one stays selected."}</p>
       <div>{values.map(value => <label className="guided-choice" key={value}>
         <input type="checkbox" checked={selected.includes(value)} onChange={event => {
           const next = event.target.checked ? [...selected, value] : selected.filter(item => item !== value);
           if (!next.length) return;
-          setForm({ ...form, [name]: next, [name === "sectors" ? "sector" : "stage"]: next[0] });
+          setForm({ ...form, [name]: next, [name === "sectors" ? "sector" : "stage"]: next[0], ...(name === "sectors" && !next.includes("Other") ? { customSector: "" } : {}) });
+          setIssues(previous => previous.filter(issue => issue.field !== name && !(name === "sectors" && (issue.field === "sector" || (!next.includes("Other") && issue.field === "customSector")))));
         }} />
         <span>{value}</span>
       </label>)}</div>
+      {issues.filter(issue => issue.field === name || (name === "sectors" && issue.field === "sector")).map((issue,index) => <p key={index} className="guided-field-error">{issue.message}</p>)}
     </fieldset>
   );
 
@@ -155,15 +161,17 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
       {field("Your public name", "founder", { required: true, max: 80, placeholder: "The name people will see" })}
       {field("City", "city", { required: true, max: 60, placeholder: "For example: Bengaluru" })}
       {!investor ? <>
-        <div className="field" data-field="sector"><label htmlFor={`${prefix}-sector`}>Primary sector <RequiredMark /></label><select required id={`${prefix}-sector`} value={form.sector} onChange={event => setForm({ ...form, sector: event.target.value })}>{sectors.map(value => <option key={value}>{value}</option>)}</select></div>
+        <div className="field" data-field="sector"><label htmlFor={`${prefix}-sector`}>Primary sector <RequiredMark /></label><select required id={`${prefix}-sector`} value={form.sector} aria-invalid={issues.some(issue => issue.field === "sector") || undefined} aria-describedby={`${prefix}-sector-help`} onChange={event => { setForm({ ...form, sector: event.target.value, customSector: event.target.value === "Other" ? form.customSector ?? "" : "" }); setIssues(previous => previous.filter(issue => issue.field !== "sector" && issue.field !== "customSector")); }}><option value="" disabled>Choose a sector</option>{sectorChoices.map(value => <option key={value}>{value}</option>)}</select><p id={`${prefix}-sector-help`} className="guided-field-help">Any industry is welcome. Choose Other if yours is not listed.</p>{issues.filter(issue => issue.field === "sector").map((issue,index) => <p key={index} className="guided-field-error">{issue.message}</p>)}</div>
         <div className="field" data-field="stage"><label htmlFor={`${prefix}-stage`}>Current stage <RequiredMark /></label><select required id={`${prefix}-stage`} value={form.stage} onChange={event => setForm({ ...form, stage: event.target.value })}>{stages.map(value => <option key={value}>{value}</option>)}</select></div>
+        {needsCustomSector ? field("Your sector or service", "customSector", { required: true, max: 80, full: true, placeholder: "For example: pet care, textile recycling or water treatment", help: "Name the industry or service in 2–80 characters. It will appear on your profile." }) : null}
       </> : null}
-      {field(investor ? "Your investment focus in one sentence" : "One-line idea", "tagline", { required: true, max: 160, full: true, placeholder: investor ? "We back early software teams solving supply-chain problems." : "We help small manufacturers track orders without spreadsheets.", help: "Say who you help and what you focus on. Keep it specific." })}
+      {field(investor ? "Your investment focus in one sentence" : "One-line idea", "tagline", { required: true, max: 160, full: true, placeholder: investor ? "We back early teams improving access to affordable healthcare." : "We help small manufacturers track orders without spreadsheets.", help: "Say who you help and what you focus on. Keep it specific." })}
       {investor ? field("Your investment interests", "solution", { max: 1500, multiline: true, full: true, placeholder: "Describe the founders, problems and stages you are interested in.", help: "Explain your interests and any important exclusions." }) : null}
     </div> : null}
     {step === 1 ? <div className="form-grid">
       {investor ? <>
-        {preference("sectors", "Sectors you are interested in", sectors, selectedSectors)}
+        {preference("sectors", "Sectors you are interested in", sectorChoices, selectedSectors)}
+        {needsCustomSector ? field("Your other sector or service", "customSector", { required: true, max: 80, full: true, placeholder: "For example: pet care or textile recycling", help: "Name one additional industry or service in 2–80 characters. It will appear in your interests." }) : null}
         {preference("stages", "Stages you consider", stages, selectedStages)}
       </> : <>
         {field("What problem are you solving?", "problem", { required: true, multiline: true, full: true, max: 1500, placeholder: "Who faces the problem, how they manage it today, and why that is difficult.", help: "Use at least 10 characters. Describe a problem you have seen or heard about." })}
@@ -195,7 +203,7 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
       </>}
     </div> : null}
     {step === 3 ? <>
-      <section className="guided-review" aria-label="Profile summary"><div><span className="eyebrow">{investor ? "Investor" : "Founder"} · Self-reported</span><h4>{form.name}</h4><p>{form.tagline}</p></div><dl><div><dt>Public name</dt><dd>{form.founder}</dd></div><div><dt>Location</dt><dd>{form.city}</dd></div><div><dt>Interests</dt><dd>{investor ? `${selectedSectors.join(", ")} · ${selectedStages.join(", ")}` : `${form.sector} · ${form.stage}`}</dd></div><div><dt>{investor ? "Preferred investment range" : "Planning budget"}</dt><dd>{investor ? hasRange ? `${formatINR(range[0])}–${formatINR(range[1])}` : form.fundingIntentINR > 0 ? `${formatINR(form.fundingIntentINR)} (previous amount; no range added)` : "Not added yet" : form.fundingIntentINR > 0 ? formatINR(form.fundingIntentINR) : "Not added yet"}</dd></div></dl><button type="button" className="text-button" onClick={() => move(0)}>Edit introduction <ArrowLeft size={14} aria-hidden="true" /></button></section>
+      <section className="guided-review" aria-label="Profile summary"><div><span className="eyebrow">{investor ? "Investor" : "Founder"} · Self-reported</span><h4>{form.name}</h4><p>{form.tagline}</p></div><dl><div><dt>Public name</dt><dd>{form.founder}</dd></div><div><dt>Location</dt><dd>{form.city}</dd></div><div><dt>Interests</dt><dd>{investor ? `${profileSectorNames(form).join(", ")} · ${selectedStages.join(", ")}` : `${sectorName(form)} · ${form.stage}`}</dd></div><div><dt>{investor ? "Preferred investment range" : "Planning budget"}</dt><dd>{investor ? hasRange ? `${formatINR(range[0])}–${formatINR(range[1])}` : form.fundingIntentINR > 0 ? `${formatINR(form.fundingIntentINR)} (previous amount; no range added)` : "Not added yet" : form.fundingIntentINR > 0 ? formatINR(form.fundingIntentINR) : "Not added yet"}</dd></div></dl><button type="button" className="text-button" onClick={() => move(0)}>Edit introduction <ArrowLeft size={14} aria-hidden="true" /></button></section>
       <section className="guided-checklist" aria-label="Profile writing checklist"><div><strong>{completion.completed} of {completion.total} sections filled</strong><small>Add these details to help others understand your profile. You can save without them.</small></div>{completion.missing.length ? <ul>{completion.missing.map(item => <li key={item.id}><span>{item.label}</span><button type="button" onClick={() => move(item.step)}>Add detail <ArrowRight size={13} aria-hidden="true" /></button></li>)}</ul> : <p><Check size={15} aria-hidden="true" />All sections are filled in. FirstSignal has not verified these details.</p>}</section>
       <fieldset className="guided-sharing"><legend>Who can see this profile? <RequiredMark /></legend><label className={`guided-sharing-option ${!publish ? "selected" : ""}`}><input type="radio" required name={`${prefix}-sharing`} checked={!publish} onChange={() => { setPublish(false); setConsent(false); }} /><LockKeyhole size={18} aria-hidden="true" /><span><strong>Private draft</strong><small>Only your account can view it. You can make it public later.</small></span></label><label className={`guided-sharing-option ${publish ? "selected" : ""}`}><input type="radio" required name={`${prefix}-sharing`} checked={publish} onChange={() => { setPublish(true); setConsent(false); }} /><Eye size={18} aria-hidden="true" /><span><strong>Make profile public</strong><small>Anyone can view your profile. Share only information you want to make public.</small></span></label></fieldset>
       <label className="consent guided-consent" data-field="consent"><input type="checkbox" required aria-invalid={issues.some(item => item.field === "consent") || undefined} checked={consent} onChange={event => { setConsent(event.target.checked); setIssues(previous => previous.filter(item => item.field !== "consent")); }} /><span><RequiredMark /> I understand that {publish ? "anyone can view my profile" : "my draft is private to my account"}. I have permission to share this information and have not included confidential or sensitive personal details.</span></label>

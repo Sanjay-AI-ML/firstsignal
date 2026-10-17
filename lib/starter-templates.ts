@@ -24,7 +24,7 @@ Keep confidential information and personal customer details out of public summar
 - Working name:
 - Public founder name:
 - City:
-- Sector:
+- Sector (any industry; name your own if needed):
 - Stage: Idea-stage / Pre-product / Prototype / Early traction
 - One-line idea: We help [customer] do [task] by [approach].
 
@@ -146,7 +146,7 @@ These are discussion preferences, not a commitment to invest.
 We are interested in [sector/customer problem] at [stage].
 
 ## Who we want to meet
-- Sectors:
+- Sectors (any industries, including your own custom sector):
 - Stages: Idea-stage / Pre-product / Prototype / Early traction
 - Important interests or exclusions:
 

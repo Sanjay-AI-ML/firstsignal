@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { profileFit } from '../lib/profile-fit.ts';
+import { build } from 'esbuild';
+const compiled = await build({entryPoints:['lib/profile-fit.ts'],bundle:true,write:false,platform:'node',format:'esm'});
+const { profileFit } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`);
 const startup = { kind:'startup', sector:'Manufacturing SaaS', stage:'Pre-product', fundingIntentINR:500000 };
 const investor = { kind:'investor', sector:'Other', stage:'Idea-stage', sectors:['Manufacturing SaaS'], stages:['Idea-stage','Pre-product'], checkRangeINR:[500000,1000000], validation:'Customer interviews' };
 assert.deepEqual(profileFit(startup,investor).slice(0,3).map(s=>s.status),['aligned','aligned','aligned']);

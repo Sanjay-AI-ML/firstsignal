@@ -1,14 +1,18 @@
 # FirstSignal release status
 
-9 October 2026. The public Site is a working pilot with Clerk development authentication. It is not yet a fully activated production service.
+17 October 2026. The public Site is a working pilot with Clerk development authentication. It is not yet a fully activated production service.
 
 ## Implemented
+
+- One founder OR investor profile per account, enforced by an atomic server write and UI entry guards. Existing records and related progress remain intact; older accounts with both profiles retain editing access. Conflict responses refresh stale workspace state. Required fields use accessible stars; optional fields have keyboard/touch info buttons. Product and marketing copy uses clearer terms while retaining fictional, unverified and non-binding labels.
+
+17 October validation: TypeScript, production build and `scripts/verify-single-profile.mjs` passed. The isolated SQLite/route test covers unauthenticated writes, consent, second-role rejection in both directions, simultaneous saves, stable IDs, ownership, progress preservation and legacy accounts. Local browser checks covered founder/investor forms, required-field errors, private defaults, required consent, optional-help keyboard opening/Escape/focus return, existing-founder editing and 390px/320px layouts without horizontal overflow. No browser errors were observed. The temporary fixture was removed before the production build. These checks do not establish production OAuth or full accessibility conformance.
 
 - Marketing evidence brief with keyboard-accessible Learning/Open questions/Next test tabs, fictional claim provenance and explicit untested assumptions. Updated writing worksheets support experiment planning; no independent startup validation or evidence review is claimed.
 
 Evidence-brief validation: TypeScript and production build passed. Browser checks covered all three views, arrow/Home/End keyboard focus, expanded method references, template navigation, desktop and 390px/320px layouts without horizontal overflow. Updated founder/progress Markdown endpoints returned 200 with the new prompts. No marketing console errors were observed. This checks presentation and interaction, not business demand or startup claims.
 
-- Role-specific marketing entry carried through sign-in/setup, preservation of existing profiles, role switching and three ungated writing worksheets with preview/copy/download actions.
+- Role-specific marketing entry carried through sign-in/setup, preservation of existing profiles, role selection before the first save and three ungated writing worksheets with preview/copy/download actions.
 
 - Guided founder/investor onboarding, private drafts or public listings, consent and profile-completion guidance.
 - Discovery, saved profiles, explainable suggestions and stated profile-fit comparison; no funding probability or independent verification claim.

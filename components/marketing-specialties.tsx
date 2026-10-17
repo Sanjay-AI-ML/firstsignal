@@ -13,8 +13,8 @@ export default function MarketingSpecialties() {
       <article className="specialty-card specialty-evidence">
         <div className="specialty-card-top"><span>01 / SUBSTANCE</span><FileText size={24}/></div>
         <h3>More than an elevator pitch.</h3>
-        <p>Show the problem you understand, what you’ve learned, and the next milestone you want to reach.</p>
-        <div className="specialty-demo"><div className="specialty-demo-heading"><strong>Tracegrid</strong><span>SAMPLE PROFILE</span></div><div className="specialty-demo-line"><span>Customer learning</span><strong>16 interviews · 6 factories</strong></div><div className="specialty-demo-line"><span>Next milestone</span><strong>Test the prototype with 2 factories</strong></div><small>Illustrative evidence · Self-reported</small></div>
+        <p>Show the problem you understand, what you’ve learned, and the next step you want to reach.</p>
+        <div className="specialty-demo"><div className="specialty-demo-heading"><strong>Tracegrid</strong><span>SAMPLE PROFILE</span></div><div className="specialty-demo-line"><span>Customer learning</span><strong>16 interviews · 6 factories</strong></div><div className="specialty-demo-line"><span>Next step</span><strong>Test the prototype with 2 factories</strong></div><small>Illustrative evidence · Self-reported</small></div>
       </article>
       <article className="specialty-card specialty-fit">
         <div className="specialty-card-top"><span>02 / RELEVANCE</span><SlidersHorizontal size={24}/></div>

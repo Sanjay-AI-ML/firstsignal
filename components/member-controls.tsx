@@ -38,7 +38,7 @@ export function MemberControls({ profile, connection, onWrite, busy, onBlocked }
       <div className="field"><label htmlFor={`${fieldId}-details`}>What happened?</label><textarea id={`${fieldId}-details`} minLength={10} maxLength={1500} required rows={3} value={details} onChange={e => setDetails(e.target.value)} placeholder="Describe what you observed. Leave out passwords, identity documents and financial account details." /></div>
       <button type="submit" className="outline-button" disabled={busy}>Submit report</button>
     </form>
-    <div className="block-choice"><p>Blocking hides this member’s profiles from your signed-in discovery and stops contact in both directions. Public profiles remain visible when signed out.</p>{connection?.blocked ? <p className="subtle">Contact is already blocked. Manage your own blocks in My profiles.</p> : <button type="button" className="text-button" disabled={busy} onClick={() => void block()}>Block member</button>}</div>
+    <div className="block-choice"><p>Blocking hides this member’s profiles from your signed-in discovery and stops contact in both directions. Public profiles remain visible when signed out.</p>{connection?.blocked ? <p className="subtle">Contact is already blocked. Manage your own blocks in My profile.</p> : <button type="button" className="text-button" disabled={busy} onClick={() => void block()}>Block member</button>}</div>
     {feedback ? <p className="notice" role="status">{feedback}</p> : null}
     {error ? <p className="notice error-notice" role="alert">{error}</p> : null}
   </details>;

@@ -23,7 +23,7 @@ export default function MarketingEntry() {
     <div className="marketing-entry-panel" role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${role}`} tabIndex={0}>
       <p>{role === "founder" ? "Shape your idea, share what you’re learning and find investors with relevant interests." : "Set your interests, follow early projects and choose which founders to meet."}</p>
       <div className="marketing-entry-actions"><a className="marketing-primary" href={setupSignIn(role)}>{role === "founder" ? "Start your founder profile" : "Start your investor profile"}</a><a className="marketing-quiet-link" href={role === "founder" ? "/app#discover" : "#investors"}>{role === "founder" ? "Explore first" : "See how it works for investors"}</a></div>
-      <span className="marketing-entry-note">Your profile starts private. One account can have both roles.</span>
+      <span className="marketing-entry-note">Your profile starts private. Choose one role: founder or investor.</span>
     </div>
   </div>;
 }

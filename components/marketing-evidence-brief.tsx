@@ -36,10 +36,10 @@ export default function MarketingEvidenceBrief() {
       </div>
       <div className="evidence-panel" role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-tab-${active}`} tabIndex={0}>
         {active === 0 ? <>
-          <div className="evidence-panel-heading"><h3>An early interview signal</h3><span className="evidence-status">Founder reported</span></div>
+          <div className="evidence-panel-heading"><h3>What the interviews suggest</h3><span className="evidence-status">Founder reported</span></div>
           <div className="evidence-numbers"><div><strong>16</strong><span>customer interviews</span></div><div><strong>6</strong><span>factories represented</span></div></div>
           <div className="evidence-observation"><span>WHAT WAS REPORTED</span><p>Unresolved incidents lose a clear owner between shifts.</p></div>
-          <dl className="evidence-source"><div><dt>Activity date</dt><dd><time dateTime="2026-09-23">23 Sep 2026</time> · Example interview round</dd></div><div><dt>Source & limits</dt><dd>Illustrative founder summary. No interview records attached; selection method and frequency are unknown.</dd></div></dl>
+          <dl className="evidence-source"><div><dt>Activity date</dt><dd><time dateTime="2026-09-23">23 Sep 2026</time> · Example interview round</dd></div><div><dt>Source & limits</dt><dd>Illustrative founder summary. No interview records attached; we do not know how people were chosen or how often the problem occurs.</dd></div></dl>
         </> : null}
         {active === 1 ? <>
           <div className="evidence-panel-heading"><h3>What still needs an answer?</h3><span className="evidence-status">Open questions</span></div>
@@ -48,13 +48,13 @@ export default function MarketingEvidenceBrief() {
         </> : null}
         {active === 2 ? <>
           <div className="evidence-panel-heading"><h3>Make the next test measurable</h3><span className="evidence-status">Proposed · Not run</span></div>
-          <dl className="evidence-test"><div><dt>Assumption</dt><dd>A short unresolved-items list helps teams assign an owner before a shift ends.</dd></div><div><dt>Test & measure</dt><dd>With two consenting factory teams, try an offline prototype over five handovers per team. Record owner assignment and completion time.</dd></div><div className="evidence-test-target"><dt>Decision criterion</dt><dd>Each team records an owner in at least four of its five handovers.</dd></div></dl>
-          <p className="evidence-limit">Example criterion chosen before testing, not an industry benchmark. Participants are not confirmed; payment needs a separate test.</p>
+          <dl className="evidence-test"><div><dt>Assumption</dt><dd>A short unresolved-items list helps teams assign an owner before a shift ends.</dd></div><div><dt>Test & measure</dt><dd>With two consenting factory teams, try an offline prototype over five handovers per team. Record owner assignment and completion time.</dd></div><div className="evidence-test-target"><dt>Result needed to continue</dt><dd>Each team records an owner in at least four of its five handovers.</dd></div></dl>
+          <p className="evidence-limit">This example target was chosen before the test. It is not an industry standard. Participants are not confirmed; payment needs a separate test.</p>
         </> : null}
       </div>
       <div className="evidence-brief-actions"><a href="/app?profile=tracegrid#discover">Open sample profile</a><a href="#templates">Build your own brief</a></div>
       <p className="evidence-brief-disclosure">All company data above is fictional and unverified. This preview saves nothing.</p>
     </article>
-    <details className="evidence-method"><summary>Why show the evidence this way?</summary><p>Separate what people said, what they did and what remains uncertain. Define a test and its decision criterion before collecting results.</p><div><a href="https://www.strategyzer.com/library/validate-your-ideas-with-the-test-card" target="_blank" rel="noreferrer">Strategyzer · Designing a test</a><a href="https://www.strategyzer.com/library/ways-to-test-your-value-proposition-and-business-model" target="_blank" rel="noreferrer">Strategyzer · Customer evidence</a></div><small>Method references, not endorsements of FirstSignal or this fictional startup.</small></details>
+    <details className="evidence-method"><summary>Why show the evidence this way?</summary><p>Separate what people said, what they did and what remains uncertain. Decide what to test and what result you need before you start.</p><div><a href="https://www.strategyzer.com/library/validate-your-ideas-with-the-test-card" target="_blank" rel="noreferrer">Strategyzer · Designing a test</a><a href="https://www.strategyzer.com/library/ways-to-test-your-value-proposition-and-business-model" target="_blank" rel="noreferrer">Strategyzer · Customer evidence</a></div><small>Method references, not endorsements of FirstSignal or this fictional startup.</small></details>
   </div>;
 }

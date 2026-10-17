@@ -44,8 +44,14 @@ export async function POST(request:Request){
  try{
  const db=database(),a=parsed.data,now=new Date().toISOString(),owner=user.userId;
  if(a.action==='profile'){
-  const current=await db.prepare('SELECT id FROM profiles WHERE owner=? AND kind=?').bind(owner,a.profile.kind).first<{id:string}>();
-  await db.prepare('INSERT INTO profiles (id,owner,kind,data,listed,updated) VALUES (?,?,?,?,?,?) ON CONFLICT(owner,kind) DO UPDATE SET data=excluded.data,listed=excluded.listed,updated=excluded.updated').bind(current?.id??crypto.randomUUID(),owner,a.profile.kind,JSON.stringify(a.profile),a.listed?1:0,now).run();
+  // Check and write in one statement so simultaneous saves cannot add a second role.
+  // Existing profiles keep their IDs and can still be edited, including legacy accounts.
+  const result=await db.prepare(`INSERT INTO profiles (id,owner,kind,data,listed,updated)
+   SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM profiles WHERE owner=?)
+   OR EXISTS (SELECT 1 FROM profiles WHERE owner=? AND kind=?)
+   ON CONFLICT(owner,kind) DO UPDATE SET data=excluded.data,listed=excluded.listed,updated=excluded.updated`)
+   .bind(crypto.randomUUID(),owner,a.profile.kind,JSON.stringify(a.profile),a.listed?1:0,now,owner,owner,a.profile.kind).run();
+  if(!result.meta.changes)return json({error:'You already have a profile. Each account can have one founder or investor profile. Open My profile to edit yours.'},409);
  }
  if(a.action==='progress'||a.action==='removeProgress'){
   const own=await db.prepare("SELECT id FROM profiles WHERE id=? AND owner=? AND kind='startup'").bind(a.profileId,owner).first();

@@ -13,7 +13,7 @@ export const starterTemplates: StarterTemplate[] = [
     sections: [
       { title: "Start with the problem", prompt: "Who faces it, how do they manage it today, and what have you observed?" },
       { title: "Separate evidence from assumptions", prompt: "What did you test, with whom and when? Untested is a useful answer too." },
-      { title: "Make the next step concrete", prompt: "State an assumption, a test, a measurement and a decision criterion before testing." },
+      { title: "Make the next step concrete", prompt: "State an assumption, a test, a measurement and a result needed to continue before testing." },
     ],
     markdown: `# Founder brief
 
@@ -37,27 +37,27 @@ What will you build? Say what exists today and what is still proposed.
 ## Relevant background
 What skills, experience or customer access can your team bring?
 
-## Evidence and customer learning
+## What you have learned so far
 What did you test, with whom, and when?
 What did you observe? Distinguish interest from commitments or paying customers.
 It is fine to say the idea has not been tested.
 - Evidence date: YYYY-MM-DD
 - Method and participant selection:
-- Sample size and relevant denominator:
+- How many people took part, and how many gave each response:
 - Source or record reference, with sharing permission:
 - What the evidence cannot establish:
 
 ## What remains uncertain
 Which assumption matters most? What evidence would change your view?
 
-## Next milestone
+## Next step
 Describe an observable next step, its time frame and what you hope to learn.
 
 ## Next experiment
 - Assumption to test:
 - Method and consenting participants:
 - Measurement:
-- Decision criterion — choose before testing:
+- Result needed to continue — choose before testing:
 - Planned date:
 - Status: Proposed / In progress / Completed / Inconclusive
 An interview count alone does not establish willingness to pay or investment readiness.
@@ -84,7 +84,7 @@ A planning budget is an estimate, not an investment offer.
     sections: [
       { title: "Describe the test", prompt: "What question did you investigate? Include the date, method and scope." },
       { title: "Share the learning", prompt: "Include negative or inconclusive results. Say what the test cannot tell you." },
-      { title: "Choose the next experiment", prompt: "What assumption, measurement and decision criterion will guide your next test?" },
+      { title: "Choose the next experiment", prompt: "What assumption, measurement and result needed to continue will guide your next test?" },
     ],
     markdown: `# Founder progress update
 
@@ -97,7 +97,7 @@ YYYY-MM-DD — when the activity happened
 ## What we tested
 What question did you investigate? Describe the people, method and scope.
 - Participant selection and sample size:
-- Measurement and decision criterion set before testing:
+- Measurement and result needed to continue set before testing:
 - Source or record reference, with sharing permission:
 
 ## What we observed
@@ -115,7 +115,7 @@ What will you test next, by when, and what would change your decision?
 - Assumption:
 - Method:
 - Measurement:
-- Decision criterion — choose before testing:
+- Result needed to continue — choose before testing:
 
 ## Before sharing
 Remove confidential details. Check permission and profile visibility.
@@ -125,11 +125,11 @@ Updates on a listed FirstSignal profile are public with that profile.
   {
     id: "investor-preferences", role: "investor", title: "Investor preferences",
     description: "Help the right founders understand your interests.",
-    outcome: "Your thesis. Your expectations. Your availability.",
+    outcome: "Your interests. What you look for. When you can meet.",
     sections: [
       { title: "Define your focus", prompt: "Which problems, sectors and stages interest you? Include important exclusions." },
       { title: "Explain what helps you decide", prompt: "What evidence do you need before a conversation? Separate essentials from extras." },
-      { title: "Set useful expectations", prompt: "Describe indicative check ranges, current availability and questions to prepare." },
+      { title: "Set useful expectations", prompt: "Describe preferred investment amounts, current availability and questions to prepare." },
     ],
     markdown: `# Investor preference brief
 
@@ -142,7 +142,7 @@ These are discussion preferences, not a commitment to invest.
 - City:
 - Investing role and relevant background:
 
-## One-line thesis
+## Investment focus in one sentence
 We are interested in [sector/customer problem] at [stage].
 
 ## Who we want to meet
@@ -154,7 +154,7 @@ We are interested in [sector/customer problem] at [stage].
 What helps you decide whether to have a conversation?
 Distinguish essential requirements from useful extras.
 
-## Indicative check range — optional
+## Preferred investment range — optional
 - Minimum INR:
 - Maximum INR:
 Leave both blank if undecided. Explain any important conditions.

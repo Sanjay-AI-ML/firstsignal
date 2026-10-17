@@ -1,6 +1,6 @@
 # FirstSignal handoff
 
-Updated 9 October 2026. FirstSignal is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
+Updated 17 October 2026. FirstSignal is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
 
 Public URL: [FirstSignal](https://firstsignal-founder-network.divineridge.chatgpt.site). Reuse this existing Site for future updates. FirstSignal remains a working brand name, not a cleared trademark.
 
@@ -14,7 +14,7 @@ The selected design is the light lavender Stitch option C, with a generated logo
 
 The marketing hero includes an interactive fictional evidence brief with Learning, Open questions and Next test views. It separates reported interviews, planned prototype use and untested paid use; exposes source/date/limitations; and gives a proposed test with a measurement and decision criterion. The example is unverified and saves nothing. External Strategyzer references explain the method without implying endorsement. Founder/progress worksheets now include source context, participant selection, measurements and criteria set before testing. This is a marketing demonstration and writing aid, not a new member verification service or a structured experiment database.
 
-The marketing hero switches between founder and investor starting points. Role-specific entry links preserve the preference through existing Clerk sign-in/sign-up redirects. After a successful workspace load, a missing profile opens an empty private editor; an existing profile is offered for explicit resume. The preference is consumed from the URL and does not assign account permissions or overwrite saved information. Failed workspace loads retain it for retry, and members can choose another role.
+The marketing hero switches between founder and investor starting points. Role-specific links preserve the preference through Clerk sign-in/sign-up redirects. After loading the workspace, a member without a profile can open an empty private editor. Existing members resume their saved profile; a link for the other role returns them to My profile without creating or overwriting anything. The role is fixed on first save, with one founder OR investor profile per account. Failed workspace loads retain entry intent for retry.
 
 The public Templates section provides original founder brief, progress update and investor preference worksheets. Preview, copy and Markdown downloads work without an account. Guided-form links preserve template/role intent; they never import fictional observations or save automatically. The progress template opens a blank composer for an existing founder, or starts founder setup first. Progress still follows profile visibility and requires explicit consent.
 
@@ -22,7 +22,7 @@ Template downloads are served at `/templates/founder-brief`, `/templates/progres
 
 | Workflow | Current behaviour |
 | --- | --- |
-| Account and role | Clerk sign-in/sign-up/sign-out. New members choose founder or investor, or explore first. An account may save one profile of each type; signing up alone does not assign an investment role. |
+| Account and role | Clerk sign-in/sign-up/sign-out. New members choose founder or investor, or explore first. Each account can create one founder OR investor profile. An atomic server-side conditional upsert rejects a second role with HTTP 409, including simultaneous requests. Same-role saves edit the existing record. Legacy accounts that already have two profiles can still edit both; no data is deleted. |
 | Profiles | Guided founder and investor forms, private drafts or public listings, explicit sharing consent and a completion checklist. Founders describe their problem, evidence, uncertainties, next milestone and INR budget. Investors can state multiple sectors/stages, evidence requirements and an optional INR check range. Completion measures filled fields, not investment quality. |
 | Discovery and suggestions | Search, sector/stage/member filters, saved profiles, detailed evidence panels and explainable opposite-role suggestions. Reasons describe stated sector, stage and budget alignment; unknown information remains explicit. There is no funding probability, automatic verification or investment recommendation score. |
 | Introductions | Real members request an introduction with consent. Recipients accept or decline; senders can withdraw pending requests. Messaging becomes available after acceptance. Fictional profiles create private practice notes and contact nobody. |

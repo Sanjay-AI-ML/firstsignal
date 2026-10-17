@@ -9,7 +9,7 @@ export default function ProfileFit({ profile, candidates }: { profile: Profile; 
   const counterpart = choices.find(p => p.id === selected);
   const signals = counterpart ? profileFit(profile.kind === 'startup' ? profile : counterpart, profile.kind === 'investor' ? profile : counterpart) : [];
   return <section className="profile-fit" aria-labelledby="profile-fit-title">
-    <h3 id="profile-fit-title">Check profile fit</h3>
+    <h3 id="profile-fit-title">Compare profiles</h3>
     <p>Compare stated interests before starting a conversation.</p>
     <label htmlFor="fit-counterpart">{profile.kind === 'startup' ? 'Compare with an investor' : 'Compare with a startup'}</label>
     <select id="fit-counterpart" value={selected} onChange={e => setSelected(e.target.value)}>
@@ -19,8 +19,8 @@ export default function ProfileFit({ profile, candidates }: { profile: Profile; 
     {!choices.length ? <p>No profiles are available to compare yet.</p> : null}
     {counterpart ? <div aria-live="polite">
       {profile.demo || counterpart.demo ? <p className="fit-sample">Illustrative comparison: includes a fictional sample profile.</p> : null}
-      <ul>{signals.map(s => <li key={s.label}><div><strong>{s.label}</strong><span className={`fit-status ${s.status}`}>{s.status === 'aligned' ? 'Aligned' : s.status === 'different' ? 'Different' : 'Confirm together'}</span></div><p>{s.explanation}</p></li>)}</ul>
-      <p className="fit-caption">Based on self-reported profile information. Alignment is not an endorsement or a prediction of funding.</p>
+      <ul>{signals.map(s => <li key={s.label}><div><strong>{s.label}</strong><span className={`fit-status ${s.status}`}>{s.status === 'aligned' ? 'Matches' : s.status === 'different' ? 'Different' : 'Ask about this'}</span></div><p>{s.explanation}</p></li>)}</ul>
+      <p className="fit-caption">Based on self-reported profile information. A match does not mean FirstSignal recommends an investment or that funding is likely.</p>
     </div> : <p className="fit-caption">You can compare listed profiles and your own private drafts. No information is sent to the other person.</p>}
   </section>;
 }

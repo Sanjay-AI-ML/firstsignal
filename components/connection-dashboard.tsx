@@ -23,7 +23,7 @@ function nextStep(connection: Connection) {
   if (connection.status === 'pending') return connection.direction === 'incoming' ? 'Review the request and choose whether to connect.' : 'Waiting for the other member to accept your request.';
   if (connection.status === 'draft') return 'Saved only in your account. No one has been contacted.';
   if (connection.status !== 'accepted') return 'This request is closed.';
-  if (connection.proposal?.status === 'open') return connection.proposal.mine ? 'Your indicative proposal is awaiting a response.' : 'Review their indicative proposal, then reply or counteroffer.';
+  if (connection.proposal?.status === 'open') return connection.proposal.mine ? 'Waiting for a response to your proposal.' : 'Review their proposal, then reply or suggest different terms.';
   const latest = lastMessage(connection);
   return latest ? latest.mine ? 'You sent the latest message. Follow up when it is useful.' : 'The latest message is from the other member. Continue the conversation.' : 'Start with a message or discuss a private proposal.';
 }
@@ -40,7 +40,7 @@ export default function ConnectionDashboard({ requests, busy, onOpen, onRespond,
   return <section className="connection-dashboard" aria-labelledby={sectionId}>
     <div className="connection-overview"><div><p className="eyebrow">Keep things moving</p><h2 id={sectionId}>Your conversations, in one place.</h2><p>Review requests, pick up a conversation and keep track of private proposals.</p></div><div className="connection-stats"><div><strong>{requests.filter(connection => !connection.blocked && connection.status === 'pending' && connection.direction === 'incoming').length}</strong><span>Requests to review</span></div><div><strong>{count('connected')}</strong><span>Connected</span></div><div><strong>{requests.filter(connection => !connection.blocked && connection.status === 'accepted' && connection.proposal?.status === 'open' && !connection.proposal.mine).length}</strong><span>Proposals to review</span></div></div></div>
     <div className="connection-filters" role="group" aria-label="Filter connections">{filters.map(({ value, label }) => <button key={value} type="button" aria-pressed={filter === value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}<span>{count(value)}</span></button>)}</div>
-    {filter === 'attention' ? <p className="connection-filter-note">Includes incoming requests, their open proposals, their latest messages and your follow-up dates due today or earlier. These are next-step prompts, not unread counts.</p> : null}
+    {filter === 'attention' ? <p className="connection-filter-note">Includes incoming requests, their open proposals, their latest messages and your follow-up dates due today or earlier. This list includes follow-ups as well as messages. It is not an unread-message count.</p> : null}
     <div className="connection-results" aria-live="polite"><p className="subtle">{visible.length} {visible.length === 1 ? 'connection' : 'connections'}{filter !== 'all' ? ` · ${filters.find(item => item.value === filter)?.label}` : ''}</p></div>
     {visible.length ? <div className="connection-list">{visible.map(connection => {
       const name = connection.direction === 'incoming' ? connection.senderName : connection.targetName;

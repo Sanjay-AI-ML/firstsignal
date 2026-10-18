@@ -234,6 +234,20 @@
 @media(max-width:760px){.discovery-preview-filters button{min-height:44px}.discovery-compare-toggle{width:44px;min-height:44px}.discovery-preview-footer a{min-height:44px}.discovery-preview-panel{min-height:330px}}
 @media(max-width:480px){.discovery-comparison-grid:has(article:nth-child(3)){grid-template-columns:1fr}.discovery-comparison-grid:has(article:nth-child(3)) article+article{border-left:0;border-top:1px solid var(--line)}.discovery-comparison-grid:has(article:nth-child(3)) dl{grid-template-columns:1fr 1fr;gap:12px}.discovery-comparison-grid:has(article:nth-child(3)) dl>div:last-child{grid-column:1/-1}.discovery-preview-chrome>div{font-size:.75rem}.discovery-sample-label{font-size:.625rem}.discovery-preview-feedback{font-size:.6875rem}.discovery-preview-footer{font-size:.6875rem;align-items:start}.discovery-preview-footer>p{max-width:110px}.discovery-preview-footer a{font-size:.6875rem}}
 
+/* Original editorial artwork stays complete at every viewport width. */
+.marketing-editorial{padding-top:8px;padding-bottom:64px}
+.marketing-editorial-heading{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:28px}
+.marketing-editorial-heading h2{margin-top:14px}
+.marketing-editorial-heading>p{max-width:39ch;justify-self:end;font-size:1rem;line-height:1.85;color:var(--fi-text-secondary)}
+.marketing-editorial-art{margin:0;overflow:hidden;border:1px solid var(--fi-border);border-radius:var(--fi-radius-card);background:#f8f1e8}
+.marketing-editorial-art>img{display:block;width:100%;height:auto;aspect-ratio:1672/941}
+.marketing-editorial-art>figcaption{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:17px 22px;background:var(--fi-surface);font-size:.75rem;line-height:1.7;color:var(--fi-text-muted)}
+.marketing-editorial-art>figcaption>span:first-child{font-weight:650;color:var(--fi-text-secondary)}
+.marketing-conversation-art>img{height:auto;aspect-ratio:1672/941;object-fit:contain}
+.marketing-audience-visual:hover .marketing-conversation-art>img{transform:none}
+.marketing-conversation-art>img{transition:none}
+@media(max-width:760px){.marketing-editorial{padding-top:0;padding-bottom:46px}.marketing-editorial-heading{grid-template-columns:1fr;gap:17px;margin-bottom:22px}.marketing-editorial-heading h2{margin-top:13px}.marketing-editorial-heading>p{justify-self:start;max-width:44ch;font-size:.9375rem}.marketing-editorial-art>figcaption{padding:13px 15px;align-items:start;flex-direction:column;gap:3px}}
+
 /* An original journey diagram: the line explains sequence; selection explains consent. */
 .connection-story-band{background:var(--fi-background);border-block:1px solid var(--fi-border)}
 .connection-story{display:grid;grid-template-columns:260px minmax(0,1fr);gap:54px;align-items:center;padding-block:63px 66px}

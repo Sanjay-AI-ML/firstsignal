@@ -22,7 +22,7 @@ const questions = [
   { q: "What happens after an introduction?", a: "The recipient accepts or declines. Acceptance opens private messaging and non-binding proposals. Each participant can also keep a private next-step note." },
   { q: "Can I follow a startup before connecting?", a: "Yes. Save a listed startup to revisit its profile and recent progress updates in your shortlist. Saving does not contact the founder or send progress emails." },
   { q: "Does FindIn guarantee funding or verify startup claims?", a: "No. Member claims are self-reported. FindIn supports discovery and discussion; investment decisions, due diligence and formal agreements happen separately." },
-  { q: "Are the examples on this page real?", a: "The product examples are fictional and labelled. The walkthrough changes only this page; it saves no records and contacts nobody. Stock photographs do not depict FindIn members or endorsements." },
+  { q: "Are the examples on this page real?", a: "The product examples are fictional and labelled. The walkthrough changes only this page; it saves no records and contacts nobody. The illustrations are AI-generated concepts. Illustrations and stock photographs do not depict FindIn members or endorsements." },
   { q: "Can I use the templates without signing up?", a: "Yes. Preview, copy and download all three worksheets without an account. The guided profile form needs sign-in and starts with your own information. A template never fills your profile with fictional evidence." },
 ];
 
@@ -45,6 +45,16 @@ export default function Home() {
         </div>
         <div className="marketing-hero-product"><MarketingDiscoveryPreview /><p className="marketing-hero-product-caption"><span>Explore first. Get the context. Choose your next step.</span><a href="#how-it-works">Take the tour<ArrowDown size={15} aria-hidden="true" /></a></p></div>
       </section>
+      <section className="marketing-editorial marketing-section" aria-labelledby="ideas-everywhere-title">
+        <div className="marketing-editorial-heading">
+          <div><span className="marketing-kicker">ROOM FOR YOUR KIND OF IDEA</span><h2 id="ideas-everywhere-title">Good ideas don’t fit<br /><em>one category.</em></h2></div>
+          <p>Food, healthcare, hardware, education, software and services. Bring the idea you want to explore.</p>
+        </div>
+        <figure className="marketing-editorial-art">
+          <img src="/images/findin-first-workshop-1080.webp" srcSet="/images/findin-first-workshop-640.webp 640w, /images/findin-first-workshop-1080.webp 1080w, /images/findin-first-workshop-1672.webp 1672w" sizes="(max-width: 380px) calc(100vw - 40px), (max-width: 760px) calc(100vw - 48px), (max-width: 1100px) calc(100vw - 56px), (max-width: 1280px) calc(100vw - 72px), 1208px" width="1672" height="941" loading="lazy" decoding="async" alt="Concept illustration of founders exploring food, product design and clean energy in connected workshops" />
+          <figcaption><span>Every idea starts somewhere.</span><span>AI-generated concept illustration</span></figcaption>
+        </figure>
+      </section>
       <MarketingConnectionMap />
 
       <MarketingSpecialties />
@@ -66,7 +76,7 @@ export default function Home() {
             <ul className="marketing-feature-list"><li><SlidersHorizontal size={20} aria-hidden="true" /><div><strong>A closer look, side by side</strong><span>Compare up to three profiles. Filter by stage and sector, then share the search.</span></div></li><li><Bookmark size={20} aria-hidden="true" /><div><strong>Follow before you connect</strong><span>Save startups and revisit their progress while you build your understanding.</span></div></li><li><MessageCircle size={20} aria-hidden="true" /><div><strong>Keep the conversation together</strong><span>Review requests, private messages and proposal history in one connections dashboard.</span></div></li></ul>
             <div className="marketing-actions"><a className="marketing-primary" href="/app#discover">Explore founder profiles</a><a className="marketing-secondary" href={investorEntry}>Create an investor profile</a></div><p className="marketing-audience-note">Your investor form opens after sign-in. Keep it private while you write.</p>
           </div>
-          <div className="marketing-audience-visual marketing-reveal"><figure className="marketing-audience-art"><img src="/images/project-discussion-photo.webp" width="1400" height="788" loading="lazy" decoding="async" alt="Two colleagues discussing a project together at a laptop" /><figcaption className="marketing-photo-credit">Stock photo · <a href="https://unsplash.com/photos/two-colleagues-collaborating-on-a-project-at-a-laptop-tRvuRPE8cr4" target="_blank" rel="noreferrer">Vitaly Gariev / Unsplash</a></figcaption></figure>
+          <div className="marketing-audience-visual marketing-reveal"><figure className="marketing-audience-art marketing-conversation-art"><img src="/images/findin-first-conversation-1080.webp" srcSet="/images/findin-first-conversation-640.webp 640w, /images/findin-first-conversation-1080.webp 1080w, /images/findin-first-conversation-1672.webp 1672w" sizes="(max-width: 760px) calc(100vw - 48px), (max-width: 1100px) 45vw, 570px" width="1672" height="941" loading="lazy" decoding="async" alt="Concept illustration of a founder and two investors discussing an early clean-energy prototype and project notes" /><figcaption className="marketing-photo-credit">AI-generated concept illustration · An early conversation</figcaption></figure>
             <div className="marketing-fit-note"><span className="marketing-example-label">FICTIONAL FIT COMPARISON</span><h3>Clear reasons to explore.</h3><div><span>Manufacturing SaaS</span><strong><Check size={15} aria-hidden="true" />Sector matches</strong></div><div><span>Pre-product</span><strong><Check size={15} aria-hidden="true" />Stage matches</strong></div><p>Availability and evidence quality? Ask about this.</p></div>
           </div>
         </div>

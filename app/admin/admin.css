@@ -91,6 +91,86 @@
   align-items: center;
   gap: 20px;
 }
+.admin-signout .signin-read {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 74px;
+  padding: 10px 12px;
+  margin: 0;
+  border: 1px solid var(--fi-border-strong);
+  border-radius: var(--fi-radius-control);
+  color: var(--fi-text-secondary);
+  background: var(--fi-surface);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.admin-signout p {
+  position: absolute;
+  right: 20px;
+  top: 65px;
+  max-width: 260px;
+  padding: 10px 14px;
+  border: 1px solid var(--fi-error);
+  background: var(--fi-error-surface);
+  color: var(--fi-error);
+  border-radius: var(--fi-radius-control);
+  font-size: 0.75rem;
+  z-index: 10;
+}
+.admin-task-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 28px;
+}
+.admin-task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 96px;
+  padding: 16px;
+  text-align: left;
+  border: 1px solid var(--fi-border);
+  border-radius: var(--fi-radius-control);
+  background: var(--fi-surface);
+  color: var(--fi-text);
+  cursor: pointer;
+}
+.admin-task:hover {
+  background: var(--fi-surface-muted);
+  border-color: var(--fi-border-strong);
+}
+.admin-task > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--fi-primary);
+  flex-shrink: 0;
+}
+.admin-task > svg:last-child {
+  margin-left: auto;
+  width: 15px;
+}
+.admin-task > span {
+  min-width: 0;
+}
+.admin-task strong,
+.admin-task small {
+  display: block;
+}
+.admin-task strong {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  font-weight: 700;
+}
+.admin-task small {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--fi-text-muted);
+  margin-top: 3px;
+}
 .admin-back {
   display: inline-flex;
   align-items: center;
@@ -892,6 +972,43 @@
   margin: 18px 0 6px;
   font-weight: 750;
 }
+.admin-review-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-review-back {
+  margin-bottom: 24px;
+}
+.admin-detail-section .admin-review-name {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  margin-top: 17px;
+  overflow-wrap: anywhere;
+}
+.admin-public-copy + .admin-public-copy {
+  margin-top: 22px;
+}
+.admin-progress-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.admin-progress-list li {
+  padding: 0 0 20px 17px;
+  border-left: 2px solid var(--fi-border);
+  overflow-wrap: anywhere;
+}
+.admin-progress-list li:last-child {
+  padding-bottom: 0;
+}
+.admin-progress-list time {
+  font-size: 0.75rem;
+  color: var(--fi-text-muted);
+}
+.admin-progress-list h4 {
+  margin-top: 6px;
+}
 .admin-detail-section p {
   margin: 0;
   color: var(--fi-text-secondary);
@@ -1068,6 +1185,12 @@
   }
 }
 @media (max-width: 1100px) {
+  .admin-task-strip {
+    grid-template-columns: 1fr;
+  }
+  .admin-task {
+    min-height: 76px;
+  }
   .admin-body {
     grid-template-columns: 190px minmax(0, 1fr);
   }
@@ -1105,7 +1228,7 @@
     display: none;
   }
   .admin-topbar-right {
-    gap: 14px;
+    gap: 10px;
   }
   .admin-back {
     font-size: 0.75rem;
@@ -1287,6 +1410,18 @@
   }
   .admin-access-card {
     padding: 30px;
+  }
+}
+@media (max-width: 480px) {
+  .admin-topbar {
+    gap: 10px;
+  }
+  .admin-identity {
+    display: none;
+  }
+  .admin-signout .signin-read {
+    font-size: 0.75rem;
+    padding: 9px;
   }
 }
 @media (max-width: 380px) {

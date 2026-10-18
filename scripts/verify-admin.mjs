@@ -47,7 +47,7 @@ async function post(user, payload, headers = {}, raw) {
   const response = await auth.run(user, () => route.POST(request)); return { status: response.status, body: await response.json() };
 }
 async function state(user, id = '') { const response = await auth.run(user, () => workspace.GET(new Request(`${origin}/api/workspace${id ? `?profile=${id}` : ''}`))); equal(response.status, 200); return response.json(); }
-const profile = { ...data.seedProfiles[0], demo: false, name: 'Public fixture', founder: 'Founder', solution: 'A working proposed solution for local verification.', kind: 'startup' };
+const profile = { ...data.seedProfiles[0], demo: false, name: 'Public fixture', founder: 'Founder', problem: 'A public early idea requiring a careful moderation review.', solution: 'A working proposed solution for local verification.', validation: 'Public customer learning without any promise of funding.', nextMilestone: 'Test a small prototype with consenting participants.', progress: [{ id: 'progress-one', date: '2026-10-17', title: 'Prototype walkthrough', body: 'One early observation from the public project update.', created: '2026-10-17T10:00:00Z' }], email: 'MEMBER_EMAIL_CANARY', privateNotes: 'UNEXPECTED_PRIVATE_FIELD_CANARY', kind: 'startup' };
 function addProfile(id, account, listed, name = id) { sqlite.prepare('INSERT INTO profiles (id,owner,kind,data,listed,updated) VALUES (?,?,?,?,?,?)').run(id, account, 'startup', JSON.stringify({ ...profile, id, name }), listed, '2026-10-18'); }
 try {
   equal(access.isAdminAccount(owner), true);
@@ -62,7 +62,9 @@ try {
   env.FINDIN_ADMIN_USER_ID = 'user_Owner123';
   const before = dbCalls;
   equal((await get(null)).status, 401);
+  equal((await get(null, '?view=profile&profileId=public-one')).status, 401);
   equal((await get(member)).status, 403);
+  equal((await get(member, '?view=profile&profileId=public-one')).status, 403);
   equal((await post(member, {})).status, 403);
   equal(dbCalls, before, 'Denied requests must not read the database');
   equal((await post(owner, {}, { origin: 'https://attacker.test' })).status, 403);
@@ -72,10 +74,16 @@ try {
   equal((await post(owner, {}, {}, 'x'.repeat(8001))).status, 413);
   equal((await get(owner, '?view=messages')).status, 400);
   equal((await get(owner, '?view=profiles&page=-1')).status, 400);
+  equal((await get(owner, '?view=profiles&kind=admin')).status, 400);
+  equal((await get(owner, '?view=profiles&visibility=private')).status, 400);
+  equal((await get(owner, '?view=profile')).status, 400);
   equal((await get(owner, '?view=reports&q=' + 'x'.repeat(101))).status, 400);
   addProfile('public-one', member.userId, 1, 'Public Fixture');
   addProfile('private-one', 'clerk:user_Private', 0, 'PRIVATE_DRAFT_CANARY');
   addProfile('public-two', 'clerk:user_Second', 1, 'Other Public');
+  const progress = profile.progress[0];
+  sqlite.prepare('INSERT INTO progress_updates (id,profile_id,date,title,body,created) VALUES (?,?,?,?,?,?)').run(progress.id, 'public-one', progress.date, progress.title, progress.body, progress.created);
+  sqlite.prepare('INSERT INTO progress_updates (id,profile_id,date,title,body,created) VALUES (?,?,?,?,?,?)').run('private-progress', 'private-one', '2026-10-17', 'PRIVATE_PROGRESS_CANARY', 'PRIVATE_PROGRESS_BODY_CANARY', '2026-10-17T10:00:00Z');
   sqlite.prepare("INSERT INTO introductions (id,sender,recipient,profile_id,target_name,sender_name,message,status,created,updated) VALUES ('intro',?,?,?,'Public Fixture','Other','PRIVATE_REQUEST_CANARY','accepted','2026-10-18','2026-10-18')").run(owner.userId, member.userId, 'public-one');
   sqlite.prepare("INSERT INTO messages (id,introduction_id,sender,sender_name,body,created) VALUES ('msg','intro',?,'Other','PRIVATE_MESSAGE_CANARY','2026-10-18')").run(member.userId);
   sqlite.prepare("INSERT INTO connection_next_steps (owner,introduction_id,note,date,updated) VALUES (?,'intro','PRIVATE_NOTE_CANARY','','2026-10-18')").run(member.userId);
@@ -86,6 +94,18 @@ try {
   equal(overview.body.reports.open, 2); equal(overview.body.configuration.clerkMode, 'development');
   assert.match(overview.headers.get('cache-control'), /no-store/); checks++;
   const listed = await get(owner, '?view=profiles'); equal(listed.body.items.length, 2);
+  equal((await get(owner, '?view=profiles&kind=startup&visibility=visible')).body.total, 2);
+  equal((await get(owner, '?view=profiles&kind=investor')).body.total, 0);
+  equal((await get(owner, '?view=profiles&visibility=removed')).body.total, 0);
+  const detail = await get(owner, '?view=profile&profileId=public-one');
+  equal(detail.status, 200); equal(detail.body.id, 'public-one'); equal(detail.body.redacted, false);
+  equal(detail.body.ideology, profile.problem); equal(detail.body.proposedSolution, profile.solution);
+  equal(detail.body.learning, profile.validation); equal(detail.body.nextExperiment, profile.nextMilestone);
+  equal(detail.body.progress[0].body, profile.progress[0].body);
+  for (const canary of [member.userId, 'MEMBER_EMAIL_CANARY', 'UNEXPECTED_PRIVATE_FIELD_CANARY']) equal(JSON.stringify(detail.body).includes(canary), false, canary);
+  assert.match(detail.headers.get('cache-control'), /no-store/); checks++;
+  equal((await get(owner, '?view=profile&profileId=private-one')).status, 404);
+  equal((await get(owner, '?view=profile&profileId=does-not-exist')).status, 404);
   const reports = await get(owner, '?view=reports'); equal(reports.body.items.find(r => r.id === 'report-private').target, null);
   sqlite.prepare("INSERT INTO member_reports (id,owner,target_owner,profile_id,reason,details,status,created) VALUES ('report-connection',?,?,?,'Other',?,'submitted','2026-10-18')").run(owner.userId, member.userId, 'connection:intro', 'x'.repeat(1490) + 'TAIL_PROOF');
   const connectionReports = await get(owner, '?view=reports');
@@ -93,6 +113,8 @@ try {
   equal(connectionReports.body.items.find(r => r.id === 'report-connection').details.endsWith('TAIL_PROOF'), true);
   sqlite.prepare('INSERT INTO profiles (id,owner,kind,data,listed,updated) VALUES (?,?,?,?,?,?)').run('legacy-investor', member.userId, 'investor', JSON.stringify({ ...profile, kind: 'investor', name: 'Listed legacy investor' }), 1, '2026-10-19');
   const legacyReports = await get(owner, '?view=reports');
+  const investorRows = await get(owner, '?view=profiles&kind=investor&visibility=visible');
+  equal(investorRows.body.total, 1); equal(investorRows.body.items[0].id, 'legacy-investor');
   equal(legacyReports.body.items.filter(r => r.id === 'report-connection').length, 1);
   equal(legacyReports.body.items.find(r => r.id === 'report-connection').target.id, 'legacy-investor');
   sqlite.prepare('DELETE FROM profiles WHERE id=?').run('legacy-investor');
@@ -102,6 +124,11 @@ try {
   const hide = { action: 'moderateProfile', profileId: 'public-one', hidden: true, reason: 'Reviewing an unresolved listing report.', expectedVersion: 0 };
   equal((await post(owner, { ...hide, role: 'admin' })).status, 400);
   equal((await post(owner, hide)).status, 200);
+  const removed = await get(owner, '?view=profiles&kind=startup&visibility=removed');
+  equal(removed.body.total, 1); equal(removed.body.items[0].id, 'public-one');
+  equal((await get(owner, '?view=profiles&visibility=visible')).body.total, 1);
+  const removedDetail = await get(owner, '?view=profile&profileId=public-one');
+  equal(removedDetail.status, 200); equal(removedDetail.body.hidden, true); equal(removedDetail.body.ideology, profile.problem);
   equal(sqlite.prepare('SELECT hidden FROM profile_moderation WHERE profile_id=?').get('public-one').hidden, 1);
   equal(sqlite.prepare('SELECT COUNT(*) n FROM admin_audit').get().n, 1);
   equal((await post(owner, hide)).status, 409);
@@ -140,6 +167,11 @@ try {
   const restricted = restrictedRows.body.items.find(p => p.id === 'public-one');
   equal(restricted.ownerListed, false); equal(restricted.hidden, true);
   equal(restricted.name, 'Private profile with a restriction');
+  const privateDetail = await get(owner, '?view=profile&profileId=public-one');
+  equal(privateDetail.status, 200); equal(privateDetail.body.redacted, true);
+  for (const key of ['ideology', 'proposedSolution', 'learning', 'nextExperiment']) equal(privateDetail.body[key], '');
+  equal(privateDetail.body.progress.length, 0);
+  for (const canary of ['PRIVATE_MODERATED_CANARY', 'PRIVATE_TAGLINE_CANARY', profile.problem, profile.solution, 'MEMBER_EMAIL_CANARY', 'UNEXPECTED_PRIVATE_FIELD_CANARY']) equal(JSON.stringify(privateDetail.body).includes(canary), false, canary);
   equal(JSON.stringify(restrictedRows.body).includes('PRIVATE_MODERATED_CANARY'), false);
   equal(JSON.stringify(restrictedRows.body).includes('PRIVATE_TAGLINE_CANARY'), false);
   equal((await get(owner, '?view=profiles&q=PRIVATE_MODERATED_CANARY')).body.total, 0, 'Search cannot infer a private name');
@@ -147,6 +179,7 @@ try {
   equal((await post(owner, { ...hide, hidden: false, expectedVersion: 5 })).status, 200);
   equal(sqlite.prepare('SELECT listed FROM profiles WHERE id=?').get('public-one').listed, 0);
   equal((await state(null, 'public-one')).profiles.some(p => p.id === 'public-one'), false);
+  equal((await get(owner, '?view=profile&profileId=public-one')).status, 404, 'Restored private draft is no longer an operator detail target');
   for (let i = 0; i < 30; i++) addProfile(`pagination-${i}`, `clerk:user_Page${i}`, 1, `Search row ${i}`);
   const page1 = await get(owner, '?view=profiles&q=Search'); const page2 = await get(owner, '?view=profiles&q=Search&page=2');
   equal(page1.body.items.length, 25); equal(page2.body.items.length, 5); equal(page1.body.total, 30);
@@ -157,5 +190,24 @@ try {
   equal(eventSearch.body.total, 3);
   equal((await get(owner, '?view=audit&q=absolutely-no-event')).body.total, 0);
   equal((await get(owner, '?view=profiles&q=%27%20OR%201%3D1--')).body.total, 0, 'Search remains parameterized');
-  console.log(`Passed ${checks} owner portal checks: fail-closed identity, authorization-before-query, origin/body/schema bounds, private-data exclusion, pagination, report review, hidden listing visibility, stale writes and atomic audit rollback.`);
+  addProfile('bounded-detail', 'clerk:user_Bounds', 1, 'Bounded detail');
+  sqlite.prepare('UPDATE profiles SET data=? WHERE id=?').run(JSON.stringify({ ...profile, problem: 'p'.repeat(10000), solution: 's'.repeat(10000), validation: 'v'.repeat(10000), nextMilestone: 'm'.repeat(10000) }), 'bounded-detail');
+  for (let i=0;i<26;i++) sqlite.prepare('INSERT INTO progress_updates (id,profile_id,date,title,body,created) VALUES (?,?,?,?,?,?)').run(`bounded-progress-${i}`, 'bounded-detail', `2026-10-${String(i+1).padStart(2,'0')}`, 't'.repeat(200), 'b'.repeat(4000), '2026-10-18T10:00:00Z');
+  const bounded = await get(owner, '?view=profile&profileId=bounded-detail');
+  equal(bounded.status, 200); equal(bounded.body.ideology.length, 1500); equal(bounded.body.proposedSolution.length, 1500);
+  equal(bounded.body.learning.length, 1500); equal(bounded.body.nextExperiment.length, 1000);
+  equal(bounded.body.progress.length, 20); equal(bounded.body.progress[0].date, '2026-10-26');
+  equal(bounded.body.progress.every(update => update.title.length <= 100 && update.body.length <= 2000), true);
+  sqlite.prepare('UPDATE profiles SET data=? WHERE id=?').run('{malformed', 'bounded-detail');
+  const malformed = await get(owner, '?view=profile&profileId=bounded-detail');
+  equal(malformed.status, 200); equal(malformed.body.ideology, ''); equal(malformed.body.name, '');
+  sqlite.prepare("INSERT INTO member_reports (id,owner,target_owner,profile_id,reason,details,status,created) VALUES ('report-malformed',?,?,?,'Other','Malformed legacy listing content.','submitted','2026-10-18')").run(owner.userId, 'clerk:user_Bounds', 'bounded-detail');
+  const malformedReports = await get(owner, '?view=reports');
+  equal(malformedReports.status, 200); equal(malformedReports.body.items.find(report => report.id === 'report-malformed').target.name, '');
+  sqlite.prepare('UPDATE profiles SET data=? WHERE id=?').run(JSON.stringify({ name: { hidden: 'NON_TEXT_SHAPE_CANARY' }, problem: ['NON_TEXT_IDEA_CANARY'], solution: 42 }), 'bounded-detail');
+  const shaped = await get(owner, '?view=profile&profileId=bounded-detail');
+  equal(shaped.status, 200); equal(shaped.body.name, ''); equal(shaped.body.ideology, ''); equal(shaped.body.proposedSolution, '');
+  equal((await get(owner, '?view=profiles&q=NON_TEXT_SHAPE_CANARY')).body.total, 0);
+  equal((await get(owner, '?view=profile&profileId=' + 'x'.repeat(101))).status, 400);
+  console.log(`Passed ${checks} owner portal checks: fail-closed identity, authorization-before-query, origin/body/schema bounds, public-detail inspection and private redaction, kind/visibility filters, pagination, report review, removal enforcement, stale writes and atomic audit rollback.`);
 } finally { sqlite.close(); }

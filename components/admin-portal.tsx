@@ -2,6 +2,7 @@
 
 import { useEffect, useReducer, useState } from "react";
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth-form";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -43,6 +44,7 @@ import type {
   AdminOverview,
   AdminPage,
   AdminProfile,
+  AdminProfileDetail,
   AdminReport,
   ReportStatus,
 } from "@/lib/admin-types";
@@ -50,6 +52,8 @@ import { reportStatuses } from "@/lib/admin-types";
 import "@/app/admin/admin.css";
 
 type View = "overview" | "reports" | "profiles" | "audit" | "settings";
+type ListingKind = "all" | "startup" | "investor";
+type ListingVisibility = "all" | "visible" | "removed";
 type Directory = AdminPage<AdminReport | AdminProfile | AdminAudit>;
 type Resource<T> = {
   data?: T;
@@ -73,8 +77,8 @@ const titles: Record<View, [string, string]> = {
     "Review member concerns. A report is a request for review, not proof of wrongdoing.",
   ],
   profiles: [
-    "Public listings",
-    "Review member-listed profiles. Hiding a listing is reversible and requires a reason.",
+    "Ideas & investor profiles",
+    "Review public content, remove unsuitable listings and restore them after review.",
   ],
   audit: [
     "Activity log",
@@ -99,6 +103,17 @@ const nav = [
   { id: "settings", label: "Settings", icon: Settings2 },
 ] as const;
 const count = (value: number) => new Intl.NumberFormat("en-IN").format(value);
+const removalReasons = [
+  ["spam", "Spam or unrelated promotion", "This listing has been removed because it contains spam or promotion unrelated to a founder idea or investor profile. Please remove that content. It remains removed until an admin reviews it."],
+  ["misleading", "Misleading information", "This listing has been removed because important claims need correction or clearer support. Please update the information and distinguish plans from completed work. It remains removed until an admin reviews it."],
+  ["inappropriate", "Harmful or inappropriate content", "This listing has been removed because it contains harmful or inappropriate content. Please remove that material. It remains removed until an admin reviews it."],
+  ["privacy", "Personal or confidential information", "This listing has been removed because it includes personal or confidential information that should not be public. Please remove that information. It remains removed until an admin reviews it."],
+  ["duplicate", "Duplicate listing", "This listing has been removed because it duplicates another listing. Please keep one clear, current profile for the idea or investor."],
+] as const;
+const restorationReasons = [
+  ["corrected", "Content corrected", "The listing has been reviewed and the content that led to its removal has been corrected. The listing restriction has been lifted."],
+  ["reviewed", "Review completed", "The listing has been reviewed and there is no longer a reason to keep it removed. The listing restriction has been lifted."],
+] as const;
 function time(value?: string | null) {
   if (!value) return "Not recorded";
   const date = new Date(value);
@@ -358,12 +373,12 @@ function ProfileRow({
           <div className="admin-row-meta">
             <Badge tone={profile.hidden ? "warning" : "success"}>
               {profile.hidden ? <EyeOff /> : <Eye />}
-              {profile.hidden ? "Operator restriction" : "Listed"}
+              {profile.hidden ? "Removed" : "Visible"}
             </Badge>
             {profile.ownerListed ? (
               <>
                 <span>
-                  {profile.kind === "startup" ? "Founder" : "Investor"}
+                  {profile.kind === "startup" ? "Founder idea" : "Investor profile"}
                 </span>
                 <span aria-hidden="true">·</span>
                 <span>{profile.city || "Location not shared"}</span>
@@ -393,7 +408,7 @@ function ProfileRow({
 function AuditRow({ item }: { item: AdminAudit }) {
   const label =
     item.action === "profile_hidden"
-      ? "Listing hidden"
+      ? "Listing removed"
       : item.action === "profile_restored"
         ? "Listing restored"
         : "Report updated";
@@ -446,14 +461,18 @@ export default function AdminPortal({
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ReportStatus>("submitted");
+  const [kind, setKind] = useState<ListingKind>("all");
+  const [visibility, setVisibility] = useState<ListingVisibility>("all");
   const [refresh, setRefresh] = useState(0);
   const [detail, setDetail] = useState<
     | { type: "report"; record: AdminReport }
-    | { type: "profile"; record: AdminProfile }
+    | { type: "profile"; record: Pick<AdminProfile, "id"> }
     | null
   >(null);
   const [moderate, setModerate] = useState<AdminProfile | null>(null);
+  const [sourceReport, setSourceReport] = useState<AdminReport | null>(null);
   const [reason, setReason] = useState("");
+  const [reasonPreset, setReasonPreset] = useState("");
   const [reviewStatus, setReviewStatus] = useState<ReportStatus>("reviewing");
   const [reviewNote, setReviewNote] = useState("");
   const [reviewDrafts, setReviewDrafts] = useState<
@@ -482,6 +501,10 @@ export default function AdminPortal({
       "status",
       view === "overview" || view === "settings" ? "submitted" : status,
     );
+  if (directoryView === "profiles") {
+    params.set("kind", kind);
+    params.set("visibility", visibility);
+  }
   const directory = useAdminResource<Directory>(
     params.toString(),
     refresh,
@@ -502,6 +525,7 @@ export default function AdminPortal({
   function openReport(record: AdminReport) {
     const draft = reviewDrafts[record.id];
     setDetail({ type: "report", record });
+    setSourceReport(null);
     setReviewStatus(
       draft?.status ||
         (record.status === "submitted" ? "reviewing" : record.status),
@@ -510,8 +534,9 @@ export default function AdminPortal({
     setMutationError("");
     setMutationStatus(0);
   }
-  function openProfile(record: AdminProfile) {
+  function openProfile(record: Pick<AdminProfile, "id">, report?: AdminReport) {
     setDetail({ type: "profile", record });
+    setSourceReport(report || null);
     setMutationError("");
     setMutationStatus(0);
   }
@@ -553,7 +578,6 @@ export default function AdminPortal({
       setModerate(null);
       setReason("");
       setReviewNote("");
-      setPage(1);
       if (action.action === "reviewReport")
         setReviewDrafts((drafts) => {
           const next = { ...drafts };
@@ -563,7 +587,7 @@ export default function AdminPortal({
       setNotice(
         action.action === "moderateProfile"
           ? action.hidden
-            ? "Listing hidden. The profile owner can see the reason, and it is recorded in the activity log."
+            ? "Listing removed. The owner can see your reason in their workspace. This action is recorded in Activity."
             : moderate?.ownerListed === false
               ? "Restriction lifted. The profile remains private, and the action is recorded in the activity log."
               : "Listing restored. The action has been recorded in the activity log."
@@ -603,7 +627,7 @@ export default function AdminPortal({
           <p>{fatal.error}</p>
           <a
             className="admin-btn admin-btn-primary"
-            href={fatal.status === 401 ? "/signin?return_to=%2Fadmin" : "/app"}
+            href={fatal.status === 401 ? "/admin/signin" : "/app"}
           >
             {fatal.status === 401 ? "Sign in" : "Return to workspace"}
             <ArrowUpRight />
@@ -641,6 +665,7 @@ export default function AdminPortal({
               <small>Owner access</small>
             </div>
           </div>
+          <div className="admin-signout"><SignOutButton redirectUrl="/admin/signin" label="Sign out" /></div>
         </div>
       </header>
       <div className="admin-body">
@@ -739,7 +764,7 @@ export default function AdminPortal({
                         icon={Eye}
                       />
                       <Metric
-                        label="Hidden listings"
+                        label="Removed listings"
                         value={overview.data.profiles.hidden}
                         help="Owner moderation can be reversed"
                         icon={EyeOff}
@@ -751,6 +776,17 @@ export default function AdminPortal({
                         icon={LockKeyhole}
                       />
                     </div>
+                    <section className="admin-task-strip" aria-label="Admin shortcuts">
+                      <button className="admin-task" onClick={() => { setStatus("submitted"); go("reports"); }}>
+                        <Flag aria-hidden="true" /><span><strong>Review member reports</strong><small>{count(overview.data.reports.submitted)} new reports to review</small></span><ArrowUpRight aria-hidden="true" />
+                      </button>
+                      <button className="admin-task" onClick={() => { setKind("startup"); setVisibility("visible"); go("profiles"); }}>
+                        <ClipboardList aria-hidden="true" /><span><strong>Manage founder ideas</strong><small>Read the idea before taking action</small></span><ArrowUpRight aria-hidden="true" />
+                      </button>
+                      <button className="admin-task" onClick={() => { setKind("all"); setVisibility("removed"); go("profiles"); }}>
+                        <EyeOff aria-hidden="true" /><span><strong>Review removed listings</strong><small>Restore content after review</small></span><ArrowUpRight aria-hidden="true" />
+                      </button>
+                    </section>
                     <div className="admin-overview-columns">
                       <section className="admin-panel">
                         <div className="admin-panel-heading">
@@ -829,8 +865,8 @@ export default function AdminPortal({
                               <div>
                                 <strong>Choose a reversible action</strong>
                                 <p>
-                                  Hide a problematic listing while reviewing it.
-                                  Restore it when appropriate.
+                                  Remove unsuitable listings from discovery.
+                                  Restore them after review when appropriate.
                                 </p>
                               </div>
                             </div>
@@ -938,6 +974,26 @@ export default function AdminPortal({
                     </select>
                   </div>
                 )}
+                {view === "profiles" && (
+                  <>
+                    <div className="admin-select-wrap">
+                      <label htmlFor="admin-listing-kind">Type</label>
+                      <select id="admin-listing-kind" value={kind} onChange={(event) => { setKind(event.target.value as ListingKind); setPage(1); }}>
+                        <option value="all">All listings</option>
+                        <option value="startup">Founder ideas</option>
+                        <option value="investor">Investor profiles</option>
+                      </select>
+                    </div>
+                    <div className="admin-select-wrap">
+                      <label htmlFor="admin-listing-visibility">Visibility</label>
+                      <select id="admin-listing-visibility" value={visibility} onChange={(event) => { setVisibility(event.target.value as ListingVisibility); setPage(1); }}>
+                        <option value="all">Visible & removed</option>
+                        <option value="visible">Visible</option>
+                        <option value="removed">Removed</option>
+                      </select>
+                    </div>
+                  </>
+                )}
               </form>
               <section className="admin-panel" aria-busy={directory.loading}>
                 <div className="admin-panel-heading">
@@ -955,7 +1011,7 @@ export default function AdminPortal({
                         : view === "reports"
                           ? "Submitted reports remain private to the operator."
                           : view === "profiles"
-                            ? "Public listings and active restriction records. Private content and fictional examples are excluded."
+                            ? "Review founder ideas and investor profiles. Private drafts and fictional examples are excluded."
                             : "Operator actions are recorded with their reasons."}
                     </p>
                   </div>
@@ -1004,7 +1060,7 @@ export default function AdminPortal({
                         : view === "reports"
                           ? "No reports in this view"
                           : view === "profiles"
-                            ? "No public listings yet"
+                            ? "No listings in this view"
                             : "No moderation actions yet"
                     }
                     text={
@@ -1013,7 +1069,7 @@ export default function AdminPortal({
                         : view === "reports"
                           ? "Try a different status. New reports will appear when a member submits a concern."
                           : view === "profiles"
-                            ? "Member profiles appear here after their owners choose to list them publicly."
+                            ? "Try another type or visibility filter. Member profiles appear after their owners choose to list them publicly."
                             : "Report reviews and listing visibility changes will be recorded here."
                     }
                   />
@@ -1048,7 +1104,7 @@ export default function AdminPortal({
             <SheetDescription>
               {detail?.type === "report"
                 ? "Review the submitted concern and record your decision. Report details are private."
-                : "A summary of information this member chose to list publicly."}
+                : "Review the member’s public content and current visibility before taking action."}
             </SheetDescription>
           </SheetHeader>
           <div className="admin-drawer-scroll">
@@ -1083,17 +1139,15 @@ export default function AdminPortal({
                       ? "A reported concern has not been independently confirmed. Review the listing before deciding what to do."
                       : "The target profile is not currently listed. Its private content is not available here. You can still record a report review."}
                   </p>
-                  {detail.record.target && !detail.record.target.hidden && (
+                  {detail.record.target && (
                     <div className="admin-detail-actions">
-                      <a
+                      <button
                         className="admin-btn"
-                        href={`/app?profile=${encodeURIComponent(detail.record.target.id)}#discover`}
-                        target="_blank"
-                        rel="noreferrer"
+                        onClick={() => detail.record.target && openProfile(detail.record.target, detail.record)}
                       >
-                        View in workspace
+                        Review listing
                         <ArrowUpRight />
-                      </a>
+                      </button>
                     </div>
                   )}
                 </section>
@@ -1202,97 +1256,20 @@ export default function AdminPortal({
               </>
             ) : detail?.type === "profile" ? (
               <>
-                <section className="admin-detail-section">
-                  <Badge tone={detail.record.hidden ? "warning" : "success"}>
-                    {detail.record.hidden ? <EyeOff /> : <Eye />}
-                    {detail.record.hidden ? "Hidden by operator" : "Listed"}
-                  </Badge>
-                  <h3 style={{ fontSize: "1.25rem", marginTop: 17 }}>
-                    {detail.record.name}
-                  </h3>
-                  <p>{detail.record.tagline}</p>
-                  {detail.record.ownerListed ? (
-                    <dl className="admin-detail-facts">
-                      {[
-                        [
-                          "Profile type",
-                          detail.record.kind === "startup"
-                            ? "Founder"
-                            : "Investor",
-                        ],
-                        ["Member name", detail.record.founder],
-                        ["Sector", detail.record.sector],
-                        ["Stage", detail.record.stage],
-                        ["Location", detail.record.city],
-                        ["Profile updated", time(detail.record.updated)],
-                      ].map(([label, value]) => (
-                        <div key={label}>
-                          <dt>{label}</dt>
-                          <dd>{value || "Not shared"}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  ) : (
-                    <p className="admin-detail-note">
-                      Owner unlisted. Private profile content is not read or
-                      shown here.
-                    </p>
-                  )}
-                  {detail.record.ownerListed && !detail.record.hidden && (
-                    <div className="admin-detail-actions">
-                      <a
-                        className="admin-btn"
-                        href={`/app?profile=${encodeURIComponent(detail.record.id)}#discover`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open public profile
-                        <ArrowUpRight />
-                      </a>
-                    </div>
-                  )}
-                </section>
-                <section className="admin-detail-section">
-                  <h3>Listing visibility</h3>
-                  <p>
-                    {detail.record.hidden
-                      ? detail.record.ownerListed
-                        ? "This listing is hidden by the operator. Restoring it makes it available again while its owner keeps it listed."
-                        : "The profile owner has unlisted this profile. Lifting the operator restriction will leave it private and remove this restriction record from the directory."
-                      : "Hiding removes this listing from public discovery and direct public access. It does not delete the profile or its account."}
-                  </p>
-                  {detail.record.moderationReason && (
-                    <>
-                      <h4>Last operator reason</h4>
-                      <p>{detail.record.moderationReason}</p>
-                      <p className="admin-row-meta">
-                        {time(detail.record.moderationUpdated)}
-                      </p>
-                    </>
-                  )}
-                  <div className="admin-detail-actions">
-                    <button
-                      className={`admin-btn ${detail.record.hidden ? "admin-btn-primary" : "admin-btn-caution"}`}
-                      onClick={() => {
-                        setModerate(detail.record);
-                        setReason("");
-                        setMutationError("");
-                        setMutationStatus(0);
-                      }}
-                    >
-                      {detail.record.hidden ? <Eye /> : <EyeOff />}
-                      {detail.record.hidden
-                        ? detail.record.ownerListed
-                          ? "Restore listing"
-                          : "Lift restriction"
-                        : "Hide listing"}
-                    </button>
-                  </div>
-                  <p className="admin-detail-note">
-                    This action is reversible and will be recorded. No
-                    notification is sent to the member.
-                  </p>
-                </section>
+              {sourceReport && <button className="admin-btn admin-review-back" onClick={() => openReport(sourceReport)}><ArrowLeft aria-hidden="true" />Back to report</button>}
+              <ProfileReview
+                key={detail.record.id}
+                profileId={detail.record.id}
+                refresh={refresh}
+                onModerate={(record) => {
+                  setModerate(record);
+                  setReason("");
+                  setReasonPreset("");
+                  setMutationError("");
+                  setMutationStatus(0);
+                }}
+                onAccessError={setAccessError}
+              />
               </>
             ) : null}
           </div>
@@ -1318,18 +1295,30 @@ export default function AdminPortal({
               ? moderate.ownerListed
                 ? "Restore this listing?"
                 : "Lift this restriction?"
-              : "Hide this listing?"}
+              : "Remove this listing?"}
           </DialogTitle>
           <DialogDescription>
             {moderate?.hidden
               ? moderate.ownerListed
                 ? `${moderate.name} will be available again while its owner keeps it listed. Explain why you are restoring it.`
                 : "The operator restriction will be lifted. The profile remains private until its owner chooses to list it. Explain why you are lifting the restriction."
-              : `${moderate?.name || "This listing"} will be removed from public discovery and direct access. Explain why you are hiding it.`}
+              : `${moderate?.name || "This listing"} will be removed from public discovery and direct access. Its owner can still edit it, but cannot make it visible again until you restore it.`}
           </DialogDescription>
           <div className="admin-field">
+            <label htmlFor="admin-reason-preset">Reason starting point</label>
+            <select id="admin-reason-preset" value={reasonPreset} disabled={busy} onChange={(event) => {
+              const value = event.target.value;
+              setReasonPreset(value);
+              const presets = moderate?.hidden ? restorationReasons : removalReasons;
+              setReason(presets.find(([id]) => id === value)?.[2] || "");
+            }}>
+              <option value="">Write your own reason</option>
+              {(moderate?.hidden ? restorationReasons : removalReasons).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+          </div>
+          <div className="admin-field">
             <label htmlFor="admin-moderation-reason">
-              Reason<span aria-label="required">*</span>
+              Reason shown to the owner<span aria-label="required">*</span>
             </label>
             <textarea
               id="admin-moderation-reason"
@@ -1389,7 +1378,7 @@ export default function AdminPortal({
                   ? moderate.ownerListed
                     ? "Restore listing"
                     : "Lift restriction"
-                  : "Hide listing"}
+                  : "Remove listing"}
             </button>
           </div>
           {mutationStatus === 409 && (
@@ -1409,6 +1398,69 @@ export default function AdminPortal({
       </Dialog>
     </div>
   );
+}
+function ProfileReview({ profileId, refresh, onModerate, onAccessError }: {
+  profileId: string;
+  refresh: number;
+  onModerate: (profile: AdminProfile) => void;
+  onAccessError: (error: { status: number; error: string }) => void;
+}) {
+  const [retry, setRetry] = useState(0);
+  const profile = useAdminResource<AdminProfileDetail>(
+    new URLSearchParams({ view: "profile", profileId }).toString(), refresh + retry,
+  );
+  useEffect(() => {
+    if (profile.status === 401 || profile.status === 403)
+      onAccessError({ status: profile.status, error: profile.error });
+  }, [profile.status, profile.error, onAccessError]);
+  if (profile.loading) return <Loading />;
+  if (profile.error) return <ErrorNotice message={profile.status === 404 ? "This listing is no longer available for review. Its owner may have made it private." : profile.error} onRetry={() => setRetry((value) => value + 1)} />;
+  const record = profile.data;
+  if (!record || record.id !== profileId) return null;
+  const founder = record.kind === "startup";
+  const sections = [
+    [founder ? "Ideology" : "Investment interests", record.ideology],
+    [founder ? "Proposed solution" : "Investment approach", record.proposedSolution],
+    [founder ? "What the founder has learned" : "What the investor looks for", record.learning],
+    [founder ? "Next step" : "Additional information", record.nextExperiment],
+  ];
+  return <>
+    <section className="admin-detail-section">
+      <div className="admin-review-badges">
+        <Badge tone={record.hidden ? "warning" : "success"}>{record.hidden ? <EyeOff /> : <Eye />}{record.hidden ? "Removed from discovery" : "Visible in discovery"}</Badge>
+        {!record.redacted && <Badge>{founder ? "Founder idea" : "Investor profile"}</Badge>}
+      </div>
+      <h3 className="admin-review-name">{record.name}</h3>
+      {record.tagline && <p>{record.tagline}</p>}
+      {record.redacted ? <p className="admin-detail-note"><LockKeyhole size={14} aria-hidden="true" />The owner has made this profile private. Only its restriction record is shown. Restoring it will leave the profile private.</p> : <>
+        <dl className="admin-detail-facts">
+          {[["Member name", record.founder], ["Sector", record.sector], ["Stage", record.stage], ["Location", record.city], ["Profile updated", time(record.updated)]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || "Not shared"}</dd></div>)}
+        </dl>
+        <p className="admin-detail-note">Member-reported content. A public listing is not independent verification of its claims.</p>
+      </>}
+    </section>
+    {!record.redacted && <>
+      <section className="admin-detail-section">
+        <h3>{founder ? "Read the idea" : "Review the investor profile"}</h3>
+        {sections.filter(([, value]) => value).length ? sections.filter(([, value]) => value).map(([label, value]) => <div className="admin-public-copy" key={label}><h4>{label}</h4><p>{value}</p></div>) : <p>No additional public details were shared.</p>}
+      </section>
+      <section className="admin-detail-section">
+        <h3>Recent public progress</h3>
+        {record.progress.length ? <ol className="admin-progress-list">{record.progress.map((item) => <li key={item.id}><time dateTime={item.date}>{time(item.date)}</time><h4>{item.title}</h4><p>{item.body}</p></li>)}</ol> : <p>No public progress updates have been shared.</p>}
+        {record.progress.length === 20 && <p className="admin-detail-note">Showing the 20 most recent public updates.</p>}
+      </section>
+    </>}
+    <section className="admin-detail-section">
+      <h3>Listing controls</h3>
+      <p>{record.hidden ? record.ownerListed ? "This listing is removed. Restore it after reviewing the content and the reason for removal." : "Lift this restriction to allow the owner to list the profile again. The profile will remain private until they choose to share it." : "Remove this listing if its content is unsuitable. This removes discovery and direct public access; the profile and account are retained."}</p>
+      {record.moderationReason && <><h4>Last moderation reason</h4><p>{record.moderationReason}</p><p className="admin-row-meta">{time(record.moderationUpdated)}</p></>}
+      <div className="admin-detail-actions">
+        <button className={`admin-btn ${record.hidden ? "admin-btn-primary" : "admin-btn-caution"}`} onClick={() => onModerate(record)}>{record.hidden ? <Eye /> : <EyeOff />}{record.hidden ? record.ownerListed ? "Restore listing" : "Lift restriction" : "Remove listing"}</button>
+        {!record.hidden && record.ownerListed && <a className="admin-btn" href={`/app?profile=${encodeURIComponent(record.id)}#discover`} target="_blank" rel="noreferrer">Open public profile<ArrowUpRight /></a>}
+      </div>
+      <p className="admin-detail-note">A reason and confirmation are required. The owner can read the reason in their workspace. Every change is recorded in Activity; these actions do not send an email.</p>
+    </section>
+  </>;
 }
 function ErrorNotice({
   message,

@@ -8,11 +8,11 @@ export function AuthForm({ destination, signup = false }: { destination: string;
   const query = `?return_to=${encodeURIComponent(destination)}`;
   return <div className="auth-form">{!isLoaded ? <div className="auth-loading" role={timedOut ? "alert" : "status"}>{timedOut ? <><p>Sign-in couldn’t load.</p><button className="outline-button" onClick={() => window.location.reload()}>Try again</button></> : <p>Loading sign-in…</p>}</div> : null}{signup ? <SignUp routing="hash" signInUrl={`/signin${query}`} forceRedirectUrl={destination}/> : <SignIn routing="hash" signUpUrl={`/signup${query}`} forceRedirectUrl={destination}/>}</div>;
 }
-export function SignOutButton() {
+export function SignOutButton({ redirectUrl = "/signin?signed_out=1", label = "Sign out" }: { redirectUrl?: string; label?: string } = {}) {
   const { signOut } = useClerk();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
-  return <><button className="signin-read" disabled={busy} onClick={() => { setBusy(true); setError(false); void signOut({ redirectUrl: "/signin?signed_out=1" }).catch(() => { setBusy(false); setError(true); }); }}>{busy ? "Signing out…" : "Sign out"}</button>{error ? <p role="alert">Sign-out failed. Please try again.</p> : null}</>;
+  return <><button className="signin-read" disabled={busy} onClick={() => { setBusy(true); setError(false); void signOut({ redirectUrl }).catch(() => { setBusy(false); setError(true); }); }}>{busy ? "Signing out…" : label}</button>{error ? <p role="alert">Sign-out failed. Please try again.</p> : null}</>;
 }
 export function SignOutPage() {
   const { signOut, loaded } = useClerk();

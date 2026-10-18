@@ -1,12 +1,19 @@
 import { z } from 'zod';
 import { getAppUser } from '@/app/auth';
 import { isAdminAccount } from '@/lib/admin-access';
-import { reportStatuses } from '@/lib/admin-types';
-import { adminAudit, adminOverview, adminProfiles, adminReports, applyAdminAction, AdminConflict } from '@/lib/admin-service';
+import { adminProfileKinds, adminProfileVisibilities, reportStatuses } from '@/lib/admin-types';
+import { adminAudit, adminOverview, adminProfile, adminProfiles, adminReports, applyAdminAction, AdminConflict } from '@/lib/admin-service';
 
 export const dynamic = 'force-dynamic';
 const json = (data: unknown, status = 200) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
-const querySchema = z.object({ view: z.enum(['overview', 'profiles', 'reports', 'audit']).default('overview'), page: z.coerce.number().int().min(1).max(10000).default(1), q: z.string().trim().max(100).default(''), status: z.enum(reportStatuses).default('submitted') }).strict();
+const querySchema = z.object({
+  view: z.enum(['overview', 'profiles', 'profile', 'reports', 'audit']).default('overview'),
+  page: z.coerce.number().int().min(1).max(10000).default(1), q: z.string().trim().max(100).default(''),
+  status: z.enum(reportStatuses).default('submitted'), kind: z.enum(adminProfileKinds).default('all'),
+  visibility: z.enum(adminProfileVisibilities).default('all'), profileId: z.string().trim().min(1).max(100).optional(),
+}).strict().superRefine((query, context) => {
+  if (query.view === 'profile' && !query.profileId) context.addIssue({ code: 'custom', path: ['profileId'], message: 'Choose a listing to inspect.' });
+});
 const version = z.number().int().min(0).max(2147483646);
 export const adminActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('moderateProfile'), profileId: z.string().min(1).max(100), hidden: z.boolean(), reason: z.string().trim().min(10).max(500), expectedVersion: version }).strict(),
@@ -45,9 +52,13 @@ export async function GET(request: Request) {
     if (auth.response) return auth.response;
     const query = querySchema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
     if (!query.success) return json({ error: 'Check the portal filters.' }, 400);
-    const { view, page, q, status } = query.data;
-    return json(view === 'profiles' ? await adminProfiles(page, q) : view === 'reports' ? await adminReports(page, status, q) : view === 'audit' ? await adminAudit(page, q) : await adminOverview());
-  } catch { console.error('Owner portal read failed'); return json({ error: 'The owner portal is temporarily unavailable. Please retry.' }, 503); }
+    const { view, page, q, status, kind, visibility, profileId } = query.data;
+    return json(view === 'profiles' ? await adminProfiles(page, q, { kind, visibility }) : view === 'profile' ? await adminProfile(profileId!) : view === 'reports' ? await adminReports(page, status, q) : view === 'audit' ? await adminAudit(page, q) : await adminOverview());
+  } catch (error) {
+    if (error instanceof AdminConflict) return json({ error: error.message }, error.status);
+    console.error('Owner portal read failed');
+    return json({ error: 'The owner portal is temporarily unavailable. Please retry.' }, 503);
+  }
 }
 export async function POST(request: Request) {
   try {

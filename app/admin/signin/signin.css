@@ -1,0 +1,34 @@
+.admin-signin-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 24px;
+  background: var(--fi-background);
+  color: var(--fi-text);
+  font-family: var(--fi-font-family);
+}
+.admin-signin-page *, .admin-signin-page *::before, .admin-signin-page *::after { box-sizing: border-box; }
+.admin-signin-page :focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 4px; }
+.admin-signin-home { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; align-self: flex-start; font-size: 0.8125rem; color: var(--fi-text-secondary); }
+.admin-signin-home:hover, .admin-signin-privacy:hover, .admin-signin-restricted > a:hover { text-decoration: underline; }
+.admin-signin-card { width: 100%; max-width: 480px; margin: auto 0; padding: clamp(24px, 5vw, 40px); background: var(--fi-surface); border: 1px solid var(--fi-border); border-radius: var(--fi-radius-panel); }
+.admin-signin-brand { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 1.25rem; font-weight: 750; letter-spacing: -0.035em; }
+.admin-signin-brand img { flex: 0 0 34px; object-fit: contain; }
+.admin-signin-brand .admin-signin-label { font-size: 0.6875rem; font-weight: 650; letter-spacing: 0.015em; color: var(--fi-text-muted); padding-left: 12px; border-left: 1px solid var(--fi-border); }
+.admin-signin-icon { display: grid; place-items: center; width: 46px; height: 46px; margin-top: 36px; border-radius: var(--fi-radius-control); background: var(--fi-surface-accent); color: var(--fi-primary); }
+.admin-signin-card h1 { font-size: clamp(1.625rem, 3vw, 1.875rem); font-weight: 750; line-height: 1.25; letter-spacing: -0.03em; margin: 18px 0 10px; }
+.admin-signin-intro { color: var(--fi-text-secondary); font-size: 0.875rem; line-height: 1.75; margin: 0 0 28px; }
+.admin-signin-form { min-height: 320px; }
+.admin-signin-loading { display: grid; place-content: center; min-height: 180px; text-align: center; color: var(--fi-text-secondary); font-size: 0.875rem; }
+.admin-signin-restricted { background: var(--fi-surface-muted); border: 1px solid var(--fi-border); border-radius: var(--fi-radius-control); padding: 20px; }
+.admin-signin-restricted h2 { font-size: 1rem; line-height: 1.55; font-weight: 700; margin: 0 0 8px; }
+.admin-signin-restricted p { color: var(--fi-text-secondary); font-size: 0.8125rem; line-height: 1.75; margin: 0 0 18px; }
+.admin-signin-loading button, .admin-signin-restricted .signin-read { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 44px; border: 1px solid var(--fi-primary); border-radius: var(--fi-radius-control); background: var(--fi-primary); color: var(--fi-on-primary); padding: 10px 16px; font: inherit; font-size: 0.8125rem; font-weight: 650; cursor: pointer; margin-top: 0; }
+.admin-signin-loading button:hover, .admin-signin-restricted .signin-read:hover { background: var(--fi-primary-hover); }
+.admin-signin-restricted .signin-read:disabled { cursor: wait; background: var(--fi-disabled-surface); color: var(--fi-disabled-text); border-color: var(--fi-border); }
+.admin-signin-restricted > a { display: flex; align-items: center; justify-content: center; min-height: 44px; color: var(--fi-primary); font-size: 0.8125rem; margin-top: 8px; }
+.admin-signin-restricted [role="alert"] { color: var(--fi-error); margin: 12px 0 0; }
+.admin-signin-note { font-size: 0.75rem; line-height: 1.8; color: var(--fi-text-muted); padding-top: 22px; margin: 28px 0 0; border-top: 1px solid var(--fi-border); }
+.admin-signin-privacy { display: inline-flex; align-items: center; min-height: 44px; margin-top: 16px; color: var(--fi-text-muted); font-size: 0.75rem; }
+@media (max-width: 480px) { .admin-signin-page { padding: 16px; } .admin-signin-card { margin: 20px 0 0; } .admin-signin-brand .admin-signin-label { padding-left: 9px; } }

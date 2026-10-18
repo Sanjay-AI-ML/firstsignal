@@ -7,6 +7,14 @@ export type AdminProfile = {
   sector: string; stage: string; tagline: string; updated: string;
   ownerListed: boolean; hidden: boolean; moderationReason: string; moderationUpdated: string | null; version: number;
 };
+export const adminProfileKinds = ['all', 'startup', 'investor'] as const;
+export const adminProfileVisibilities = ['all', 'visible', 'removed'] as const;
+export type AdminProfileFilters = { kind: typeof adminProfileKinds[number]; visibility: typeof adminProfileVisibilities[number] };
+export type AdminProfileDetail = AdminProfile & {
+  ideology: string; proposedSolution: string; learning: string; nextExperiment: string;
+  progress: { id: string; date: string; title: string; body: string; created: string }[];
+  redacted: boolean;
+};
 export type AdminReport = {
   id: string; profileId: string; reason: string; details: string; status: ReportStatus;
   created: string; updated: string; version: number; operatorNote: string;

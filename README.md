@@ -2,6 +2,8 @@
 
 A founder–investor discovery platform for early startup ideas. Built with React, Vinext, Clerk authentication and Cloudflare D1.
 
+Published admin entry: [FindIn administration](https://firstsignal-founder-network.divineridge.chatgpt.site/admin/signin). Version28 is live; access is restricted to the configured owner. The marketing illustrations are also published. See [release verification and limits](ADMIN_PORTAL.md#published-admin-release--18-october-2026).
+
 ## Features
 
 - All startup industries, with broad sector choices and an Other field for a named custom sector or service. Custom sectors are saved, displayed and searchable; investors can add a custom interest alongside listed sectors. Existing SaaS categories retain their meaning.
@@ -14,6 +16,7 @@ A founder–investor discovery platform for early startup ideas. Built with Reac
 - Profile reporting and account blocking with server-enforced contact restrictions.
 - In-app notifications and optional verified-email notifications through Resend.
 - Responsive marketing pages and reduced-motion support.
+- Dedicated owner admin sign-in, reported-content review, searchable founder/investor listings, reversible removal/restoration and an activity log. See [admin access and setup](ADMIN_PORTAL.md).
 - An interactive fictional evidence brief distinguishing reported learning, open questions and a measurable next test; founder/progress worksheets include source and experiment-planning prompts.
 - Founder/investor entry paths that preserve the selected setup through sign-in, plus three public starter worksheets with preview, copy and Markdown downloads.
 
@@ -28,16 +31,17 @@ Requires Node.js 22.13 or later. Clean clones use the portable execution profile
 1. Run `npm ci`.
 2. Copy `.env.example` to `.env.local` and fill in your own Clerk development keys. Set the origin to `http://127.0.0.1:5173`.
 3. Run `npm run build` to generate the local Worker configuration.
-4. Initialize a fresh local database with all three migration commands below, in order.
+4. Initialize a fresh local database with all four migration commands below, in order.
 5. Run `npm run dev` and open the printed loopback URL.
 
 ```sh
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_majestic_ender_wiggin.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_whole_king_bedlam.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_glossy_cable.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_owner_portal.sql
 ```
 
-Run all three initialization commands only on a fresh local database. For an existing local database with the first two migrations applied, run only `0002`. These commands never initialize the live database. [HANDOFF.md](HANDOFF.md) also gives direct Node.js entrypoints for this Windows host.
+Run all four initialization commands only on a fresh local database. For an existing local database, check which migrations have been applied and run only the missing ones in order; never rerun an applied `ALTER TABLE` migration. These commands never initialize the live database. [HANDOFF.md](HANDOFF.md) also gives direct Node.js entrypoints for this Windows host.
 
 ## Validation
 
@@ -47,6 +51,8 @@ node scripts/verify-profile-fit.mjs
 node scripts/verify-profile-suggestions.mjs
 node scripts/verify-workspace-bounds.mjs
 node scripts/verify-notifications.mjs
+node scripts/verify-admin.mjs
+node scripts/verify-admin-entry.mjs
 npm run build
 ```
 
@@ -65,9 +71,9 @@ Upload the application source, assets, lockfile, migrations and documentation. N
 
 ## Owner portal and V2 visual update
 
-`/admin` is a server-protected operator portal for one configured existing Clerk user. It provides real aggregate status, report review, reversible public-listing restrictions and an audit history. Private drafts, messages, proposals and follow-up notes are excluded. Missing owner configuration denies everyone. See [ADMIN_PORTAL.md](ADMIN_PORTAL.md) before activating or deploying this update.
+`/admin/signin` is the dedicated sign-in entry for `/admin`, a server-protected operator portal for one configured existing Clerk user. It provides real aggregate status, report review, filtered founder/investor listings, listed-idea/progress inspection, reversible removal/restoration and an audit history. Private drafts, messages, proposals and follow-up notes are excluded. Missing owner configuration denies everyone. See [ADMIN_PORTAL.md](ADMIN_PORTAL.md) before activating or deploying this update.
 
-The app now requires migration `0003_owner_portal.sql` in addition to the previous three migrations. Apply only unapplied migrations in order; do not reset existing data. This task applied 0003 to the existing local database only. Hosted migration/publication remain pending because the current Sites connection cannot locate the retained project.
+The app now requires migration `0003_owner_portal.sql` in addition to the previous three migrations. Apply only unapplied migrations in order; do not reset existing data. This task applied 0003 to the existing local database only. Sites access was recovered on 18 October 2026 and hosted owner identity is configured securely. The existing Sites deployment flow applies pending migrations before Worker upload; confirm the resulting native deployment status.
 
 ```powershell
 node scripts/verify-admin.mjs

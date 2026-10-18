@@ -1,0 +1,13 @@
+# Preserve the framework's cache policy for content-hashed assets.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Explicit media types for Sites' uploaded static assets.
+/images/*.webp
+  Content-Type: image/webp
+
+/illustrations/*.webp
+  Content-Type: image/webp
+
+/fonts/*.woff2
+  Content-Type: font/woff2

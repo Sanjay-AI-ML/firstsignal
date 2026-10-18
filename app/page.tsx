@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDown, ArrowRight, Bookmark, Check, FileText, Handshake, LockKeyhole, MessageCircle, SlidersHorizontal, Sprout } from "lucide-react";
+import { ArrowRight, Bookmark, Check, FileText, Handshake, LockKeyhole, MessageCircle, SlidersHorizontal, Sprout } from "lucide-react";
 import MarketingMotion from "../components/marketing-motion";
 import MarketingSpecialties from "../components/marketing-specialties";
 import MarketingProductTour from "../components/marketing-product-tour";
@@ -43,7 +43,7 @@ export default function Home() {
           <MarketingEntry />
           <div className="marketing-hero-footnote"><span>Any industry.</span><span>Idea to early traction.</span><span>Your pace.</span></div>
         </div>
-        <div className="marketing-hero-product"><MarketingDiscoveryPreview /><p className="marketing-hero-product-caption"><span>Explore first. Get the context. Choose your next step.</span><a href="#how-it-works">Take the tour<ArrowDown size={15} aria-hidden="true" /></a></p></div>
+        <div className="marketing-hero-product"><MarketingDiscoveryPreview /></div>
       </section>
       <section className="marketing-editorial marketing-section" aria-labelledby="ideas-everywhere-title">
         <div className="marketing-editorial-heading">

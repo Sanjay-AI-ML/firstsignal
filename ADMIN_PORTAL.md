@@ -28,7 +28,7 @@ node scripts/configure-admin.mjs --email your-sign-in-email --write-local
 
 Set **`FINDIN_ADMIN_USER_ID`** to that exact raw ID in the existing Site's secure runtime environment and deploy the checked source. Do not put an email, a comma-separated list or a namespaced `clerk:` value in this setting. Never commit the actual binding or credentials. New Clerk production instances have different user IDs; bind the owner's production account explicitly when moving instances.
 
-The current task has not bound an owner: the requested sign-in email is still pending. Access remains denied until this is supplied and configured. There is no first-user bootstrap route, shared admin password or login bypass.
+The owner supplied their sign-in email and the existing verified primary-email account was resolved successfully. The exact account ID is now bound in ignored local configuration. Hosted configuration and publication remain pending because the current Sites connection cannot locate the existing project. There is no first-user bootstrap route, shared admin password or login bypass.
 
 ## Storage and concurrency
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./design-system.css";
 import SessionGuard from "../components/session-guard";
 import AuthProvider from "../components/clerk-provider";
 import { clerkPublishableKey, getAppUser } from "./auth";

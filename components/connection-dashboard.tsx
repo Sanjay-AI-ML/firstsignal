@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useId, useState } from 'react';
-import { ArrowUpRight, Check, Clock3, Handshake, MessageCircle } from 'lucide-react';
+import { ArrowUpRight, Check, Clock3, Handshake, MessageCircle, Search, X } from 'lucide-react';
 import { formatINR, initials, type Intro } from '@/lib/data';
+import { connectionMatches } from '@/lib/connection-search';
 
 type Connection = Intro & { updated?: string; blocked?: boolean; proposal?: { status: string; amount: number; mine: boolean; version: number; updated?: string } | null };
 type Filter = 'all' | 'attention' | 'pending' | 'connected' | 'archive';
@@ -32,13 +33,15 @@ export default function ConnectionDashboard({ requests, busy, onOpen, onRespond,
   requests: Connection[]; busy: boolean; onOpen: (connection: Intro) => void; onRespond: (connection: Intro, status: string) => void; onDiscover: () => void;
 }) {
   const [filter, setFilter] = useState<Filter>('all');
+  const [search, setSearch] = useState('');
   const [today, setToday] = useState('');
   useEffect(() => { const date = new Date(); setToday(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`); }, [requests]);
   const sectionId = useId();
   const count = (value: Filter) => requests.filter(connection => value === 'all' || value === 'attention' && needsAction(connection, today) || value === 'pending' && connection.status === 'pending' || value === 'connected' && connection.status === 'accepted' || value === 'archive' && !['pending', 'accepted'].includes(connection.status)).length;
-  const visible = requests.filter(connection => filter === 'all' || filter === 'attention' && needsAction(connection, today) || filter === 'pending' && connection.status === 'pending' || filter === 'connected' && connection.status === 'accepted' || filter === 'archive' && !['pending', 'accepted'].includes(connection.status)).sort((a, b) => lastActivity(b) - lastActivity(a) || a.id.localeCompare(b.id));
+  const visible = requests.filter(connection => filter === 'all' || filter === 'attention' && needsAction(connection, today) || filter === 'pending' && connection.status === 'pending' || filter === 'connected' && connection.status === 'accepted' || filter === 'archive' && !['pending', 'accepted'].includes(connection.status)).filter(connection=>connectionMatches(connection,search)).sort((a, b) => lastActivity(b) - lastActivity(a) || a.id.localeCompare(b.id));
   return <section className="connection-dashboard" aria-labelledby={sectionId}>
     <div className="connection-overview"><div><p className="eyebrow">Keep things moving</p><h2 id={sectionId}>Your conversations, in one place.</h2><p>Review requests, pick up a conversation and keep track of private proposals.</p></div><div className="connection-stats"><div><strong>{requests.filter(connection => !connection.blocked && connection.status === 'pending' && connection.direction === 'incoming').length}</strong><span>Requests to review</span></div><div><strong>{count('connected')}</strong><span>Connected</span></div><div><strong>{requests.filter(connection => !connection.blocked && connection.status === 'accepted' && connection.proposal?.status === 'open' && !connection.proposal.mine).length}</strong><span>Proposals to review</span></div></div></div>
+    <div className="connection-search"><Search size={16} aria-hidden="true"/><label htmlFor={`${sectionId}-search`} className="sr-only">Search conversations</label><input id={`${sectionId}-search`} maxLength={100} placeholder="Search names, messages, or your private notes" value={search} onChange={event=>setSearch(event.target.value)}/>{search?<button aria-label="Clear conversation search" onClick={()=>setSearch('')}><X size={15}/></button>:null}</div>
     <div className="connection-filters" role="group" aria-label="Filter connections">{filters.map(({ value, label }) => <button key={value} type="button" aria-pressed={filter === value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}<span>{count(value)}</span></button>)}</div>
     {filter === 'attention' ? <p className="connection-filter-note">Includes incoming requests, their open proposals, their latest messages and your follow-up dates due today or earlier. This list includes follow-ups as well as messages. It is not an unread-message count.</p> : null}
     <div className="connection-results" aria-live="polite"><p className="subtle">{visible.length} {visible.length === 1 ? 'connection' : 'connections'}{filter !== 'all' ? ` · ${filters.find(item => item.value === filter)?.label}` : ''}</p></div>
@@ -58,7 +61,7 @@ export default function ConnectionDashboard({ requests, busy, onOpen, onRespond,
           {connection.status === 'accepted' ? <button type="button" className={connection.blocked ? 'outline-button' : 'primary-button'} onClick={() => onOpen(connection)}>{connection.blocked ? 'Review connection' : connection.proposal?.status === 'open' && !connection.proposal.mine ? 'Review proposal' : 'Open connection'}<ArrowUpRight size={15} aria-hidden="true" /></button> : null}
         </div></div>
       </article>;
-    })}</div> : <div className="connection-empty"><Handshake size={27} aria-hidden="true" /><h3>{requests.length ? filter === 'attention' ? 'You’re up to date on next steps.' : 'No connections in this view.' : 'A thoughtful introduction starts here.'}</h3><p>{requests.length ? 'Try another filter to see your requests and conversations.' : 'Find a profile with shared interests and explain why you would like to connect. Messaging opens after acceptance.'}</p><button type="button" className="outline-button" onClick={requests.length ? () => setFilter('all') : onDiscover}>{requests.length ? 'View all connections' : 'Explore profiles'}</button></div>}
+    })}</div> : <div className="connection-empty"><Handshake size={27} aria-hidden="true" /><h3>{search.trim() ? 'No conversations match this search.' : requests.length ? filter === 'attention' ? 'You’re up to date on next steps.' : 'No connections in this view.' : 'A thoughtful introduction starts here.'}</h3><p>{search.trim() ? 'Try a name or a word from a message. Your filters still apply.' : requests.length ? 'Try another filter to see your requests and conversations.' : 'Find a profile with shared interests and explain why you would like to connect. Messaging opens after acceptance.'}</p><button type="button" className="outline-button" onClick={search.trim() ? () => setSearch('') : requests.length ? () => setFilter('all') : onDiscover}>{search.trim() ? 'Clear search' : requests.length ? 'View all connections' : 'Explore profiles'}</button></div>}
     <p className="connection-caption">Requests require mutual consent. Private proposals express non-binding interest; they do not record a completed investment.</p>
   </section>;
 }

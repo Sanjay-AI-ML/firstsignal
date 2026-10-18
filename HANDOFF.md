@@ -1,6 +1,6 @@
 # FindIn handoff
 
-Updated 17 October 2026. FindIn is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
+Updated 18 October 2026. FindIn is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
 
 Public URL: [FindIn](https://firstsignal-founder-network.divineridge.chatgpt.site). Reuse this existing Site for future updates. FindIn remains a working brand name, not a cleared trademark.
 
@@ -54,7 +54,7 @@ Old ChatGPT-owned records are retained under their old IDs. Do not transfer them
 
 ## Pilot limits
 
-- One founder and one investor profile per account; newest 200 eligible public listings in discovery.
+- One founder OR investor profile per account (legacy pairs remain editable); newest 200 eligible public listings in discovery.
 - Up to 200 saves, 20 introduction requests per account per rolling 24 hours and 100 messages per conversation.
 - Latest 100 introductions in the dashboard; an existing request for the same target cannot be recreated.
 - Up to 50 proposal-history versions per accepted connection.
@@ -98,3 +98,14 @@ See [Clerk setup](cloudflare/CLERK_SETUP.md), [email activation](EMAIL_SETUP.md)
 The light marketing page now includes a four-step interactive product walkthrough, separate founder and investor sections, stock photographs with visible credits, privacy/consent explanations and expanded FAQs. Founder and investor anchors have distinct vertical destinations; native anchor navigation, sticky-header offsets and active navigation feedback replace the previous ambiguous shared-row destination. Manrope is self-hosted under the SIL Open Font License.
 
 The walkthrough uses explicitly fictional data and local React state only. Its visibility toggle, stage comparison and counteroffer preview do not save records, send proposals or contact members. Its tabs support arrow keys, Home/End and one keyboard tab stop. The real workspace entry remains linked separately. This marketing update does not change account APIs, D1 schema, auth configuration or email activation.
+
+
+## Integrated design update — 18 October 2026
+
+The public marketing page, workspace and authentication share Manrope and semantic lavender design tokens. Marketing demonstrates clearly labelled fictional discovery and comparison, with role-specific sign-in routes and stage-filter deep links. Profile rows support compact list or card layouts. The smaller workspace overview prioritises profile review, requests/proposals and private follow-up dates.
+
+Quick search (header or Ctrl/Cmd+K) finds already loaded, authorised profiles, including the account's own private draft, and workspace pages; it shows at most 20 profiles. Conversation search runs locally over authorised names, request/message text and the current participant's private notes. It combines with connection filters and sends no contact. Existing APIs and permission rules are unchanged.
+
+See [design system](DESIGN_SYSTEM.md) and [audit/research and verification](DESIGN_AUDIT_2026-10-18.md). Browser checks covered 320px comparison, private search, keyboard selection/Escape focus, dirty-edit protection, connection search/filter recovery, marketing at 320/390/768/1024px, role handoff and sign-in layout. Authentication fields/actions have 44px minimum heights; the Google label fits at 320px. Core Web Vitals and full accessibility remain unmeasured. Existing lint baseline remains; newly added components pass scoped lint.
+
+18 October final verification: TypeScript and production build passed after the profile-sheet key fix. Regression scripts for workbench/search, saved/direct access, 402-profile database bounds, single-profile/solution rules, broad/custom sectors, profile fit and suggestions passed. Modified marketing and new components have zero lint errors; existing image warnings and legacy workflow lint errors remain. The temporary fixture is absent from the build. Built-Worker browser checks opened direct-linked profiles and used lazy quick search to open another profile without observed errors from that local origin.

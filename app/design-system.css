@@ -1,0 +1,355 @@
+/* FindIn foundations. Use semantic tokens in page styles instead of new palette values. */
+@font-face {
+  font-family: Manrope;
+  src: url("/fonts/manrope-latin-variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --fi-primary: #6934b5;
+  --fi-primary-hover: #572998;
+  --fi-primary-active: #49217f;
+  --fi-on-primary: #ffffff;
+  --fi-background: #fbf9fd;
+  --fi-surface: #ffffff;
+  --fi-surface-elevated: #ffffff;
+  --fi-surface-muted: #f5effb;
+  --fi-surface-accent: #ede3f8;
+  --fi-surface-hover: #faf6fe;
+  --fi-secondary: var(--fi-surface-muted);
+  --fi-accent: var(--fi-primary);
+  --fi-text: #282134;
+  --fi-text-secondary: #51485f;
+  --fi-text-muted: #6b6176;
+  --fi-border: #e4ddec;
+  --fi-border-strong: #8c7c9e;
+  --fi-focus: #6934b5;
+  --fi-success: #276244;
+  --fi-success-surface: #edf6f0;
+  --fi-warning: #805014;
+  --fi-warning-surface: #fff5e6;
+  --fi-error: #a12d3f;
+  --fi-error-surface: #fff1f3;
+  --fi-info: #325fa0;
+  --fi-info-surface: #eef4fc;
+  --fi-disabled-surface: #ebe6ef;
+  --fi-disabled-text: #6b6176;
+
+  --fi-font-family: Manrope, "Segoe UI", Arial, sans-serif;
+  --fi-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --fi-type-display-large: clamp(3.25rem, 6.2vw, 5.5rem);
+  --fi-type-display: clamp(2.75rem, 5.5vw, 4.75rem);
+  --fi-type-page: clamp(1.75rem, 2.8vw, 2.375rem);
+  --fi-type-section: clamp(1.5rem, 2.7vw, 2rem);
+  --fi-type-subsection: 1.25rem;
+  --fi-type-card: 1.125rem;
+  --fi-type-body-large: 1.125rem;
+  --fi-type-body: 1rem;
+  --fi-type-body-small: 0.875rem;
+  --fi-type-caption: 0.75rem;
+  --fi-type-label: 0.875rem;
+  --fi-type-button: 0.875rem;
+  --fi-type-numeric: 1.75rem;
+  --fi-type-code: 0.875rem;
+  --fi-weight-regular: 450;
+  --fi-weight-medium: 550;
+  --fi-weight-semibold: 650;
+  --fi-weight-bold: 750;
+  --fi-leading-display: 1.08;
+  --fi-leading-heading: 1.25;
+  --fi-leading-body: 1.65;
+  --fi-leading-label: 1.45;
+  --fi-tracking-display: -0.045em;
+  --fi-tracking-heading: -0.025em;
+  --fi-tracking-label: 0;
+
+  --fi-space-1: 0.25rem;
+  --fi-space-2: 0.5rem;
+  --fi-space-3: 0.75rem;
+  --fi-space-4: 1rem;
+  --fi-space-5: 1.25rem;
+  --fi-space-6: 1.5rem;
+  --fi-space-8: 2rem;
+  --fi-space-10: 2.5rem;
+  --fi-space-12: 3rem;
+  --fi-space-16: 4rem;
+  --fi-space-20: 5rem;
+  --fi-space-24: 6rem;
+  --fi-space-32: 8rem;
+  --fi-radius-sm: 0.375rem;
+  --fi-radius-control: 0.625rem;
+  --fi-radius-card: 0.875rem;
+  --fi-radius-panel: 1.25rem;
+  --fi-radius-pill: 999px;
+  --fi-shadow-raised: 0 2px 4px rgb(40 33 52 / 2%), 0 8px 24px rgb(40 33 52 / 4%);
+  --fi-shadow-floating: 0 4px 12px rgb(40 33 52 / 5%), 0 16px 40px rgb(40 33 52 / 8%);
+  --fi-shadow-dialog: 0 16px 72px rgb(40 33 52 / 18%);
+  --fi-duration-fast: 120ms;
+  --fi-duration-normal: 180ms;
+  --fi-duration-slow: 240ms;
+  --fi-ease-out: cubic-bezier(0.2, 0.75, 0.25, 1);
+  --fi-control-height: 2.75rem;
+  --fi-control-height-compact: 2.25rem;
+  --fi-card-padding: 1.5rem;
+  --fi-field-gap: 0.5rem;
+  --fi-page-gutter: clamp(1rem, 3vw, 2.5rem);
+  --fi-content-width: 80rem;
+  --fi-reading-width: 68ch;
+
+  /* Keep the existing shadcn/Tailwind contract; pages share the same palette. */
+  --background: var(--fi-background);
+  --foreground: var(--fi-text);
+  --card: var(--fi-surface);
+  --card-foreground: var(--fi-text);
+  --popover: var(--fi-surface-elevated);
+  --popover-foreground: var(--fi-text);
+  --primary: var(--fi-primary);
+  --primary-foreground: var(--fi-on-primary);
+  --secondary: var(--fi-surface-muted);
+  --secondary-foreground: var(--fi-text-secondary);
+  --muted: var(--fi-surface-muted);
+  --muted-foreground: var(--fi-text-muted);
+  --accent: var(--fi-surface-accent);
+  --accent-foreground: var(--fi-primary);
+  --destructive: var(--fi-error);
+  --border: var(--fi-border);
+  --input: var(--fi-border-strong);
+  --ring: var(--fi-focus);
+  --radius: var(--fi-radius-control);
+  --sidebar: var(--fi-surface);
+  --sidebar-foreground: var(--fi-text-secondary);
+  --sidebar-primary: var(--fi-primary);
+  --sidebar-primary-foreground: var(--fi-on-primary);
+  --sidebar-accent: var(--fi-surface-accent);
+  --sidebar-accent-foreground: var(--fi-primary);
+  --sidebar-border: var(--fi-border);
+  --sidebar-ring: var(--fi-focus);
+  --font-sans: var(--fi-font-family);
+  --font-mono: var(--fi-font-mono);
+}
+
+body {
+  background: var(--fi-background);
+  color: var(--fi-text);
+  font-family: var(--fi-font-family);
+  font-size: var(--fi-type-body);
+  font-weight: var(--fi-weight-regular);
+  line-height: 1.55;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+}
+
+code, pre, kbd, samp {
+  font-family: var(--fi-font-mono);
+}
+
+.page-title, .company-word, .rail-number, .resource h2, .research-lead h2,
+.signin-panel h2, .signin-story h1 {
+  font-family: var(--fi-font-family);
+}
+
+.workspace .subtle, .workspace .sample-note, .workspace .page-desc,
+.app-footer, .breadcrumb, .signin-panel > p, .signin-footer, .signin-back,
+.information-page p, .dialog-form .guided-field-help, .dialog-form .guided-save-note {
+  color: var(--fi-text-muted);
+}
+
+:focus-visible {
+  outline: 3px solid var(--fi-focus);
+  outline-offset: 4px;
+}
+
+.primary-button, .outline-button, .text-button {
+  font-family: var(--fi-font-family);
+  font-size: var(--fi-type-button);
+  font-weight: var(--fi-weight-semibold);
+  line-height: var(--fi-leading-label);
+  min-height: var(--fi-control-height);
+  gap: var(--fi-space-2);
+  transition: background-color var(--fi-duration-fast) var(--fi-ease-out),
+    border-color var(--fi-duration-fast) var(--fi-ease-out),
+    color var(--fi-duration-fast) var(--fi-ease-out),
+    box-shadow var(--fi-duration-fast) var(--fi-ease-out);
+}
+
+.primary-button, .outline-button {
+  border-radius: var(--fi-radius-control);
+  padding: 0.6875rem var(--fi-space-4);
+}
+
+.primary-button {
+  color: var(--fi-on-primary);
+  background: var(--fi-primary);
+  border-color: var(--fi-primary);
+}
+
+.primary-button:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--fi-primary-hover);
+  border-color: var(--fi-primary-hover);
+}
+
+.primary-button:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--fi-primary-active);
+  border-color: var(--fi-primary-active);
+}
+
+.outline-button {
+  color: var(--fi-text-secondary);
+  background: var(--fi-surface);
+  border-color: var(--fi-border-strong);
+}
+
+.outline-button:hover:not(:disabled):not([aria-disabled="true"]) {
+  color: var(--fi-primary);
+  background: var(--fi-surface-muted);
+  border-color: var(--fi-primary);
+}
+
+.outline-button:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--fi-surface-accent);
+}
+
+.text-button {
+  color: var(--fi-primary);
+  border-radius: var(--fi-radius-sm);
+}
+
+.text-button:hover:not(:disabled):not([aria-disabled="true"]) {
+  color: var(--fi-primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.primary-button:disabled, .outline-button:disabled,
+.primary-button[aria-disabled="true"], .outline-button[aria-disabled="true"] {
+  color: var(--fi-disabled-text);
+  background: var(--fi-disabled-surface);
+  border-color: var(--fi-border-strong);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.text-button:disabled, .text-button[aria-disabled="true"] {
+  color: var(--fi-disabled-text);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.primary-button[aria-busy="true"], .outline-button[aria-busy="true"] {
+  cursor: progress;
+}
+
+.field {
+  gap: var(--fi-field-gap);
+}
+
+.field label {
+  color: var(--fi-text-secondary);
+  font-weight: var(--fi-weight-semibold);
+  line-height: var(--fi-leading-label);
+}
+
+.field input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.field textarea, .field select {
+  color: var(--fi-text);
+  background: var(--fi-surface);
+  border: 1px solid var(--fi-border-strong);
+  border-radius: var(--fi-radius-control);
+  min-height: var(--fi-control-height);
+  padding: 0.6875rem var(--fi-space-3);
+  font-family: var(--fi-font-family);
+  font-size: var(--fi-type-body);
+  line-height: 1.5;
+  transition: border-color var(--fi-duration-fast) var(--fi-ease-out),
+    box-shadow var(--fi-duration-fast) var(--fi-ease-out);
+}
+
+.field input::placeholder, .field textarea::placeholder,
+.search-input::placeholder {
+  color: var(--fi-text-muted);
+  opacity: 1;
+}
+
+.guided-editor .field select {
+  border-color: var(--fi-border-strong);
+  border-radius: var(--fi-radius-control);
+  font-family: var(--fi-font-family);
+  font-size: var(--fi-type-body);
+}
+
+.field input:hover:not(:disabled), .field textarea:hover:not(:disabled),
+.field select:hover:not(:disabled) {
+  border-color: var(--fi-primary);
+}
+
+.field input:disabled, .field textarea:disabled, .field select:disabled {
+  color: var(--fi-disabled-text);
+  background: var(--fi-disabled-surface);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.field [aria-invalid="true"] {
+  border-color: var(--fi-error);
+}
+
+.search-input, .select-filter, .profile-fit select {
+  border-color: var(--fi-border-strong) !important;
+  border-radius: var(--fi-radius-control);
+  color: var(--fi-text);
+  font-family: var(--fi-font-family);
+}
+
+.notice {
+  border-color: var(--fi-border);
+  border-radius: var(--fi-radius-control);
+  background: var(--fi-surface-muted);
+  color: var(--fi-text-secondary);
+}
+
+.error-notice {
+  color: var(--fi-error);
+  background: var(--fi-error-surface);
+  border-color: var(--fi-error);
+}
+
+.guided-field-error {
+  color: var(--fi-error);
+}
+
+.field-required {
+  color: var(--fi-primary);
+}
+
+.field-optional {
+  color: var(--fi-text-muted);
+}
+
+.field-optional:hover, .field-optional[aria-expanded="true"] {
+  color: var(--fi-primary);
+  background: var(--fi-surface-accent);
+}
+
+.fit-status.aligned, .accepted {
+  background: var(--fi-success-surface) !important;
+  color: var(--fi-success) !important;
+}
+
+.fit-status.different {
+  background: var(--fi-warning-surface);
+  color: var(--fi-warning);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fi-duration-fast: 0ms;
+    --fi-duration-normal: 0ms;
+    --fi-duration-slow: 0ms;
+  }
+}

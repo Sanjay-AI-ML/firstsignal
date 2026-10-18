@@ -68,3 +68,10 @@ Examples remain labelled fictional. Stock marketing photographs imply no member,
 ## Marketing experience — 9 October 2026
 
 The public landing page now demonstrates profile drafting/listing, stated stage fit, saved-startup progress and non-binding proposal versions through a clearly labelled local example. Founder and investor navigation targets separate sections. Marketing copy describes implemented controls; it does not claim guaranteed funding, verified investment quality, email delivery, automatic report resolution or scheduled reminders. The self-hosted Manrope font includes its license in `public/fonts/Manrope-OFL.txt`.
+
+
+## Integrated design update — 18 October 2026
+
+Shared semantic tokens, consistent Manrope, compact overview, profile list/card layouts, composed discovery filters, local workspace search and local conversation search are implemented. The public preview uses fictional profiles and truthful planning-budget labels. Neither search changes account visibility or sends messages. Existing one-profile, custom-sector, consent, saved/direct access and private proposal workflows are retained.
+
+Scoped lint for the new components passes. The two modified legacy workflow files retain 11 pre-existing lint errors with no added errors; this is not a clean-lint release. Manual browser checks cover key keyboard, narrow-screen and privacy-sensitive interactions; see [the dated audit](DESIGN_AUDIT_2026-10-18.md) for exact scope and limits. Production Clerk/domain, email activation and launch operations above still apply.

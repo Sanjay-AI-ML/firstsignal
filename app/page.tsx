@@ -1,10 +1,12 @@
-import { Bookmark, Check, FileText, Handshake, LockKeyhole, MessageCircle, SlidersHorizontal, Sprout } from "lucide-react";
+import Link from "next/link";
+import { ArrowDown, ArrowRight, Bookmark, Check, FileText, Handshake, LockKeyhole, MessageCircle, SlidersHorizontal, Sprout } from "lucide-react";
 import MarketingMotion from "../components/marketing-motion";
 import MarketingSpecialties from "../components/marketing-specialties";
 import MarketingProductTour from "../components/marketing-product-tour";
 import MarketingEntry from "../components/marketing-entry";
 import MarketingTemplates from "../components/marketing-templates";
 import MarketingEvidenceBrief from "../components/marketing-evidence-brief";
+import MarketingDiscoveryPreview from "../components/marketing-discovery-preview";
 import { setupSignIn } from "../lib/onboarding-intent";
 import LegacyWorkspaceLinks from "../components/legacy-workspace-links";
 import "./marketing.css";
@@ -27,31 +29,30 @@ export default function Home() {
   return <div className="marketing">
     <LegacyWorkspaceLinks /><MarketingMotion />
     <header className="marketing-nav">
-      <a className="marketing-brand" href="/" aria-label="FindIn home"><img src="/findin-logo.png" width="38" height="38" alt="" />FindIn</a>
+      <Link className="marketing-brand" href="/" aria-label="FindIn home"><img src="/findin-logo.png" width="38" height="38" alt="" />FindIn</Link>
       <nav aria-label="Main navigation"><a href="#how-it-works">Product</a><a href="#templates">Templates</a><a href="#founders">Founders</a><a href="#investors">Investors</a></nav>
-      <a className="marketing-nav-cta" href="/app">Open workspace</a>
+      <a className="marketing-nav-cta" href="/app">Open workspace<ArrowRight size={16} aria-hidden="true" /></a>
     </header>
     <main id="main-content">
       <section className="marketing-hero">
         <div className="marketing-hero-copy">
-          <span className="marketing-kicker"><Sprout size={16} aria-hidden="true" /> THE FIRST MILE OF BUILDING SOMETHING</span>
-          <h1>An early idea.<br /><em>A clear next move.</em></h1>
-          <p>Meet founders and investors through clear profiles, shared progress and conversations you both choose.</p>
+          <span className="marketing-kicker"><span className="marketing-status-dot" aria-hidden="true" /> A HOME FOR EARLY IDEAS</span>
+          <h1>An early idea.<br />A meaningful<br /><em>first connection.</em></h1>
+          <p>A workspace for early founders and investors. Share your thinking and find a reason to talk.</p>
           <MarketingEntry />
-          <div className="marketing-hero-footnote"><span>Idea</span><span>Pre-product</span><span>First prototype</span><span>Early traction</span></div>
+          <div className="marketing-hero-footnote"><span>Any industry.</span><span>Idea to early traction.</span><span>Your pace.</span></div>
         </div>
-        <MarketingEvidenceBrief />
+        <div className="marketing-hero-product"><MarketingDiscoveryPreview /><p className="marketing-hero-product-caption"><span>Explore first. Get the context. Choose your next step.</span><a href="#how-it-works">Take the tour<ArrowDown size={15} aria-hidden="true" /></a></p></div>
       </section>
-      <div className="marketing-principles" aria-label="FindIn principles"><span>Show the learning.</span><span>Understand the fit.</span><span>Choose the conversation.</span><span>Keep moving forward.</span></div>
+      <div className="marketing-principles" aria-label="The FindIn workflow"><span><small>01</small>Show your thinking</span><span><small>02</small>Explore the fit</span><span><small>03</small>Make the introduction</span><span><small>04</small>Keep moving forward</span></div>
 
       <MarketingSpecialties />
       <MarketingProductTour />
-      <MarketingTemplates />
 
       <section className="marketing-audience marketing-section" id="founders" aria-labelledby="founders-title" tabIndex={-1}>
-        <div className="marketing-audience-copy marketing-reveal"><span className="marketing-kicker">FOR FOUNDERS</span><h2 id="founders-title">Your idea has a story.<br /><em>Give it a starting point.</em></h2><p>Bring the problem, the learning and the next experiment together. You can start before the product is ready.</p>
+        <div className="marketing-audience-copy marketing-reveal"><span className="marketing-kicker"><span className="marketing-section-number">01 /</span> FOR FOUNDERS</span><h2 id="founders-title">Start with the idea.<br /><em>Show how it grows.</em></h2><p>You don’t need a launch to tell a useful story. Bring your ideology, proposed solution and the next question worth answering.</p>
           <ul className="marketing-feature-list"><li><FileText size={20} aria-hidden="true" /><div><strong>One clear step at a time</strong><span>Guided fields and a completion checklist help you tell the useful parts of your story.</span></div></li><li><LockKeyhole size={20} aria-hidden="true" /><div><strong>Your pace. Your visibility.</strong><span>Work on a private draft, then list it when you’re comfortable sharing.</span></div></li><li><Sprout size={20} aria-hidden="true" /><div><strong>Keep the learning visible</strong><span>Post dated progress updates so people can revisit how your idea develops.</span></div></li></ul>
-          <a className="marketing-primary" href={founderEntry}>Create your founder profile</a>
+          <a className="marketing-primary" href={founderEntry}>Create your founder profile<ArrowRight size={16} aria-hidden="true" /></a>
         </div>
         <div className="marketing-audience-visual marketing-reveal"><figure className="marketing-audience-art"><img src="/images/founder-work-photo.webp" width="1400" height="788" loading="lazy" decoding="async" alt="A woman working on a laptop beside project notes in an office" /><figcaption className="marketing-photo-credit">Stock photo · <a href="https://unsplash.com/photos/woman-working-on-laptop-in-modern-office-setting-O9PEo38zOss" target="_blank" rel="noreferrer">Vitaly Gariev / Unsplash</a></figcaption></figure>
           <div className="marketing-learning-note"><span className="marketing-example-label">FICTIONAL PROGRESS UPDATE</span><time dateTime="2026-10-06">06 Oct 2026</time><h3>We simplified the handover.</h3><p>Three walkthroughs pointed to a shorter unresolved-items list. Whether owners will pay remains untested.</p><span className="marketing-note-footer">What changed, what is still unknown, and what comes next.</span></div>
@@ -60,8 +61,8 @@ export default function Home() {
 
       <section className="marketing-investor-band">
         <div className="marketing-audience marketing-section marketing-audience-investor" id="investors" aria-labelledby="investors-title" tabIndex={-1}>
-          <div className="marketing-audience-copy marketing-reveal"><span className="marketing-kicker">FOR INVESTORS</span><h2 id="investors-title">See the thinking.<br /><em>Then start talking.</em></h2><p>Explore the learning behind an early idea, see whether it matches your interests and choose which conversations deserve your time.</p>
-            <ul className="marketing-feature-list"><li><SlidersHorizontal size={20} aria-hidden="true" /><div><strong>Put your interests into focus</strong><span>Describe sectors, stages, preferred investment amounts and the evidence you want to see.</span></div></li><li><Bookmark size={20} aria-hidden="true" /><div><strong>Follow before you connect</strong><span>Save startups and revisit their progress while you build your understanding.</span></div></li><li><MessageCircle size={20} aria-hidden="true" /><div><strong>Keep the conversation together</strong><span>Review requests, private messages and proposal history in one connections dashboard.</span></div></li></ul>
+          <div className="marketing-audience-copy marketing-reveal"><span className="marketing-kicker"><span className="marketing-section-number">02 /</span> FOR INVESTORS</span><h2 id="investors-title">Look beyond the pitch.<br /><em>Find a reason to talk.</em></h2><p>Make a shortlist with context. Compare stages, stated plans and funding interests before choosing a conversation.</p>
+            <ul className="marketing-feature-list"><li><SlidersHorizontal size={20} aria-hidden="true" /><div><strong>A closer look, side by side</strong><span>Compare up to three profiles. Filter by stage and sector, then share the search.</span></div></li><li><Bookmark size={20} aria-hidden="true" /><div><strong>Follow before you connect</strong><span>Save startups and revisit their progress while you build your understanding.</span></div></li><li><MessageCircle size={20} aria-hidden="true" /><div><strong>Keep the conversation together</strong><span>Review requests, private messages and proposal history in one connections dashboard.</span></div></li></ul>
             <div className="marketing-actions"><a className="marketing-primary" href="/app#discover">Explore founder profiles</a><a className="marketing-secondary" href={investorEntry}>Create an investor profile</a></div><p className="marketing-audience-note">Your investor form opens after sign-in. Keep it private while you write.</p>
           </div>
           <div className="marketing-audience-visual marketing-reveal"><figure className="marketing-audience-art"><img src="/images/project-discussion-photo.webp" width="1400" height="788" loading="lazy" decoding="async" alt="Two colleagues discussing a project together at a laptop" /><figcaption className="marketing-photo-credit">Stock photo · <a href="https://unsplash.com/photos/two-colleagues-collaborating-on-a-project-at-a-laptop-tRvuRPE8cr4" target="_blank" rel="noreferrer">Vitaly Gariev / Unsplash</a></figcaption></figure>
@@ -70,13 +71,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="marketing-trust marketing-section" aria-labelledby="trust-title"><div className="marketing-reveal"><span className="marketing-kicker">YOU KEEP THE CHOICE</span><h2 id="trust-title">Open to possibility.<br />Clear about boundaries.</h2><p>Useful relationships start with context and control.</p><a href="/privacy" className="marketing-secondary">Read how sharing works</a></div><div className="marketing-trust-list">
-        {[{ icon: LockKeyhole, title: "Private until you choose otherwise", text: "Drafts stay with your account. A listed profile is public. Your follow-up notes stay private." }, { icon: Handshake, title: "Introductions need acceptance", text: "Messages and proposals open after both people choose to connect. Proposals express non-binding interest." }, { icon: MessageCircle, title: "A way to handle unwanted contact", text: "Report a member or block contact in both directions. Reports are submitted for manual handling; they do not automatically remove a profile." }, { icon: FileText, title: "Know where the information comes from", text: "Member evidence is self-reported. Examples are labelled. Funding, due diligence and formal agreements remain separate." }].map(({ icon: Icon, title, text }) => <article key={title}><Icon size={22} aria-hidden="true" /><div><h3>{title}</h3><p>{text}</p></div></article>)}
+      <section className="marketing-context marketing-section" aria-labelledby="context-title"><div className="marketing-context-copy marketing-reveal"><span className="marketing-kicker">CONTEXT BEFORE CONVICTION</span><h2 id="context-title">The learning matters.<br /><em>So do the unknowns.</em></h2><p>An interview is a beginning. A prototype is a test. Neither is a promise of success. Put the useful detail and the unanswered questions in the same place.</p><ol className="marketing-context-points"><li><span>01</span><div><strong>What have you learned?</strong><p>Describe the observation and where it came from.</p></div></li><li><span>02</span><div><strong>What remains uncertain?</strong><p>Make room for the questions a pitch can leave out.</p></div></li><li><span>03</span><div><strong>What will you test next?</strong><p>Share a concrete next step and what you hope to learn.</p></div></li></ol><a href="#templates" className="marketing-text-link">Build your own brief<ArrowRight size={17} aria-hidden="true" /></a><p className="marketing-context-note">Member claims are self-reported. FindIn does not independently verify startup evidence.</p></div><MarketingEvidenceBrief /></section>
+
+      <MarketingTemplates />
+
+      <section className="marketing-trust marketing-section" aria-labelledby="trust-title"><div className="marketing-trust-heading"><span className="marketing-kicker">BUILT AROUND YOUR CHOICE</span><h2 id="trust-title">A little more control.<br /><em>At every first step.</em></h2><a href="/privacy" className="marketing-text-link">How sharing works<ArrowRight size={17} aria-hidden="true" /></a></div><div className="marketing-trust-list">
+        {[{ icon: LockKeyhole, title: "Choose what to share", text: "Your draft stays private. List your profile when you’re ready. Follow-up notes belong only to you." }, { icon: Handshake, title: "A conversation takes two", text: "Messages and non-binding proposals open after an introduction is accepted." }, { icon: MessageCircle, title: "Keep your boundaries", text: "Block contact in both directions or submit a report for manual handling." }].map(({ icon: Icon, title, text }) => <article key={title}><Icon size={22} aria-hidden="true" /><div><h3>{title}</h3><p>{text}</p></div></article>)}
       </div></section>
 
       <section className="marketing-faq marketing-section" aria-labelledby="faq-title"><div className="marketing-section-heading"><span className="marketing-kicker">A LITTLE CLARITY</span><h2 id="faq-title">Before your<br />first hello.</h2></div><div>{questions.map(({ q, a }) => <details key={q}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></section>
-      <section className="marketing-closing"><span className="marketing-kicker">BUILD SOMETHING WORTH A CONVERSATION</span><h2>The product can come later.<br /><em>The first signal starts here.</em></h2><p>Bring what you know. Be clear about what comes next.</p><div className="marketing-actions"><a className="marketing-primary" href={profileEntry}>Create your profile</a><a className="marketing-secondary" href="/app#discover">Explore the network</a></div></section>
+      <section className="marketing-closing"><span className="marketing-kicker">YOUR NEXT CHAPTER IS STILL UNWRITTEN</span><h2>Start with an idea.<br /><em>See who it brings you to.</em></h2><p>Bring what you know. Be clear about what comes next.</p><div className="marketing-actions"><a className="marketing-primary" href={profileEntry}>Create your profile<ArrowRight size={16} aria-hidden="true" /></a><a className="marketing-secondary" href="/app#discover">Explore the network</a></div><span className="marketing-closing-note">Discovery and discussion. No funding guarantee.</span></section>
     </main>
-    <footer className="marketing-footer"><div><a className="marketing-brand" href="/"><img src="/findin-logo.png" width="32" height="32" alt="" />FindIn</a><p>Early ideas. Meaningful connections.</p></div><nav aria-label="Footer navigation"><a href="#templates">Starter templates</a><a href="#how-it-works">Inside the product</a><a href="#founders">For founders</a><a href="#investors">For investors</a><a href="/signin?return_to=%2Fapp">Sign in</a><a href="/privacy">Privacy</a></nav><small>© {new Date().getFullYear()} FindIn · Discovery and discussion. No funding guarantee.</small></footer>
+    <footer className="marketing-footer"><div><Link className="marketing-brand" href="/"><img src="/findin-logo.png" width="32" height="32" alt="" />FindIn</Link><p>Early ideas. Meaningful connections.</p></div><nav aria-label="Footer navigation"><a href="#templates">Starter templates</a><a href="#how-it-works">Inside the product</a><a href="#founders">For founders</a><a href="#investors">For investors</a><a href="/signin?return_to=%2Fapp">Sign in</a><a href="/privacy">Privacy</a></nav><small>© {new Date().getFullYear()} FindIn · Discovery and discussion. No funding guarantee.</small></footer>
   </div>;
 }

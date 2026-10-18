@@ -1,0 +1,87 @@
+/* One motion language: quick feedback, a slower entrance, and native scrolling. */
+.marketing {
+  --motion-feedback: 180ms;
+  --motion-entrance: 560ms;
+  --motion-ease: cubic-bezier(.22, 1, .36, 1);
+}
+.marketing .scroll-reveal { animation: findin-section-arrive var(--motion-entrance) var(--motion-ease) both; }
+@keyframes findin-section-arrive {
+  from { opacity: .6; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+.marketing .marketing-primary,
+.marketing .marketing-secondary,
+.marketing .marketing-tour-steps > button,
+.marketing .connection-map-tabs > button {
+  transition-duration: var(--motion-feedback);
+  transition-timing-function: var(--motion-ease);
+}
+.marketing .marketing-primary:active,
+.marketing .marketing-secondary:active { transform: translateY(1px); }
+.marketing .marketing-tour-panel { animation-duration: 240ms; animation-timing-function: var(--motion-ease); }
+.marketing-motion-settings { display: flex; align-items: center; }
+.marketing-motion-toggle {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 44px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+  background: var(--fi-surface); color: var(--muted); font: inherit; font-size: .75rem;
+  cursor: pointer; transition: border-color var(--motion-feedback), color var(--motion-feedback);
+}
+.marketing-motion-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.marketing-motion-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.marketing-motion-toggle:disabled { cursor: default; color: var(--muted); }
+.marketing .specialty-card { --card-rotation: 0deg; transition: transform var(--motion-feedback) var(--motion-ease); }
+.marketing[data-motion="full"] .illustration-reveal > img {
+  animation: findin-illustration-settle 760ms var(--motion-ease) both;
+}
+@keyframes findin-illustration-settle {
+  from { opacity: .92; transform: translateY(8px) scale(1.025); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: scroll()) {
+  .marketing[data-motion="full"][data-scroll-timeline="native"] .marketing-reading-progress {
+    animation: findin-reading-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+  @keyframes findin-reading-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+}
+@supports (animation-timeline: view()) {
+  @media (min-width: 1001px) and (prefers-reduced-motion: no-preference) {
+    .marketing[data-motion="full"] .marketing-editorial-art > img {
+      animation: findin-illustration-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+    .marketing[data-motion="full"] .specialty-card {
+      animation: findin-card-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 60%;
+    }
+    .marketing .specialty-evidence { --settle-start: -4deg; --settle-end: 1deg; }
+    .marketing .specialty-fit { --settle-start: 1.5deg; --settle-end: -1deg; }
+    .marketing .specialty-consent { --settle-start: 4deg; --settle-end: -1deg; }
+    @keyframes findin-card-settle {
+      from { rotate: var(--settle-start); }
+      to { rotate: var(--settle-end); }
+    }
+  }
+}
+.marketing[data-motion="paused"] *,
+.marketing[data-motion="paused"] *::before,
+.marketing[data-motion="paused"] *::after { animation: none !important; transition: none !important; }
+.marketing[data-motion="paused"] .marketing-reading-progress { display: none; }
+.marketing[data-motion="paused"] .specialty-card,
+.marketing[data-motion="paused"] .specialty-card:hover,
+.marketing[data-motion="paused"] .marketing-audience-art img,
+.marketing[data-motion="paused"] .marketing-primary:hover,
+.marketing[data-motion="paused"] .marketing-primary:active,
+.marketing[data-motion="paused"] .marketing-secondary:active { transform: none; rotate: none; }
+html:has(.marketing[data-motion="paused"]) { scroll-behavior: auto; }
+@media (max-width: 1000px) {
+  .marketing .specialty-card, .marketing .specialty-card:hover { transform: none; rotate: none; }
+  .marketing[data-motion="full"] .illustration-reveal > img { animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marketing *, .marketing *::before, .marketing *::after { animation: none !important; transition: none !important; }
+  .marketing .specialty-card { rotate: none; }
+  .marketing-reading-progress { display: none; }
+}

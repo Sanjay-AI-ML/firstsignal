@@ -152,3 +152,15 @@ The user's screenshot exposed stacked outlines, redundant notes and uneven spaci
 Browser access became available again during this task, superseding earlier browser-disabled notes for this specific preview. Actual local checks covered desktop appearance,390px and320px layouts without horizontal overflow, stage filtering and search destinations, selection removal and comparison empty-state recovery, all-three comparison, arrow/Home/End focus and selection, and absence of observed browser errors. The container layout stacks narrow comparisons; budget amounts stay together. These checks do not establish whole-product accessibility, performance or owner OAuth. TypeScript, scoped lint (zero errors; native-image advisories), CSS parsing and production build passed. No backend, database, authentication or real member records changed.
 
 Published preview cleanup as version29/source6d21b7f19d7e74aef42f4f91f292508e086a4a83, deployment appgdep_6ad4e56d3adc8191b6f73074e1ef860b succeeded on the existing public URL. Live browser checks confirmed the single frame, stage filters, comparison, Home focus/selection and absence of observed errors. Screenshot saved locally at outputs/findin-preview-polished-live.png (ignored review artifact).
+
+
+## Scroll and motion update — 18 October 2026
+
+FindIn now uses a bounded sticky product walkthrough on wide, tall screens when the actual preview fits. Native scrolling advances the existing four examples; deliberate interaction pauses progression. A stable Pause/Resume control protects keyboard focus. Phones, short screens, OS reduced motion and the footer Pause animations control use the ordinary tab layout. Native CSS scroll/view timelines enhance the reading strip, workshop image and three specialty cards; older browsers retain a complete static layout and JS reading-progress fallback. Entrances share consistent timing. No animation dependency, new image, backend or schema change.
+
+Research, implementation decisions and actual verification: [motion research](MOTION_RESEARCH_2026-10-18.md). TypeScript, scoped component lint and CSS parsing passed; page lint retains five existing image warnings. Local browser tests covered desktop story progression/release, stage interaction freeze, immediate explicit resume/focus, version2 counteroffer, global pause, keyboard End, 320/390px overflow, short laptop fallback, investor anchor and FAQ expansion. OS reduced-motion/fallback logic was reviewed, not emulated; cross-browser devices and frame metrics remain unmeasured.
+
+Final production build passed.
+
+
+Published motion update: version30, source d0b284cadc826024c647c95c046b858b382c0c38, deployment appgdep_6ad4ee0aee8c81918ffb20ec0f9ba3de succeeded on the existing public URL. Live browser confirmed native view timelines on artwork/cards, the sticky preview at y103 and scroll advancement to step2, stage interaction pausing and no observed client error. Proof: outputs/findin-scroll-story-live-2026-10-18.png. Existing Clerk development instance, domain and email activation/operations work remain separate launch requirements.

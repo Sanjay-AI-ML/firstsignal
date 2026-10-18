@@ -11,6 +11,8 @@ import MarketingConnectionMap from "../components/marketing-connection-map";
 import { setupSignIn } from "../lib/onboarding-intent";
 import LegacyWorkspaceLinks from "../components/legacy-workspace-links";
 import "./marketing.css";
+import "./marketing-tour-motion.css";
+import "./marketing-motion.css";
 
 const profileEntry = "/signin?return_to=%2Fapp%23profiles";
 const founderEntry = setupSignIn("founder");
@@ -28,7 +30,7 @@ const questions = [
 
 export default function Home() {
   return <div className="marketing">
-    <LegacyWorkspaceLinks /><MarketingMotion />
+    <LegacyWorkspaceLinks />
     <header className="marketing-nav">
       <Link className="marketing-brand" href="/" aria-label="FindIn home"><img src="/illustrations/findin-mark-64.webp" srcSet="/illustrations/findin-mark-64.webp 64w, /illustrations/findin-mark-128.webp 128w" sizes="(max-width: 760px) 32px, 38px" width="38" height="38" alt="" />FindIn</Link>
       <nav aria-label="Main navigation"><a href="#how-it-works">Product</a><a href="#templates">Templates</a><a href="#founders">Founders</a><a href="#investors">Investors</a></nav>
@@ -93,6 +95,6 @@ export default function Home() {
       <section className="marketing-faq marketing-section" aria-labelledby="faq-title"><div className="marketing-section-heading"><span className="marketing-kicker">A LITTLE CLARITY</span><h2 id="faq-title">Before your<br />first hello.</h2></div><div>{questions.map(({ q, a }) => <details key={q}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></section>
       <section className="marketing-closing"><span className="marketing-kicker">YOUR NEXT CHAPTER IS STILL UNWRITTEN</span><h2>Start with an idea.<br /><em>See who it brings you to.</em></h2><p>Bring what you know. Be clear about what comes next.</p><div className="marketing-actions"><a className="marketing-primary" href={profileEntry}>Create your profile<ArrowRight size={16} aria-hidden="true" /></a><a className="marketing-secondary" href="/app#discover">Explore the network</a></div><span className="marketing-closing-note">Discovery and discussion. No funding guarantee.</span></section>
     </main>
-    <footer className="marketing-footer"><div><Link className="marketing-brand" href="/"><img src="/illustrations/findin-mark-64.webp" srcSet="/illustrations/findin-mark-64.webp 64w, /illustrations/findin-mark-128.webp 128w" sizes="32px" width="32" height="32" loading="lazy" decoding="async" alt="" />FindIn</Link><p>Early ideas. Meaningful connections.</p></div><nav aria-label="Footer navigation"><a href="#templates">Starter templates</a><a href="#how-it-works">Inside the product</a><a href="#founders">For founders</a><a href="#investors">For investors</a><a href="/signin?return_to=%2Fapp">Sign in</a><a href="/privacy">Privacy</a></nav><small>© {new Date().getFullYear()} FindIn · Discovery and discussion. No funding guarantee.</small></footer>
+    <footer className="marketing-footer"><div><Link className="marketing-brand" href="/"><img src="/illustrations/findin-mark-64.webp" srcSet="/illustrations/findin-mark-64.webp 64w, /illustrations/findin-mark-128.webp 128w" sizes="32px" width="32" height="32" loading="lazy" decoding="async" alt="" />FindIn</Link><p>Early ideas. Meaningful connections.</p></div><nav aria-label="Footer navigation"><a href="#templates">Starter templates</a><a href="#how-it-works">Inside the product</a><a href="#founders">For founders</a><a href="#investors">For investors</a><a href="/signin?return_to=%2Fapp">Sign in</a><a href="/privacy">Privacy</a></nav><MarketingMotion /><small>© {new Date().getFullYear()} FindIn · Discovery and discussion. No funding guarantee.</small></footer>
   </div>;
 }

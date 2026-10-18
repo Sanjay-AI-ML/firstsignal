@@ -61,3 +61,17 @@ See [email setup](EMAIL_SETUP.md), [Clerk setup](cloudflare/CLERK_SETUP.md) and 
 ## GitHub upload
 
 Upload the application source, assets, lockfile, migrations and documentation. Never upload `.env.local`, `node_modules`, `.git`, `.wrangler`, `.sites-runtime`, `dist` or database files. The prepared source ZIP excludes these. Git's ignore rules do not protect files dragged into GitHub's browser upload, so use the ZIP contents rather than the whole workspace folder.
+
+
+## Owner portal and V2 visual update
+
+`/admin` is a server-protected operator portal for one configured existing Clerk user. It provides real aggregate status, report review, reversible public-listing restrictions and an audit history. Private drafts, messages, proposals and follow-up notes are excluded. Missing owner configuration denies everyone. See [ADMIN_PORTAL.md](ADMIN_PORTAL.md) before activating or deploying this update.
+
+The app now requires migration `0003_owner_portal.sql` in addition to the previous three migrations. Apply only unapplied migrations in order; do not reset existing data. This task applied 0003 to the existing local database only. Hosted migration/publication remain pending because the current Sites connection cannot locate the retained project.
+
+```powershell
+node scripts/verify-admin.mjs
+node scripts/configure-admin.mjs --email your-sign-in-email --write-local
+```
+
+The second command is setup, not a test: it requires the owner's explicitly identified verified primary email and existing local Clerk secret, and writes only the ignored local ID binding. Hosting needs the same binding configured securely. See [DESIGN_V2_REVIEW.md](DESIGN_V2_REVIEW.md) for research, assets and honest visual-verification limits.

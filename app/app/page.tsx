@@ -1,4 +1,5 @@
 import Workspace from "../platform";
+import { isAdminAccount } from "@/lib/admin-access";
 import { getAppUser } from "../auth";
 import { readSetupIntent } from "@/lib/onboarding-intent";
 export const dynamic = "force-dynamic";
@@ -10,5 +11,5 @@ export default async function AppPage({ searchParams }: { searchParams: Promise<
     for (const value of Array.isArray(values) ? values : values ? [values] : []) query.append(key, value);
   }
   const user = await getAppUser();
-  return <Workspace user={user ? {id:user.userId,name:user.displayName,email:user.email}:null} setupIntent={readSetupIntent(query.toString())}/>;
+  return <Workspace isAdmin={isAdminAccount(user)} user={user ? {id:user.userId,name:user.displayName,email:user.email}:null} setupIntent={readSetupIntent(query.toString())}/>;
 }

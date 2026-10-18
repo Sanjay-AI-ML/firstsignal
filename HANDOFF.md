@@ -75,12 +75,13 @@ node scripts/run-framework.mjs dev
 
 The direct JavaScript entrypoints above are useful on this Windows host if an npm wrapper fails. The development server normally uses `http://127.0.0.1:5173`; keep `FIRSTSIGNAL_ORIGIN` and the opened URL consistent.
 
-Schema lives in `db/schema.ts`; SQL migrations live in `drizzle/`. Keep applied migrations immutable. A fresh local database needs all three migrations in order:
+Schema lives in `db/schema.ts`; SQL migrations live in `drizzle/`. Keep applied migrations immutable. A fresh local database needs all four migrations in order (including 0003 below):
 
 ```powershell
 node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_majestic_ender_wiggin.sql
 node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_whole_king_bedlam.sql
 node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_glossy_cable.sql
+node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_owner_portal.sql
 ```
 
 Migration `0002_glossy_cable.sql` adds progress updates, member blocks/reports and private connection next steps. On an existing local database with `0000` and `0001` already applied, run only `0002`. These commands target local state; never substitute a live database or reset one to initialize development. Sites deployment owns the current live D1 binding and migration workflow.
@@ -109,3 +110,14 @@ Quick search (header or Ctrl/Cmd+K) finds already loaded, authorised profiles, i
 See [design system](DESIGN_SYSTEM.md) and [audit/research and verification](DESIGN_AUDIT_2026-10-18.md). Browser checks covered 320px comparison, private search, keyboard selection/Escape focus, dirty-edit protection, connection search/filter recovery, marketing at 320/390/768/1024px, role handoff and sign-in layout. Authentication fields/actions have 44px minimum heights; the Google label fits at 320px. Core Web Vitals and full accessibility remain unmeasured. Existing lint baseline remains; newly added components pass scoped lint.
 
 18 October final verification: TypeScript and production build passed after the profile-sheet key fix. Regression scripts for workbench/search, saved/direct access, 402-profile database bounds, single-profile/solution rules, broad/custom sectors, profile fit and suggestions passed. Modified marketing and new components have zero lint errors; existing image warnings and legacy workflow lint errors remain. The temporary fixture is absent from the build. Built-Worker browser checks opened direct-linked profiles and used lazy quick search to open another profile without observed errors from that local origin.
+
+
+## Owner portal + visual V2 — local implementation, 18 October 2026
+
+Implemented `/admin` and `/api/admin`: exact Clerk owner-ID authorization before reads/writes, actual aggregate counts, searchable/paginated listings/reports/activity, review statuses and notes, reversible listing moderation with owner-visible reasons, optimistic versions and atomic audit history. Restriction records remain restorable after an owner unlists, with private draft content redacted. Connection reports resolve a single current owner-listed target profile; full bounded report details remain available. No account deletion/role granting, private conversation access or outbound emails. See [setup and behavior](ADMIN_PORTAL.md).
+
+The public marketing page gains an original responsive connection map with keyboard tab semantics and reduced motion. Existing generated logo source is retained; 64/128/256 WebP delivery variants are 2,500/4,926/10,106 bytes. No new generated people or proof claims.
+
+Validation: TypeScript, production build, 94 actual-route/SQLite owner-portal assertions, existing workbench/private saved-direct access/single-profile/sector/fit/suggestion and 402-profile bounds regressions pass. New backend/admin/marketing files have zero scoped lint errors; small native image warnings and the existing legacy workflow baseline remain. Actual component server rendering produced five clearly labelled static synthetic layout review files in ignored outputs; these do not establish browser layout or interaction quality. Browser control is disabled in Work settings.
+
+Migration0003 was applied once to the existing LOCAL database after verifying it was not already present. No hosted schema or data changed. Owner binding is still pending the user's sign-in email; the default denies all accounts. Current Sites connector returns project-not-found for the retained identity and lists zero projects. Consequently this update is NOT PUBLISHED; the version26 website remains the last confirmed public deployment. Reconnect the existing Site's account/workspace, configure the immutable owner ID, and use the established migration/deployment flow. No replacement Site was created.

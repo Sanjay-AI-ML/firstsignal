@@ -5,27 +5,28 @@ import { seedProfiles,type Profile } from '@/lib/data';
 import { actionSchema } from '@/lib/validation';
 import { membersBlocked } from '@/lib/member-safety';
 export const dynamic='force-dynamic';
-type Stored={id:string;owner:string;kind:string;data:string;listed:number;updated:string};
+type Stored={id:string;owner:string;kind:string;data:string;listed:number;updated:string;moderation_hidden?:number;moderation_reason?:string;moderation_updated?:string};
 type RequestRow={id:string;sender:string;recipient:string|null;profile_id:string;target_name:string;sender_name:string;message:string;status:string;created:string;updated:string;activity?:string;blocked?:number;proposal_status?:string;proposal_amount?:number;proposal_author?:string;proposal_version?:number;next_note?:string;next_date?:string};
 type Progress={id:string;profile_id:string;date:string;title:string;body:string;created:string};
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
-function profile(row:Stored,userId?:string,updates:Profile['updates']=[]):Profile{const data=JSON.parse(row.data);return {...data,id:row.id,kind:row.kind,updates,demo:false,mine:row.owner===userId,listed:!!row.listed,updated:row.updated,evidenceDate:data.evidenceDate??''};}
+function profile(row:Stored,userId?:string,updates:Profile['updates']=[]):Profile{const data=JSON.parse(row.data);return {...data,id:row.id,kind:row.kind,updates,demo:false,mine:row.owner===userId,listed:!!row.listed,updated:row.updated,evidenceDate:data.evidenceDate??'',...(row.owner===userId&&row.moderation_hidden?{moderation:{hidden:true,reason:row.moderation_reason??'',updated:row.moderation_updated??''}}:{})};}
 async function state(userId?:string,requestedProfileId?:string){
  const db=database();
- const rows=await (userId?db.prepare('SELECT p.* FROM profiles p WHERE listed=1 AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.owner=? AND b.target_owner=p.owner) OR (b.owner=p.owner AND b.target_owner=?)) ORDER BY updated DESC LIMIT 200').bind(userId,userId):db.prepare('SELECT * FROM profiles WHERE listed=1 ORDER BY updated DESC LIMIT 200')).all<Stored>();
- const owned=userId?await db.prepare('SELECT * FROM profiles WHERE owner=? ORDER BY updated DESC').bind(userId).all<Stored>():{results:[]};
+ const rows=await (userId?db.prepare('SELECT p.* FROM profiles p WHERE listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1) AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.owner=? AND b.target_owner=p.owner) OR (b.owner=p.owner AND b.target_owner=?)) ORDER BY updated DESC LIMIT 200').bind(userId,userId):db.prepare('SELECT p.* FROM profiles p WHERE listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1) ORDER BY updated DESC LIMIT 200')).all<Stored>();
+ const owned=userId?await db.prepare('SELECT p.*,m.hidden AS moderation_hidden,m.reason AS moderation_reason,m.updated AS moderation_updated FROM profiles p LEFT JOIN profile_moderation m ON m.profile_id=p.id WHERE owner=? ORDER BY p.updated DESC').bind(userId).all<Stored>():{results:[]};
  // A shortlist must survive a profile falling outside the recent discovery window.
  // Join against the bounded saved set instead of constructing an unbounded IN list.
  // A saved ID never grants access to another member's private or blocked profile.
  const savedRows=userId?await db.prepare(`SELECT p.* FROM profiles p INNER JOIN saves s ON s.profile_id=p.id
- WHERE s.owner=? AND (p.listed=1 OR p.owner=?)
+ WHERE s.owner=? AND ((p.listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)) OR p.owner=?)
  AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.owner=? AND b.target_owner=p.owner) OR (b.owner=p.owner AND b.target_owner=?))
  ORDER BY s.created DESC LIMIT 200`).bind(userId,userId,userId,userId).all<Stored>():{results:[]};
  // Shared profile links are independent of discovery recency and shortlist state.
  // The same visibility and bilateral-block checks still apply to a direct link.
- const requestedRows=requestedProfileId?await (userId?db.prepare(`SELECT p.* FROM profiles p WHERE p.id=? AND (p.listed=1 OR p.owner=?)
- AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.owner=? AND b.target_owner=p.owner) OR (b.owner=p.owner AND b.target_owner=?)) LIMIT 1`).bind(requestedProfileId,userId,userId,userId):db.prepare('SELECT * FROM profiles WHERE id=? AND listed=1 LIMIT 1').bind(requestedProfileId)).all<Stored>():{results:[]};
- const accessibleRows=[...new Map([...rows.results,...savedRows.results,...requestedRows.results].map(row=>[row.id,row])).values()];
+ const requestedRows=requestedProfileId?await (userId?db.prepare(`SELECT p.* FROM profiles p WHERE p.id=? AND ((p.listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)) OR p.owner=?)
+ AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.owner=? AND b.target_owner=p.owner) OR (b.owner=p.owner AND b.target_owner=?)) LIMIT 1`).bind(requestedProfileId,userId,userId,userId):db.prepare('SELECT p.* FROM profiles p WHERE id=? AND listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1) LIMIT 1').bind(requestedProfileId)).all<Stored>():{results:[]};
+ const ownHidden=new Set(owned.results.filter(row=>row.moderation_hidden).map(row=>row.id));
+ const accessibleRows=[...new Map([...rows.results,...savedRows.results,...requestedRows.results].filter(row=>!ownHidden.has(row.id)).map(row=>[row.id,row])).values()];
  const visibleIds=[...new Set([...accessibleRows,...owned.results].map(r=>r.id))];
  const progressQueries=[];
  for(let offset=0;offset<visibleIds.length;offset+=100){const ids=visibleIds.slice(offset,offset+100);progressQueries.push(db.prepare(`SELECT id,profile_id,date,title,body,created FROM progress_updates WHERE profile_id IN (${ids.map(()=>'?').join(',')}) ORDER BY date DESC,created DESC LIMIT 2000`).bind(...ids));}
@@ -84,7 +85,7 @@ export async function POST(request:Request){
    const intro=await db.prepare("SELECT sender,recipient,sender_name,target_name FROM introductions WHERE id=? AND status='accepted' AND recipient IS NOT NULL AND (sender=? OR recipient=?)").bind(a.id,owner,owner).first<{sender:string;recipient:string;sender_name:string;target_name:string}>();
    if(intro)target={id:`connection:${a.id}`,owner:intro.sender===owner?intro.recipient:intro.sender,name:intro.sender===owner?intro.target_name:intro.sender_name};
   }else{
-   const stored=await db.prepare(`SELECT p.* FROM profiles p WHERE p.id=? AND (p.listed=1 OR EXISTS (SELECT 1 FROM introductions i WHERE i.status='accepted' AND ((i.sender=? AND i.recipient=p.owner) OR (i.recipient=? AND i.sender=p.owner))))`).bind(a.profileId,owner,owner).first<Stored>();
+   const stored=await db.prepare(`SELECT p.* FROM profiles p WHERE p.id=? AND ((p.listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)) OR EXISTS (SELECT 1 FROM introductions i WHERE i.status='accepted' AND ((i.sender=? AND i.recipient=p.owner) OR (i.recipient=? AND i.sender=p.owner))))`).bind(a.profileId,owner,owner).first<Stored>();
    if(stored)target={id:stored.id,owner:stored.owner,name:profile(stored).name};
   }
   if(!target)return json({error:'This member profile is unavailable.'},404);
@@ -100,17 +101,17 @@ export async function POST(request:Request){
   }
  }
  if(a.action==='save'||a.action==='request'){
-  const seed=seedProfiles.find(p=>p.id===a.profileId),stored=seed?null:await db.prepare('SELECT * FROM profiles WHERE id=? AND listed=1').bind(a.profileId).first<Stored>();
+  const seed=seedProfiles.find(p=>p.id===a.profileId),stored=seed?null:await db.prepare('SELECT p.* FROM profiles p WHERE id=? AND listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)').bind(a.profileId).first<Stored>();
   if((!seed&&!stored||stored&&await membersBlocked(owner,stored.owner))&&!(a.action==='save'&&!a.saved))return json({error:'This profile is no longer available.'},404);
   if(a.action==='save'){
-   if(a.saved){const count=await db.prepare('SELECT COUNT(*) AS n FROM saves WHERE owner=?').bind(owner).first<{n:number}>();if((count?.n??0)>=200)return json({error:'Your shortlist is full. Remove a saved profile first.'},400);await db.prepare('INSERT INTO saves (owner,profile_id,created) VALUES (?,?,?) ON CONFLICT(owner,profile_id) DO NOTHING').bind(owner,a.profileId,now).run();}
+   if(a.saved){const count=await db.prepare('SELECT COUNT(*) AS n FROM saves WHERE owner=?').bind(owner).first<{n:number}>();if((count?.n??0)>=200)return json({error:'Your shortlist is full. Remove a saved profile first.'},400);await db.prepare('INSERT INTO saves (owner,profile_id,created) SELECT ?,?,? WHERE NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=? AND m.hidden=1) AND (?=1 OR EXISTS (SELECT 1 FROM profiles p WHERE p.id=? AND p.listed=1)) ON CONFLICT(owner,profile_id) DO NOTHING').bind(owner,a.profileId,now,a.profileId,seed?1:0,a.profileId).run();}
    else await db.prepare('DELETE FROM saves WHERE owner=? AND profile_id=?').bind(owner,a.profileId).run();
   }else{
    if(stored?.owner===owner)return json({error:'You cannot request an introduction to your own profile.'},400);
    const target=seed??profile(stored!),existing=await db.prepare('SELECT id,status FROM introductions WHERE sender=? AND profile_id=?').bind(owner,a.profileId).first();if(existing)return json({error:'You already have a request for this profile. Find it in Connections.'},409);
    const count=await db.prepare('SELECT COUNT(*) AS n FROM introductions WHERE sender=? AND created>?').bind(owner,new Date(Date.now()-86400000).toISOString()).first<{n:number}>();if((count?.n??0)>=20)return json({error:"You've reached today's request limit. Try again tomorrow."},429);
    const introductionId=crypto.randomUUID();
-   const result=await db.prepare('INSERT INTO introductions (id,sender,recipient,profile_id,target_name,sender_name,message,status,created,updated) SELECT ?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))').bind(introductionId,owner,stored?.owner??null,target.id,target.name,user.displayName.slice(0,120),a.message,seed?'draft':'pending',now,now,owner,stored?.owner??null,stored?.owner??null,owner).run();
+   const result=await db.prepare('INSERT INTO introductions (id,sender,recipient,profile_id,target_name,sender_name,message,status,created,updated) SELECT ?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?)) AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=? AND m.hidden=1) AND (?=1 OR EXISTS (SELECT 1 FROM profiles p WHERE p.id=? AND p.listed=1))').bind(introductionId,owner,stored?.owner??null,target.id,target.name,user.displayName.slice(0,120),a.message,seed?'draft':'pending',now,now,owner,stored?.owner??null,stored?.owner??null,owner,a.profileId,seed?1:0,a.profileId).run();
    if(!result.meta.changes)return json({error:'This member connection is unavailable.'},403);
    await notify(stored?.owner??null,introductionId,'You have a new introduction request');
   }

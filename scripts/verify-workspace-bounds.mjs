@@ -18,7 +18,7 @@ const database=()=>({
     if(sql.includes('INNER JOIN saves')){assert.ok(sql.includes('LIMIT 200')&&sql.includes('member_blocks'));return {results:savedRows};}
     if(sql.includes('SELECT p.* FROM profiles')){assert.ok(sql.includes('member_blocks'));return {results:publicRows};}
     if(sql.includes('SELECT profile_id FROM saves'))return {results:savedRows.map(row=>({profile_id:row.id}))};
-    if(sql.includes('SELECT * FROM profiles WHERE owner='))return {results:ownRows};
+    if(sql.includes('AS moderation_hidden'))return {results:ownRows};
     if(sql.includes('FROM introductions r')){assert.ok(sql.includes('LIMIT 100'));return {results:requestRows};}
     if(sql.includes('FROM messages WHERE introduction_id IN')){messageIds=args;assert.ok(sql.includes('LIMIT 10000'));return {results:args.map(id=>({id:`message-${id}`,introduction_id:id,sender:owner,sender_name:'Me',body:'Private message',created:now}))};}
     return {results:[]};

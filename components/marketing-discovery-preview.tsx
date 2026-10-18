@@ -37,7 +37,7 @@ export default function MarketingDiscoveryPreview() {
   }
 
   return <div className="discovery-preview" aria-label="Interactive fictional workspace preview">
-    <div className="discovery-preview-chrome"><div><img src="/findin-logo.png" alt="" width="24" height="24" /><strong>FindIn</strong><span>/ Workspace preview</span></div><span className="discovery-sample-label">FICTIONAL PROFILES</span></div>
+    <div className="discovery-preview-chrome"><div><img src="/illustrations/findin-mark-64.webp" srcSet="/illustrations/findin-mark-64.webp 1x, /illustrations/findin-mark-128.webp 2x" alt="" width="24" height="24" /><strong>FindIn</strong><span>/ Workspace preview</span></div><span className="discovery-sample-label">FICTIONAL PROFILES</span></div>
     <div className="discovery-preview-body">
       <div className="discovery-preview-heading"><div><span className="marketing-kicker">THE NEXT POSSIBILITY</span><h2>Meet an idea early.</h2></div><SlidersHorizontal size={20} aria-hidden="true" /></div>
       <div className="discovery-preview-tabs" role="tablist" aria-label="Explore the workspace preview">

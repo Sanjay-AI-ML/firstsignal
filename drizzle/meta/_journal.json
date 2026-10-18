@@ -22,6 +22,13 @@
       "when": 1791487926985,
       "tag": "0002_glossy_cable",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792319523750,
+      "tag": "0003_owner_portal",
+      "breakpoints": true
     }
   ]
 }

@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   title: "FindIn — Meet the next generation of founders",
   description: "Discover early-stage founders through their progress, evidence, and ambition. An India-first founder–investor pilot.",
   icons: {
-    icon: "/findin-logo.png",
-    shortcut: "/findin-logo.png",
+    icon: "/illustrations/findin-mark-64.webp",
+    shortcut: "/illustrations/findin-mark-64.webp",
   },
 };
 

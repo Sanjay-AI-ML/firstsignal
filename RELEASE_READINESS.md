@@ -75,3 +75,8 @@ The public landing page now demonstrates profile drafting/listing, stated stage 
 Shared semantic tokens, consistent Manrope, compact overview, profile list/card layouts, composed discovery filters, local workspace search and local conversation search are implemented. The public preview uses fictional profiles and truthful planning-budget labels. Neither search changes account visibility or sends messages. Existing one-profile, custom-sector, consent, saved/direct access and private proposal workflows are retained.
 
 Scoped lint for the new components passes. The two modified legacy workflow files retain 11 pre-existing lint errors with no added errors; this is not a clean-lint release. Manual browser checks cover key keyboard, narrow-screen and privacy-sensitive interactions; see [the dated audit](DESIGN_AUDIT_2026-10-18.md) for exact scope and limits. Production Clerk/domain, email activation and launch operations above still apply.
+
+
+## Owner portal — implemented locally, not activated/published
+
+The operator report-review and reversible listing-moderation UI/API are now implemented with exact server-side owner identity, private-content exclusion, atomic audit records and conflict checks. This supersedes the earlier missing-admin-UI limitation in source only; it does not establish a staffed report-handling process or production activation. Owner binding and hosted migration0003 remain required. Current Sites access cannot locate the existing project; preserve its identity/data and restore the correct connection before publishing. Browser visual/focus/reflow verification also remains pending because browser control is disabled. See [ADMIN_PORTAL.md](ADMIN_PORTAL.md) and [DESIGN_V2_REVIEW.md](DESIGN_V2_REVIEW.md).

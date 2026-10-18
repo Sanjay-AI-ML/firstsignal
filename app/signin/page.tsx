@@ -10,7 +10,7 @@ export default async function SignInPage({ searchParams, signup = false }: { sea
   const user = await getAppUser();
   return <main className="signin-page" id="main-content">
     <section className="signin-story" aria-label="About FindIn">
-      <a href="/" className="brand"><img src="/findin-logo.png" width="36" height="36" alt=""/>FindIn</a>
+      <a href="/" className="brand"><img src="/illustrations/findin-mark-64.webp" srcSet="/illustrations/findin-mark-64.webp 1x, /illustrations/findin-mark-128.webp 2x" width="36" height="36" alt=""/>FindIn</a>
       <div className="signin-story-copy"><h1>Your next connection<br/>starts here.</h1><p>Share your progress. Meet founders and investors.</p></div>
     </section>
     <section className="signin-form-side">

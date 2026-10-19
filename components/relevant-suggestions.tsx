@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 import { ArrowUpRight, Sparkles } from 'lucide-react';
 import { initials, type Profile } from '@/lib/data';
 import { profileSuggestions } from '@/lib/profile-suggestions';
+import ProjectIcon from './project-icon';
 
 export default function RelevantSuggestions({ profiles, myProfiles, onOpen, onCreate }: {
   profiles: Profile[]; myProfiles: Profile[]; onOpen: (profile: Profile) => void; onCreate: () => void;
@@ -16,10 +17,10 @@ export default function RelevantSuggestions({ profiles, myProfiles, onOpen, onCr
     <Sparkles size={19} aria-hidden="true" />
     <h2 id={titleId}>Suggested conversations</h2>
     {!anchor ? <><p>Add your interests to see founders or investors with similar sector or stage interests.</p><button type="button" className="outline-button" onClick={onCreate}>Create a profile</button></> : <>
-      {myProfiles.length > 1 ? <div className="suggestion-selector"><label htmlFor={selectId}>Use my profile</label><select id={selectId} value={anchor.id} onChange={event => setSelected(event.target.value)}>{myProfiles.map(profile => <option key={profile.id} value={profile.id}>{profile.name} · {profile.kind === 'startup' ? 'Founder' : 'Investor'}</option>)}</select></div> : <p className="suggestion-anchor">For {anchor.name}</p>}
+      {myProfiles.length > 1 ? <div className="suggestion-selector"><label htmlFor={selectId}>Find matches for</label><select id={selectId} value={anchor.id} onChange={event => setSelected(event.target.value)}>{myProfiles.map(profile => <option key={profile.id} value={profile.id}>{profile.name} · {profile.kind === 'startup' ? 'Idea' : 'Investor'}</option>)}</select></div> : <p className="suggestion-anchor">For {anchor.name}</p>}
       {suggestions?.mode === 'samples' ? <p className="suggestion-example">No member profiles fit these interests yet. These fictional examples show how comparisons work; they cannot be contacted.</p> : null}
       {suggestions?.matches.length ? <div className="suggestion-list">{suggestions.matches.map(({ profile, signals }) => <article key={profile.id} className="suggestion-item">
-        <button type="button" className="suggestion-identity" onClick={() => onOpen(profile)}><span className="founder-avatar" aria-hidden="true">{initials(profile.name)}</span><span><strong>{profile.name}</strong><small>{profile.demo ? 'Fictional example' : 'Member · Self-reported'}</small></span><ArrowUpRight size={15} aria-hidden="true" /></button>
+        <button type="button" className="suggestion-identity" onClick={() => onOpen(profile)}>{profile.kind === "startup" ? <ProjectIcon project={profile} size="sm" /> : <span className="founder-avatar" aria-hidden="true">{initials(profile.name)}</span>}<span><strong>{profile.name}</strong><small>{profile.demo ? 'Fictional example' : 'Member · Self-reported'}</small></span><ArrowUpRight size={15} aria-hidden="true" /></button>
         <ul className="suggestion-reasons">{signals.slice(0, 2).map(signal => <li key={signal.label}><span className={signal.status === 'aligned' ? 'suggestion-aligned' : ''}>{signal.status === 'aligned' ? `${signal.label} aligns` : `${signal.label}: confirm together`}</span><small>{signal.explanation}</small></li>)}</ul>
         <p className="suggestion-budget">{signals[2].status === 'unknown' ? 'Budget range unknown. Confirm the amount together.' : signals[2].status === 'aligned' ? 'Planning budget is within the investor’s preferred range. Confirm the actual funding need.' : 'Planning budget differs from the investor’s preferred range. Discuss the amount first.'}</p>
         <button type="button" className="text-button" onClick={() => onOpen(profile)}>{profile.demo ? 'Compare example' : 'Review profile'}<ArrowUpRight size={13} aria-hidden="true" /></button>

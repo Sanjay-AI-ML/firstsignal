@@ -1,0 +1,32 @@
+/* One quiet, semantic identity tile for project lists, detail views and demos. */
+.project-icon[data-size] {
+  --project-size: 42px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  inline-size: var(--project-size);
+  block-size: var(--project-size);
+  border: 1px solid var(--project-border, #d9c8ed);
+  border-radius: calc(var(--project-size) * .28);
+  background: var(--project-surface, var(--fi-surface-accent, #ede3f8));
+  color: var(--project-ink, var(--fi-primary, #6934b5));
+  vertical-align: middle;
+  line-height: 1;
+}
+.project-icon[data-size="xs"] { --project-size: 30px; }
+.project-icon[data-size="sm"] { --project-size: 36px; }
+.project-icon[data-size="lg"] { --project-size: 52px; }
+.project-icon[data-size] > svg { width: 53%; height: 53%; margin: 0; flex-shrink: 0; }
+.project-icon[data-tone="green"] { --project-surface: #edf6f0; --project-border: #cde2d4; --project-ink: #276244; }
+.project-icon[data-tone="blue"] { --project-surface: #eef4fc; --project-border: #d0def2; --project-ink: #325fa0; }
+.project-icon[data-tone="amber"] { --project-surface: #fff5e6; --project-border: #ecd9b8; --project-ink: #805014; }
+.project-icon[data-tone="rose"] { --project-surface: #fff1f3; --project-border: #edcdd3; --project-ink: #a12d3f; }
+/* The app currently uses a light theme; retain legible marks if a dark surface is enabled. */
+.dark .project-icon[data-size] { --project-surface: #332745; --project-border: #604977; --project-ink: #d9b9ff; }
+.dark .project-icon[data-tone="green"] { --project-surface: #18382b; --project-border: #38634b; --project-ink: #a8dfbd; }
+.dark .project-icon[data-tone="blue"] { --project-surface: #20324c; --project-border: #405e85; --project-ink: #bad6ff; }
+.dark .project-icon[data-tone="amber"] { --project-surface: #44331e; --project-border: #78603c; --project-ink: #f1d199; }
+.dark .project-icon[data-tone="rose"] { --project-surface: #442934; --project-border: #7d495d; --project-ink: #ffc5d2; }
+@media (forced-colors: active) {
+  .project-icon[data-size] { background: Canvas; color: CanvasText; border-color: CanvasText; }
+}

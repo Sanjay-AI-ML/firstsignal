@@ -1,6 +1,6 @@
 # FindIn handoff
 
-Updated 18 October 2026. FindIn is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
+Updated 19 October 2026. FindIn is a public pilot using Clerk development authentication, React/Vinext and Sites-managed Cloudflare D1. The current implementation includes the guided profiles, connections and member controls described below. Production authentication, a controlled domain, live email activation and operational release work remain pending; see [release status](RELEASE_READINESS.md).
 
 Public URL: [FindIn](https://firstsignal-founder-network.divineridge.chatgpt.site). Reuse this existing Site for future updates. FindIn remains a working brand name, not a cleared trademark.
 
@@ -24,7 +24,7 @@ The platform accepts startup ideas across industries, including physical product
 
 The marketing hero includes an interactive fictional evidence brief with Learning, Open questions and Next test views. It separates reported interviews, planned prototype use and untested paid use; exposes source/date/limitations; and gives a proposed test with a measurement and decision criterion. The example is unverified and saves nothing. External Strategyzer references explain the method without implying endorsement. Founder/progress worksheets now include source context, participant selection, measurements and criteria set before testing. This is a marketing demonstration and writing aid, not a new member verification service or a structured experiment database.
 
-The marketing hero switches between founder and investor starting points. Role-specific links preserve the preference through Clerk sign-in/sign-up redirects. After loading the workspace, a member without a profile can open an empty private editor. Existing members resume their saved profile; a link for the other role returns them to My profile without creating or overwriting anything. The role is fixed on first save, with one founder OR investor profile per account. Failed workspace loads retain entry intent for retry.
+The marketing hero switches between founder and investor starting points. Role-specific links preserve the preference through Clerk sign-in/sign-up redirects. After loading the workspace, a member without a profile can open an empty private editor. Existing members resume their saved profile; a link for the other role returns them to My profile without creating or overwriting anything. The role is fixed on first save. Founders can manage multiple independent ideas; investors have one investment profile. Failed workspace loads retain entry intent for retry.
 
 The public Templates section provides original founder brief, progress update and investor preference worksheets. Preview, copy and Markdown downloads work without an account. Guided-form links preserve template/role intent; they never import fictional observations or save automatically. The progress template opens a blank composer for an existing founder, or starts founder setup first. Progress still follows profile visibility and requires explicit consent.
 
@@ -32,7 +32,7 @@ Template downloads are served at `/templates/founder-brief`, `/templates/progres
 
 | Workflow | Current behaviour |
 | --- | --- |
-| Account and role | Clerk sign-in/sign-up/sign-out. New members choose founder or investor, or explore first. Each account can create one founder OR investor profile. An atomic server-side conditional upsert rejects a second role with HTTP 409, including simultaneous requests. Same-role saves edit the existing record. Legacy accounts that already have two profiles can still edit both; no data is deleted. |
+| Account and role | Clerk sign-in/sign-up/sign-out. New members choose founder or investor, or explore first. Founders can create multiple independent ideas; investors have one investment profile. Atomic checks reject a new opposite role with HTTP 409, including simultaneous requests. Creation inserts a new record; edits require its exact ID and authenticated owner. Legacy accounts that already have two profiles can still edit both; no data is deleted. |
 | Profiles | Guided founder and investor forms, private drafts or public listings, explicit sharing consent and a completion checklist. Founders describe their problem, evidence, uncertainties, next milestone and INR budget. Investors can state multiple sectors/stages, evidence requirements and an optional INR check range. Completion measures filled fields, not investment quality. |
 | Discovery and suggestions | Search, sector/stage/member filters, saved profiles, detailed evidence panels and explainable opposite-role suggestions. Reasons describe stated sector, stage and budget alignment; unknown information remains explicit. There is no funding probability, automatic verification or investment recommendation score. |
 | Introductions | Real members request an introduction with consent. Recipients accept or decline; senders can withdraw pending requests. Messaging becomes available after acceptance. Fictional profiles create private practice notes and contact nobody. |
@@ -164,3 +164,12 @@ Final production build passed.
 
 
 Published motion update: version30, source d0b284cadc826024c647c95c046b858b382c0c38, deployment appgdep_6ad4ee0aee8c81918ffb20ec0f9ba3de succeeded on the existing public URL. Live browser confirmed native view timelines on artwork/cards, the sticky preview at y103 and scroll advancement to step2, stage interaction pausing and no observed client error. Proof: outputs/findin-scroll-story-live-2026-10-18.png. Existing Clerk development instance, domain and email activation/operations work remain separate launch requirements.
+
+
+## Published multiple-idea release — 19 October 2026
+
+Published version31 on the existing public Site, source 9dbab35f721082d5cae34a6946956f58565afb29, deployment appgdep_6ad5b81d47d88191b67ff62162a5636d succeeded with unchanged environment revision2. Migration0004 enables independent founder ideas and source-scoped introduction threads without replacing existing records. New shared category/purpose icons replace project initials. See [contract and verification](MULTIPLE_IDEAS_2026-10-19.md).
+
+239 isolated multi-idea checks, existing role/saved-direct/privacy/bounds/workbench/sector/fit/suggestion and157 admin checks passed. Final TypeScript, production build, CSS parsing and15-file scoped lint passed (one native-image warning; existing legacy workflow lint findings remain). Browser testing created and edited two ideas through the actual editor against an isolated real-handler/SQLite memory server; IDs survived reload, progress remained per idea, same-investor practice threads stayed distinct, and320/390px layouts had no horizontal overflow. Test route removed before build and live /qa-ideas returns404; anonymous profile writes and admin API return401/no-store.
+
+Live signed-in My ideas loads the existing owner's one public idea without error. Add an idea opens a blank name field and cancels cleanly, leaving the existing record unchanged; no real idea/account was created or edited by verification. Live sample icons use distinct handover/documents SVG marks, updated role explanation is present, and no client error was observed. Proof of the two-idea flow is outputs/findin-multiple-ideas-local-qa-2026-10-19.png, explicitly labelled LOCAL QA. Existing domain/production-Clerk/email/operations limits remain separate.

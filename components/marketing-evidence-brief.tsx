@@ -3,6 +3,7 @@
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { ClipboardList, FlaskConical, HelpCircle, MessageSquare, Search } from "lucide-react";
 import "./marketing-evidence-brief.css";
+import ProjectIcon from "./project-icon";
 
 const views = ["Learning", "Open questions", "Next test"];
 
@@ -23,7 +24,7 @@ export default function MarketingEvidenceBrief() {
   return <div className="evidence-brief" aria-label="Tracegrid fictional evidence brief">
     <div className="evidence-brief-chrome"><span><ClipboardList size={17} aria-hidden="true" /> Inside an early idea</span><span className="evidence-example">Fictional example</span></div>
     <article className="evidence-brief-paper">
-      <header className="evidence-company"><span className="evidence-company-mark" aria-hidden="true">T</span><div><strong>Tracegrid</strong><span>Bengaluru · Manufacturing SaaS</span></div><span className="evidence-stage">Pre-product</span></header>
+      <header className="evidence-company"><ProjectIcon project={{ id: "tracegrid", sector: "Manufacturing SaaS" }} /><div><strong>Tracegrid</strong><span>Bengaluru · Manufacturing SaaS</span></div><span className="evidence-stage">Pre-product</span></header>
       <h2>Better handovers.</h2>
       <p className="evidence-brief-intro">A shift-handover tool for factory teams.</p>
       <div className="evidence-path" aria-label="Example evidence status">

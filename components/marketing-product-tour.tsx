@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Bookmark, Check, FileText, Handshake, LockKeyhole, MessageCircle, Sprout } from "lucide-react";
+import ProjectIcon from "./project-icon";
 
 const steps = [
   { title: "Shape your profile", description: "A clear story, in manageable steps.", icon: FileText },
@@ -37,7 +38,7 @@ export default function MarketingProductTour() {
     const marketing = tour?.closest<HTMLElement>(".marketing");
     if (!tour || !stageElement || !workspaceElement || !chapterElement || !marketing || !("IntersectionObserver" in window) || !("ResizeObserver" in window)) return;
 
-    const size = matchMedia("(min-width: 1101px) and (min-height: 860px)");
+    const size = matchMedia("(min-width: 1101px) and (min-height: 680px)");
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     const navigation = marketing.querySelector<HTMLElement>(".marketing-nav");
     let enabled = false;
@@ -54,6 +55,8 @@ export default function MarketingProductTour() {
       const bounds = chapterElement.getBoundingClientRect();
       if (!bounds.height) return;
       const anchor = stickyTop + stageElement.offsetHeight / 2;
+      const progress = Math.max(0, Math.min(1, (anchor - bounds.top) / bounds.height));
+      tour.style.setProperty("--tour-scroll-progress", String(progress));
       const next = Math.max(0, Math.min(steps.length - 1, Math.floor((anchor - bounds.top) / bounds.height * steps.length)));
       setActive(current => current === next ? current : next);
     };
@@ -104,6 +107,7 @@ export default function MarketingProductTour() {
       workspaceElement.removeEventListener("focusout", schedule);
       scheduleScroll.current = null;
       tour.style.removeProperty("--tour-sticky-top");
+      tour.style.removeProperty("--tour-scroll-progress");
     };
   }, []);
 
@@ -135,7 +139,7 @@ export default function MarketingProductTour() {
           </> : null}
           {active === 1 ? <>
             <div className="tour-panel-heading"><div><span className="marketing-kicker">FIT / STATED INTERESTS</span><h3>Know why it could fit.</h3></div><span className="tour-status">Example comparison</span></div>
-            <div className="tour-fit-people"><div><span className="tour-avatar" aria-hidden="true">T</span><strong>Tracegrid<small>Founder profile</small></strong></div><span className="tour-fit-connector" aria-hidden="true"><Handshake size={23} /></span><div><span className="tour-avatar investor" aria-hidden="true">A</span><strong>Aarav Shah<small>Fictional investor</small></strong></div></div>
+            <div className="tour-fit-people"><div><ProjectIcon project={{ id: "tracegrid", sector: "Manufacturing SaaS" }} size="sm" /><strong>Tracegrid<small>Founder profile</small></strong></div><span className="tour-fit-connector" aria-hidden="true"><Handshake size={23} /></span><div><span className="tour-avatar investor" aria-hidden="true">A</span><strong>Aarav Shah<small>Fictional investor</small></strong></div></div>
             <div className="tour-fit-row"><span>Sector · Manufacturing SaaS</span><strong><Check size={16} aria-hidden="true" />Aligns</strong></div><div className="tour-fit-row"><span>Startup stage · Pre-product</span><strong className={stage === "Pre-product" ? "" : "tour-open-question"}>{stage === "Pre-product" ? <><Check size={16} aria-hidden="true" />Aligns</> : "Different stage"}</strong></div><div className="tour-fit-row"><span>Evidence quality & availability</span><strong className="tour-open-question">Ask about this</strong></div>
             <div className="tour-panel-bottom"><label className="tour-stage-choice" htmlFor={`${id}-stage`}>Try changing the investor’s stage<select id={`${id}-stage`} value={stage} onChange={event => setStage(event.target.value)}><option>Pre-product</option><option>Prototype</option></select></label><p role="status">{stage === "Pre-product" ? "Sector and stage align. This is a reason to explore, not a funding prediction." : "Sector still aligns, but the stated stage differs. Ask whether earlier projects are considered."}</p></div>
           </> : null}

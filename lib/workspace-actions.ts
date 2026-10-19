@@ -1,8 +1,8 @@
 import type { Intro, Profile } from "./data";
 import { getProfileCompletion } from "./profile-completion";
 
-export function outgoingRelationship(profileId: string, requests: Intro[]) {
-  return requests.find(request => request.direction === "outgoing" && request.profileId === profileId);
+export function outgoingRelationship(profileId: string, requests: Intro[], sourceProfileId?: string | null) {
+  return requests.find(request => request.direction === "outgoing" && request.profileId === profileId && (sourceProfileId === undefined || (request.sourceProfileId ?? null) === sourceProfileId));
 }
 
 export function relationshipLabel(request?: Intro) {
@@ -19,6 +19,8 @@ export function workspaceActions(profiles: Profile[], requests: Intro[], today: 
   const checklist = own ? getProfileCompletion(own) : null;
   return {
     profile: own,
+    ideas: profiles.filter(profile => profile.kind === "startup").length,
+    publicIdeas: profiles.filter(profile => profile.kind === "startup" && profile.listed && !profile.moderation?.hidden).length,
     missing: checklist?.missing.length ?? 0,
     requests: requests.filter(item => !item.blocked && item.status === "pending" && item.direction === "incoming").length,
     proposals: requests.filter(item => !item.blocked && item.status === "accepted" && item.proposal?.status === "open" && !item.proposal.mine).length,

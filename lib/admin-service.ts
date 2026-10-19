@@ -36,8 +36,8 @@ export async function adminOverview(): Promise<AdminOverview> {
       COALESCE(SUM(p.listed=1 AND COALESCE(m.hidden,0)=0),0) AS public,
       COALESCE(SUM(p.listed=0 AND COALESCE(m.hidden,0)=0),0) AS private,
       COALESCE(SUM(m.hidden=1),0) AS hidden,
-      COALESCE(SUM(p.kind='startup'),0) AS founders,
-      COALESCE(SUM(p.kind='investor'),0) AS investors
+      COUNT(DISTINCT CASE WHEN p.kind='startup' THEN p.owner END) AS founders,
+      COUNT(DISTINCT CASE WHEN p.kind='investor' THEN p.owner END) AS investors
       FROM profiles p LEFT JOIN profile_moderation m ON m.profile_id=p.id`),
     db.prepare('SELECT status,COUNT(*) AS n FROM introductions GROUP BY status'),
     db.prepare('SELECT status,COUNT(*) AS n FROM member_reports GROUP BY status'),
@@ -113,8 +113,10 @@ export async function adminReports(page: number, status: ReportStatus, query: st
       r.status,r.created,COALESCE(NULLIF(r.updated,''),r.created) AS updated,r.version,substr(r.operator_note,1,1000) AS operator_note,
       p.id AS target_id,substr(${listedText('name')},1,120) AS target_name,p.kind AS target_kind,COALESCE(m.hidden,0) AS target_hidden
       FROM member_reports r LEFT JOIN profiles p ON p.id=CASE WHEN substr(r.profile_id,1,11)='connection:'
-        THEN (SELECT linked.id FROM profiles linked WHERE linked.owner=r.target_owner AND linked.listed=1 ORDER BY linked.updated DESC,linked.id ASC LIMIT 1)
-        ELSE r.profile_id END AND p.listed=1
+        THEN (SELECT linked.id FROM introductions i JOIN profiles linked ON (linked.id=i.profile_id OR linked.id=i.source_profile_id)
+          WHERE i.id=substr(r.profile_id,12) AND linked.owner=r.target_owner AND linked.listed=1
+          AND ((i.sender=r.owner AND i.recipient=r.target_owner) OR (i.recipient=r.owner AND i.sender=r.target_owner)) LIMIT 1)
+        ELSE r.profile_id END AND p.listed=1 AND p.owner=r.target_owner
       LEFT JOIN profile_moderation m ON m.profile_id=p.id WHERE ${where}
       ORDER BY r.created DESC,r.id ASC LIMIT ? OFFSET ?`).bind(...params, adminPageSize, (page - 1) * adminPageSize).all<ReportRow>(),
   ]);

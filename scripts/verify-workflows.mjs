@@ -18,7 +18,7 @@ let owner=await call(alice,{action:"profile",profile,listed:false,consent:true})
 owner=await call(alice,{action:'progress',profileId:id,title:'Customer discovery completed',body:'Interviewed prospective customers and recorded adoption assumptions for the next experiment.',date:'2026-10-01',consent:true});const updateId=owner.myProfiles[0].updates[0].id;assert.ok(updateId);checks++;
 let visitor=await call(bob);assert.equal(visitor.myProfiles.length,0);assert.ok(!visitor.profiles.some(p=>p.id===id));checks+=2;
 await call(bob,{action:"request",profileId:id,message:"I would like to discuss this fictional workflow.",consent:true},404);
-owner=await call(alice,{action:"profile",profile:{...profile,city:"Chennai"},listed:true,consent:true});assert.equal(owner.myProfiles[0].id,id);assert.equal(owner.myProfiles[0].evidenceDate,"2026-10-01");checks+=2;
+owner=await call(alice,{action:"profile",profileId:id,profile:{...profile,city:"Chennai"},listed:true,consent:true});assert.equal(owner.myProfiles[0].id,id);assert.equal(owner.myProfiles[0].evidenceDate,"2026-10-01");checks+=2;
 assert.equal(owner.myProfiles[0].updates[0].id,updateId,'Profile edits must retain independent progress records');checks++;
 visitor=await call(bob);assert.ok(visitor.profiles.some(p=>p.id===id&&!p.mine));checks++;
 assert.equal(visitor.profiles.find(p=>p.id===id).updates[0].id,updateId,'Listed progress must be available to interested members');checks++;
@@ -131,6 +131,6 @@ ownConnection=await connection(bob,{action:'nextStep',id:intro.id,note:'',date:'
 await call(alice,{action:'removeProgress',profileId:id,updateId:'missing-update'},404);
 owner=await call(alice,{action:'removeProgress',profileId:id,updateId});assert.deepEqual(owner.myProfiles[0].updates,[]);checks++;
 await call(alice,{action:"profile",profile:{...profile,evidenceDate:"2026-02-31"},listed:false,consent:true},400);
-await call(alice,{action:"profile",profile,listed:false,consent:true});await call(bob,{action:"save",profileId:id,saved:false});
-await call(bob,{action:'profile',profile:investor,listed:false,consent:true});
+await call(alice,{action:"profile",profileId:id,profile,listed:false,consent:true});await call(bob,{action:"save",profileId:id,saved:false});
+await call(bob,{action:'profile',profileId:investorId,profile:investor,listed:false,consent:true});
 console.log(JSON.stringify({result:"passed",checks,scope:"Local Worker with verified Clerk development sessions; consent, persistence, investor preferences, progress visibility, private next steps, reports, bidirectional blocking and account isolation",testProfiles:"Retained privately in local database; never deployed"}));

@@ -1,12 +1,13 @@
 import { sqliteTable, text, integer, primaryKey, uniqueIndex, index } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 export const profiles = sqliteTable("profiles", {
   id:text("id").primaryKey(), owner:text("owner").notNull(), kind:text("kind").notNull(),
   data:text("data").notNull(), listed:integer("listed").notNull().default(0), updated:text("updated").notNull(),
-}, t=>[uniqueIndex("profiles_owner_kind").on(t.owner,t.kind),index("profiles_listed").on(t.listed)]);
+}, t=>[index("profiles_owner_kind_lookup").on(t.owner,t.kind),uniqueIndex("profiles_investor_owner").on(t.owner).where(sql`${t.kind} = 'investor'`),index("profiles_listed").on(t.listed)]);
 export const saves = sqliteTable("saves", {owner:text("owner").notNull(),profileId:text("profile_id").notNull(),created:text("created").notNull()},t=>[primaryKey({columns:[t.owner,t.profileId]})]);
 export const introductions=sqliteTable("introductions",{
-  id:text("id").primaryKey(),sender:text("sender").notNull(),recipient:text("recipient"),profileId:text("profile_id").notNull(),targetName:text("target_name").notNull(),senderName:text("sender_name").notNull(),message:text("message").notNull(),status:text("status").notNull(),created:text("created").notNull(),updated:text("updated").notNull(),
-},t=>[uniqueIndex("introductions_sender_profile").on(t.sender,t.profileId),index("introductions_recipient").on(t.recipient)]);
+  id:text("id").primaryKey(),sender:text("sender").notNull(),recipient:text("recipient"),profileId:text("profile_id").notNull(),sourceProfileId:text("source_profile_id").references(()=>profiles.id),sourceName:text("source_name"),targetName:text("target_name").notNull(),senderName:text("sender_name").notNull(),message:text("message").notNull(),status:text("status").notNull(),created:text("created").notNull(),updated:text("updated").notNull(),
+},t=>[uniqueIndex("introductions_sender_profile_source").on(t.sender,t.profileId,sql`coalesce(${t.sourceProfileId}, '')`),index("introductions_recipient").on(t.recipient)]);
 export const messages=sqliteTable("messages",{id:text("id").primaryKey(),introductionId:text("introduction_id").notNull().references(()=>introductions.id),sender:text("sender").notNull(),senderName:text("sender_name").notNull(),body:text("body").notNull(),created:text("created").notNull()},t=>[index("messages_introduction_created").on(t.introductionId,t.created)]);
 export const negotiations=sqliteTable("negotiations",{introductionId:text("introduction_id").primaryKey().references(()=>introductions.id),version:integer("version").notNull(),author:text("author").notNull(),amount:integer("amount").notNull(),terms:text("terms").notNull(),status:text("status").notNull(),eventId:text("event_id").notNull(),updated:text("updated").notNull()});
 export const negotiationEvents=sqliteTable("negotiation_events",{id:text("id").primaryKey(),introductionId:text("introduction_id").notNull().references(()=>introductions.id),version:integer("version").notNull(),author:text("author").notNull(),authorName:text("author_name").notNull(),amount:integer("amount").notNull(),terms:text("terms").notNull(),status:text("status").notNull(),created:text("created").notNull()},t=>[uniqueIndex("negotiation_event_version").on(t.introductionId,t.version)]);

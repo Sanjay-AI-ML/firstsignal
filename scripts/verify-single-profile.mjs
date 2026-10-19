@@ -36,7 +36,7 @@ const route = await load('app/api/workspace/route.ts', {
   '@/lib/database': {database:()=>db}, '@/lib/data':data, '@/lib/validation':validation,
   '@/lib/member-safety': {membersBlocked:async()=>false}
 });
-const base = {kind:'startup', name:'Profile policy test', founder:'Test Founder', city:'Chennai', sector:data.sectors[0], stage:data.stages[0], tagline:'A profile used only in local tests', problem:'Testing one profile per account without touching real data.', solution:'A proposed service to test with early customers.',fundingIntentINR:0};
+const base = {kind:'startup', name:'Profile policy test', founder:'Test Founder', city:'Chennai', sector:data.sectors[0], stage:data.stages[0], tagline:'A profile used only in local tests', problem:'Testing role policy and independent ideas without touching real data.', solution:'A proposed service to test with early customers.',fundingIntentINR:0};
 async function save(owner, profile, extras={}) {
   const request = new Request('http://localhost/api/workspace',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({action:'profile',profile,listed:false,consent:true,...extras})});
   const response = await auth.run(owner?{userId:owner,displayName:'Test Owner'}:null,()=>route.POST(request));
@@ -47,27 +47,36 @@ try {
   assert.equal((await save('founder',base,{consent:false})).status,400);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM profiles').get().n,0);
   const first = await save('founder',base); assert.equal(first.status,200);
-  const id = first.body.myProfiles[0].id;
+  const id = first.body.savedProfileId;
+  assert.equal(id,first.body.myProfiles[0].id);
   const secondRole = await save('founder',{...base,kind:'investor'});
-  assert.equal(secondRole.status,409); assert.match(secondRole.body.error,/one founder or investor profile/);
+  assert.equal(secondRole.status,409);
   sqlite.prepare('INSERT INTO progress_updates (id,profile_id,date,title,body,created) VALUES (?,?,?,?,?,?)').run('progress',id,'2026-10-01','Saved progress','Retain this update','2026-10-01');
-  const edit = await save('founder',{...base,name:'Updated founder',id:'forged-id',owner:'other'}, {listed:true});
+  const edit = await save('founder',{...base,name:'Updated founder',id:'forged-id',owner:'other'}, {listed:true,profileId:id});
   assert.equal(edit.status,200);assert.equal(edit.body.myProfiles.length,1);assert.equal(edit.body.myProfiles[0].id,id);assert.equal(edit.body.myProfiles[0].updates[0].id,'progress');
   assert.equal(sqlite.prepare('SELECT owner FROM profiles WHERE id=?').get(id).owner,'founder');
+  assert.equal((await save('other',{...base,name:'Unauthorized edit'},{profileId:id})).status,404);
+  assert.equal((await save('founder',{...base,kind:'investor'},{profileId:id})).status,404);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM profiles WHERE owner=?').get('other').n,0);
   const investor = await save('investor',{...base,kind:'investor'});assert.equal(investor.status,200);
   assert.equal((await save('investor',base)).status,409);
+  assert.equal((await save('investor',{...base,kind:'investor'})).status,409);
   const race = await Promise.all([save('race',base),save('race',{...base,kind:'investor'})]);
   assert.deepEqual(race.map(r=>r.status).sort(),[200,409]);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM profiles WHERE owner=?').get('race').n,1);
   const sameRole = await Promise.all([save('same',base),save('same',base)]);
   assert.deepEqual(sameRole.map(r=>r.status),[200,200]);
-  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM profiles WHERE owner=?').get('same').n,1);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM profiles WHERE owner=?').get('same').n,2);
+  assert.notEqual(sameRole[0].body.savedProfileId,sameRole[1].body.savedProfileId);
+  const investorRace=await Promise.all([save('investor-race',{...base,kind:'investor'}),save('investor-race',{...base,kind:'investor'})]);
+  assert.deepEqual(investorRace.map(r=>r.status).sort(),[200,409]);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM profiles WHERE owner=?').get('investor-race').n,1);
   for(const kind of ['startup','investor'])sqlite.prepare('INSERT INTO profiles(id,owner,kind,data,listed,updated) VALUES(?,?,?,?,?,?)').run(`legacy-${kind}`,'legacy',kind,JSON.stringify({...base,kind}),0,'2026-10-01');
-  for(const kind of ['startup','investor']){const result=await save('legacy',{...base,kind,name:`Edited ${kind}`});assert.equal(result.status,200);assert.equal(result.body.myProfiles.length,2);assert.equal(result.body.myProfiles.find(p=>p.kind===kind).id,`legacy-${kind}`);}
+  for(const kind of ['startup','investor']){const result=await save('legacy',{...base,kind,name:`Edited ${kind}`},{profileId:`legacy-${kind}`});assert.equal(result.status,200);assert.equal(result.body.myProfiles.length,2);assert.equal(result.body.myProfiles.find(p=>p.kind===kind).id,`legacy-${kind}`);}
   const customFounder=await save('custom-founder',{...base,sector:'Other',customSector:'  Textile   Recycling  '});
   assert.equal(customFounder.status,200);assert.equal(customFounder.body.myProfiles[0].customSector,'Textile Recycling');
   const customId=customFounder.body.myProfiles[0].id;
-  const editedCustom=await save('custom-founder',{...base,sector:'Other',customSector:'Textile Recycling',name:'Edited custom founder'});
+  const editedCustom=await save('custom-founder',{...base,sector:'Other',customSector:'Textile Recycling',name:'Edited custom founder'},{profileId:customId});
   assert.equal(editedCustom.body.myProfiles[0].id,customId);assert.equal(editedCustom.body.myProfiles[0].customSector,'Textile Recycling');
   const customInvestor=await save('custom-investor',{...base,kind:'investor',sector:'Healthcare & Life Sciences',sectors:['Healthcare & Life Sciences','Other'],customSector:'Pet Care'});
   assert.equal(customInvestor.status,200);assert.deepEqual(customInvestor.body.myProfiles[0].sectors,['Healthcare & Life Sciences','Other']);assert.equal(customInvestor.body.myProfiles[0].customSector,'Pet Care');
@@ -76,7 +85,7 @@ try {
   for(const solution of [undefined,'','   ','Too short'])assert.equal((await save('missing-solution',{...base,solution})).status,400);
   const noDate=await save('without-date',{...base,evidenceDate:undefined});assert.equal(noDate.status,200);assert.equal(noDate.body.myProfiles[0].evidenceDate,'');
   const dated=await save('historical-date',{...base,evidenceDate:'2026-10-01'});assert.equal(dated.status,200);
-  const datedEdit=await save('historical-date',{...dated.body.myProfiles[0],name:'Updated ideology profile'});assert.equal(datedEdit.status,200);assert.equal(datedEdit.body.myProfiles[0].evidenceDate,'2026-10-01');
+  const datedEdit=await save('historical-date',{...dated.body.myProfiles[0],name:'Updated ideology profile'},{profileId:dated.body.savedProfileId});assert.equal(datedEdit.status,200);assert.equal(datedEdit.body.myProfiles[0].evidenceDate,'2026-10-01');
   const investorWithoutSolution=await save('optional-investor-interests',{...base,kind:'investor',solution:undefined});assert.equal(investorWithoutSolution.status,200);
-  console.log('Passed: profile policy/custom sectors; required founder solution; date-free saving and historical-date preservation; optional investor interests.');
+  console.log('Passed: independent founder ideas; explicit owned edits; one account role/single investor policy and concurrent creates; legacy profile/progress preservation; custom sectors; required founder solution and historical dates.');
 } finally { sqlite.close(); }

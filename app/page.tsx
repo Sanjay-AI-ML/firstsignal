@@ -20,7 +20,7 @@ const investorEntry = setupSignIn("investor");
 const questions = [
   { q: "Is FindIn only for software startups?", a: "No. Founders from any industry can create a profile, including food, healthcare, education, consumer products, hardware and services. Choose a sector, or select Other and enter your own. Investors choose the industries they want to explore." },
   { q: "Do I need a finished product?", a: "No. Start with an idea, a prototype or early traction. Explain what you know, what remains uncertain and what you will test next." },
-  { q: "Do I sign up as a founder or an investor?", a: "Choose one when you create your profile. Each account can have one founder or investor profile. Your role is set when you first save; you can edit the profile details and sharing settings later." },
+  { q: "Do I sign up as a founder or an investor?", a: "Choose your role when you first save. Founders can create and manage multiple ideas, each with its own details, progress and sharing settings. Investors have one investment profile." },
   { q: "What happens after an introduction?", a: "The recipient accepts or declines. Acceptance opens private messaging and non-binding proposals. Each participant can also keep a private next-step note." },
   { q: "Can I follow a startup before connecting?", a: "Yes. Save a listed startup to revisit its profile and recent progress updates in your shortlist. Saving does not contact the founder or send progress emails." },
   { q: "Does FindIn guarantee funding or verify startup claims?", a: "No. Member claims are self-reported. FindIn supports discovery and discussion; investment decisions, due diligence and formal agreements happen separately." },

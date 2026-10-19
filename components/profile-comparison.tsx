@@ -5,6 +5,7 @@ import { ArrowUpRight, Bookmark, Columns3, Minus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { initials, type Profile } from '@/lib/data';
 import { comparisonProfiles, compareRows } from '@/lib/profile-comparison';
+import ProjectIcon from './project-icon';
 
 type ProfileComparisonProps = {
   profiles: Profile[];
@@ -48,7 +49,7 @@ export default function ProfileComparison({ profiles, open, onOpenChange, onRemo
             <colgroup><col className="profile-comparison-label-column" />{choices.map(profile => <col key={profile.id} className="profile-comparison-profile-column" />)}</colgroup>
             <thead><tr><th scope="col" className="profile-comparison-corner"><span>What matters<br />to you?</span><small>No scores. Just the details.</small></th>{choices.map(profile => {
               return <th scope="col" key={profile.id}>
-                <div className="profile-comparison-identity"><span className="profile-comparison-avatar" aria-hidden="true">{initials(profile.name)}</span><span className={`profile-comparison-source${profile.demo ? ' is-sample' : ''}`}>{profile.demo ? 'Fictional sample' : 'Member · Self-reported'}</span></div>
+                <div className="profile-comparison-identity">{profile.kind === "startup" ? <ProjectIcon project={profile} /> : <span className="profile-comparison-avatar" aria-hidden="true">{initials(profile.name)}</span>}<span className={`profile-comparison-source${profile.demo ? ' is-sample' : ''}`}>{profile.demo ? 'Fictional sample' : 'Member · Self-reported'}</span></div>
                 <strong className="profile-comparison-name">{profile.name}</strong>
                 <p className="profile-comparison-tagline">{profile.tagline || 'Introduction not added yet'}</p>
                 {profileActions(profile)}
@@ -62,7 +63,7 @@ export default function ProfileComparison({ profiles, open, onOpenChange, onRemo
           <div className="profile-comparison-mobile-cards">{choices.map((profile, index) => {
             const value = selectedRow.values[index];
             return <article className="profile-comparison-mobile-card" key={profile.id}>
-              <div className="profile-comparison-identity"><span className="profile-comparison-avatar" aria-hidden="true">{initials(profile.name)}</span><span className={`profile-comparison-source${profile.demo ? ' is-sample' : ''}`}>{profile.demo ? 'Fictional sample' : 'Member · Self-reported'}</span></div>
+              <div className="profile-comparison-identity">{profile.kind === "startup" ? <ProjectIcon project={profile} /> : <span className="profile-comparison-avatar" aria-hidden="true">{initials(profile.name)}</span>}<span className={`profile-comparison-source${profile.demo ? ' is-sample' : ''}`}>{profile.demo ? 'Fictional sample' : 'Member · Self-reported'}</span></div>
               <strong className="profile-comparison-name">{profile.name}</strong>
               <div className="profile-comparison-mobile-value"><h3>{selectedRow.label}</h3><p className={value === 'Not added yet' || value === 'Not shared' ? 'profile-comparison-missing' : undefined}>{value}</p></div>
               {profileActions(profile)}

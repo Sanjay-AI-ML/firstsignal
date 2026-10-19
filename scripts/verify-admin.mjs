@@ -116,7 +116,7 @@ try {
   const investorRows = await get(owner, '?view=profiles&kind=investor&visibility=visible');
   equal(investorRows.body.total, 1); equal(investorRows.body.items[0].id, 'legacy-investor');
   equal(legacyReports.body.items.filter(r => r.id === 'report-connection').length, 1);
-  equal(legacyReports.body.items.find(r => r.id === 'report-connection').target.id, 'legacy-investor');
+  equal(legacyReports.body.items.find(r => r.id === 'report-connection').target.id, 'public-one', 'A connection report stays attached to its actual project, not the newest sibling profile');
   sqlite.prepare('DELETE FROM profiles WHERE id=?').run('legacy-investor');
   const combined = JSON.stringify([overview.body, listed.body, reports.body]);
   for (const canary of ['PRIVATE_DRAFT_CANARY', 'PRIVATE_REQUEST_CANARY', 'PRIVATE_MESSAGE_CANARY', 'PRIVATE_NOTE_CANARY', 'sk_test_fixture', member.userId]) { equal(combined.includes(canary), false, canary); }
@@ -135,7 +135,7 @@ try {
   equal(sqlite.prepare('SELECT COUNT(*) n FROM admin_audit').get().n, 1);
   for (const identity of [null, owner, member]) { const current = await state(identity, 'public-one'); equal(current.profiles.some(p => p.id === 'public-one'), false); }
   const own = await state(member, 'public-one'); equal(own.myProfiles.find(p => p.id === 'public-one').moderation.hidden, true);
-  const editHidden = new Request(`${origin}/api/workspace`, { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ action: 'profile', profile: { ...profile, name: 'Edited while hidden' }, listed: true, consent: true }) });
+  const editHidden = new Request(`${origin}/api/workspace`, { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ action: 'profile', profileId: 'public-one', profile: { ...profile, name: 'Edited while hidden' }, listed: true, consent: true }) });
   const editResult = await auth.run(member, () => workspace.POST(editHidden)); equal(editResult.status, 200);
   equal((await state(null, 'public-one')).profiles.some(p => p.id === 'public-one'), false, 'Owner republish cannot bypass restriction');
   const ownAfterEdit = await state(member); equal(ownAfterEdit.myProfiles[0].moderation.hidden, true);

@@ -2,13 +2,14 @@
 
 A founder–investor discovery platform for early startup ideas. Built with React, Vinext, Clerk authentication and Cloudflare D1.
 
-Published admin entry: [FindIn administration](https://firstsignal-founder-network.divineridge.chatgpt.site/admin/signin). Version28 is live; access is restricted to the configured owner. The marketing illustrations are also published. See [release verification and limits](ADMIN_PORTAL.md#published-admin-release--18-october-2026).
+Admin entry: [FindIn administration](https://firstsignal-founder-network.divineridge.chatgpt.site/admin/signin). Access remains restricted to the configured owner. The portal and marketing illustrations are published. See [release verification and limits](ADMIN_PORTAL.md#published-admin-release--18-october-2026).
 
 ## Features
 
 - All startup industries, with broad sector choices and an Other field for a named custom sector or service. Custom sectors are saved, displayed and searchable; investors can add a custom interest alongside listed sectors. Existing SaaS categories retain their meaning.
 
-- Guided founder and investor profiles, completion checklists and private/public sharing controls.
+- Multiple independent ideas per founder, with Add/Edit/Preview, per-idea progress and sharing, meaningful category icons and idea-specific introductions. See [implementation and verification](MULTIPLE_IDEAS_2026-10-19.md).
+- Guided founder and investor forms, completion checklists and private/public sharing controls.
 - Discovery, saved opportunities and explainable suggestions using stated sector, stage and check-size preferences.
 - Mutual-consent introductions, private messaging and a connections dashboard with private follow-up notes/dates.
 - Private, non-binding INR bids, counteroffers, decisions and versioned negotiation history.
@@ -20,7 +21,7 @@ Published admin entry: [FindIn administration](https://firstsignal-founder-netwo
 - An interactive fictional evidence brief distinguishing reported learning, open questions and a measurable next test; founder/progress worksheets include source and experiment-planning prompts.
 - Founder/investor entry paths that preserve the selected setup through sign-in, plus three public starter worksheets with preview, copy and Markdown downloads.
 
-Marketing templates are writing prompts, not imported fictional evidence. A new founder or investor entry opens an empty private form; an existing profile is offered for explicit resume. Progress-template entry opens a blank update composer on an existing founder profile, or starts founder setup first. Each account can create one founder OR investor profile. The server atomically rejects a second role with HTTP 409, including simultaneous requests; repeated same-role saves update the existing profile. Older accounts that already have both profiles retain access to edit them. Marketing entry links cannot create a second role. No template action saves or publishes a record by itself.
+Marketing templates are writing prompts, not imported fictional evidence. A new founder or investor entry opens an empty private form; an existing profile is offered for explicit resume. Progress-template entry opens a blank update composer on an existing founder profile, or starts founder setup first. Each account keeps its founder or investor role. Founders can create and manage multiple independent ideas; investors have one investment profile. Creation makes a new record, while edits target the exact ID and authenticated owner. The server atomically rejects a new opposite role, including simultaneous requests. Older accounts that already have both profiles retain access to edit them. Marketing entry links cannot create a second role. No template action saves or publishes a record by itself.
 
 Sample profiles are labelled, and real member claims/updates are self-reported. This pilot does not process investments, payments or binding agreements. Follow-up dates do not send reminders, progress updates do not broadcast emails, and submitted reports require manual operator handling. Production Clerk/domain activation, live email configuration and operational work remain pending; see [release status](RELEASE_READINESS.md).
 

@@ -2,6 +2,10 @@
 
 17 October 2026. The public Site is a working pilot with Clerk development authentication. It is not yet a fully activated production service.
 
+## Multiple founder ideas — 19 October 2026
+
+Implemented meaningful project icons, My ideas management, independent per-idea details/sharing/progress and selected-idea introduction threads. Non-destructive migration0004 preserves existing IDs and related records. The old single-idea restriction is superseded; the account role and single investor profile remain. See [verification and limits](MULTIPLE_IDEAS_2026-10-19.md). Synthetic browser creation/edit/reload and239 isolated multi-idea checks passed; no real account data was used.
+
 ## Implemented
 
 - Research-led decision workspace: role-aware discovery and action overview, URL-restored filters/clean share links, two/three-profile comparison with a dedicated phone layout, visible budgets and removable filters, existing-request actions, own-profile fit defaults and unsaved-edit protection. Saved and direct-linked accessible profiles survive the newest-results cutoff; private/block controls and D1 query bounds remain enforced. No browser-storage draft saving, email reminder scheduler or investment ranking was added.
@@ -83,6 +87,7 @@ The operator report-review and reversible listing-moderation UI/API are now impl
 
 The subsequent admin research update adds a dedicated `/admin/signin`, no admin signup, owner/member account switching, separate admin logout return, founder/investor and removed/visible filters, and bounded listed-idea/progress inspection before removal. Removal/restoration still records the owner-visible reason and audit atomically.174 isolated API/entry assertions, TypeScript, CSS parsing, scoped lint and build pass; anonymous built-Worker HTTP guards pass. This requires no migration beyond the earlier 0003. Live owner OAuth and full-page visual/keyboard checks remain unverified. Hosted binding is configured; the existing Sites deployment flow owns migration and publication. It provides reversible listing moderation rather than account suspension, permanent deletion or unrestricted data access.
 
+
 ## Published admin release — 18 October 2026
 
 Published successfully as version28 on the existing public FindIn site, with hosted owner secret environment revision2 and the pending admin schema migration applied by the Sites deployment flow. Source: d7da3ed1cbb3c199ad7b2fb2b3863fe064fec368. Deployment: appgdep_6ad4e18e05408191acdca1bd7229f4bc. Admin entry: https://firstsignal-founder-network.divineridge.chatgpt.site/admin/signin . Earlier project-not-found and unpublished notes describe the recovered blocker, not the current release.
@@ -90,3 +95,12 @@ Published successfully as version28 on the existing public FindIn site, with hos
 Live HTTP checks confirm admin sign-in200, anonymous admin redirect to its dedicated entry, admin API401/no-store and working workspace queries. Both new marketing artworks return200 with bytes matching the checked source files. Full owner OAuth and browser visual/interaction QA remain unverified because browser automation is disabled in Work settings. No real member moderation or account changes were used for testing.
 
 Static-asset header limit: public/_headers declares correct WebP/WOFF2 types and retains content-hashed caching rules, but Sites still returns application/octet-stream for these media types after deployment. Contents match their originals; do not claim the hosted MIME header is corrected. This remains a platform delivery limitation.
+
+
+## Published multiple-idea release — 19 October 2026
+
+Published version31 on the existing public Site, source 9dbab35f721082d5cae34a6946956f58565afb29, deployment appgdep_6ad5b81d47d88191b67ff62162a5636d succeeded with unchanged environment revision2. Migration0004 enables independent founder ideas and source-scoped introduction threads without replacing existing records. New shared category/purpose icons replace project initials. See [contract and verification](MULTIPLE_IDEAS_2026-10-19.md).
+
+239 isolated multi-idea checks, existing role/saved-direct/privacy/bounds/workbench/sector/fit/suggestion and157 admin checks passed. Final TypeScript, production build, CSS parsing and15-file scoped lint passed (one native-image warning; existing legacy workflow lint findings remain). Browser testing created and edited two ideas through the actual editor against an isolated real-handler/SQLite memory server; IDs survived reload, progress remained per idea, same-investor practice threads stayed distinct, and320/390px layouts had no horizontal overflow. Test route removed before build and live /qa-ideas returns404; anonymous profile writes and admin API return401/no-store.
+
+Live signed-in My ideas loads the existing owner's one public idea without error. Add an idea opens a blank name field and cancels cleanly, leaving the existing record unchanged; no real idea/account was created or edited by verification. Live sample icons use distinct handover/documents SVG marks, updated role explanation is present, and no client error was observed. Proof of the two-idea flow is outputs/findin-multiple-ideas-local-qa-2026-10-19.png, explicitly labelled LOCAL QA. Existing domain/production-Clerk/email/operations limits remain separate.

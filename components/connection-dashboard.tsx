@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useState } from 'react';
 import { ArrowUpRight, Check, Clock3, Handshake, MessageCircle, Search, X } from 'lucide-react';
-import { formatINR, initials, type Intro } from '@/lib/data';
+import { formatINR, initials, type Intro, type Profile } from '@/lib/data';
+import ProjectIcon from './project-icon';
 import { connectionMatches } from '@/lib/connection-search';
 
 type Connection = Intro & { updated?: string; blocked?: boolean; proposal?: { status: string; amount: number; mine: boolean; version: number; updated?: string } | null };
@@ -29,8 +30,8 @@ function nextStep(connection: Connection) {
   return latest ? latest.mine ? 'You sent the latest message. Follow up when it is useful.' : 'The latest message is from the other member. Continue the conversation.' : 'Start with a message or discuss a private proposal.';
 }
 
-export default function ConnectionDashboard({ requests, busy, onOpen, onRespond, onDiscover }: {
-  requests: Connection[]; busy: boolean; onOpen: (connection: Intro) => void; onRespond: (connection: Intro, status: string) => void; onDiscover: () => void;
+export default function ConnectionDashboard({ requests, profiles = [], busy, onOpen, onRespond, onDiscover }: {
+  requests: Connection[]; profiles?: Profile[]; busy: boolean; onOpen: (connection: Intro) => void; onRespond: (connection: Intro, status: string) => void; onDiscover: () => void;
 }) {
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
@@ -47,9 +48,10 @@ export default function ConnectionDashboard({ requests, busy, onOpen, onRespond,
     <div className="connection-results" aria-live="polite"><p className="subtle">{visible.length} {visible.length === 1 ? 'connection' : 'connections'}{filter !== 'all' ? ` · ${filters.find(item => item.value === filter)?.label}` : ''}</p></div>
     {visible.length ? <div className="connection-list">{visible.map(connection => {
       const name = connection.direction === 'incoming' ? connection.senderName : connection.targetName;
+      const target = profiles.find(profile => profile.id === connection.profileId);
       const latest = lastMessage(connection), date = lastActivity(connection);
       return <article className={`connection-card${connection.blocked ? ' connection-paused' : ''}`} key={connection.id}>
-        <div className="connection-card-heading"><div className="connection-person"><span className="founder-avatar" aria-hidden="true">{initials(name)}</span><div><h3>{name}</h3><p>{connection.direction === 'incoming' ? `About ${connection.targetName}` : connection.status === 'draft' ? 'Fictional profile · Private practice' : 'Your introduction request'}</p></div></div><span className={`tag ${connection.status === 'accepted' && !connection.blocked ? 'accepted' : ''}`}>{connection.blocked ? 'Connection paused' : requestStatus(connection.status)}</span></div>
+        <div className="connection-card-heading"><div className="connection-person">{connection.direction === 'outgoing' && target?.kind === 'startup' ? <ProjectIcon project={target} /> : <span className="founder-avatar" aria-hidden="true">{initials(name)}</span>}<div><h3>{name}</h3><p>{connection.direction === 'incoming' ? `About ${connection.targetName}` : connection.status === 'draft' ? 'Fictional profile · Private practice' : 'Your introduction request'}</p>{connection.sourceName ? <p>Idea: {connection.sourceProfileId?<a className="text-button" href={"/app?profile="+encodeURIComponent(connection.sourceProfileId)+"#discover"}>{connection.sourceName}</a>:<strong>{connection.sourceName}</strong>}</p> : null}</div></div><span className={`tag ${connection.status === 'accepted' && !connection.blocked ? 'accepted' : ''}`}>{connection.blocked ? 'Connection paused' : requestStatus(connection.status)}</span></div>
         <p className="connection-next"><span aria-hidden="true">{connection.status === 'pending' ? <Clock3 size={16} /> : <MessageCircle size={16} />}</span>{nextStep(connection)}</p>
         {connection.status === 'accepted' && latest ? <div className="connection-message-preview"><small>{latest.mine ? 'You' : latest.senderName} · Latest message</small><p>{latest.body}</p></div> : null}
         {connection.status === 'accepted' && connection.proposal ? <div className="connection-proposal"><Handshake size={17} aria-hidden="true" /><div><strong>{formatINR(connection.proposal.amount)} <span>indicative</span></strong><small>{proposalStatus(connection.proposal.status)} · {connection.proposal.mine ? 'Your proposal' : 'Their proposal'} · v{connection.proposal.version}</small></div><span className="tag">Non-binding</span></div> : null}

@@ -1,4 +1,5 @@
 "use client";
+import ProjectIcon from "./project-icon";
 
 import { useEffect, useReducer, useState } from "react";
 import Link from "next/link";
@@ -359,13 +360,13 @@ function ProfileRow({
   return (
     <li className="admin-list-row">
       <div className="admin-profile-summary">
-        <span className="admin-row-avatar" aria-hidden="true">
+        {profile.kind === "startup" ? <ProjectIcon project={profile} size="md" /> : <span className="admin-row-avatar" aria-hidden="true">
           {profile.name
             .split(/\s+/)
             .slice(0, 2)
             .map((word) => word[0])
             .join("")}
-        </span>
+        </span>}
         <div>
           <h3 className="admin-row-title">
             <button onClick={onOpen}>{profile.name}</button>

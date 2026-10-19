@@ -57,7 +57,7 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
   const investor = form.kind === "investor";
   const titles = investor
     ? ["Your investment interests", "Who you want to meet", "Investment range & availability", "Review & sharing"]
-    : ["Your startup at a glance", "The idea & what you know", "Your next step", "Review & sharing"];
+    : ["Your idea at a glance", "The idea & what you know", "Your next step", "Review & sharing"];
   const captions = investor
     ? ["Start with a clear introduction.", "Help founders see whether your interests match.", "Set expectations before the first conversation.", "Choose what to share, then save."]
     : ["Start with a clear introduction.", "Explain what you have learned and what you still need to test.", "Make the next step easy to understand.", "Choose what to share, then save."];
@@ -150,14 +150,14 @@ export default function ProfileEditor({ form, setForm, publish, setPublish, cons
 
   return <form ref={formElement} onSubmit={submit} className="dialog-form guided-editor" noValidate>
     <div className="guided-progress">
-      <div><span>{investor ? "Investor profile" : "Founder profile"}</span><strong>Step {step + 1} of 4</strong></div>
+      <div><span>{investor ? "Investor profile" : "Startup idea"}</span><strong>Step {step + 1} of 4</strong></div>
       <ol aria-label="Profile creation steps">{titles.map((title, index) => <li key={title} aria-current={step === index ? "step" : undefined} className={index === step ? "current" : index < step ? "done" : ""}>
         <span aria-hidden="true">{index < step ? <Check size={13} /> : index + 1}</span><small>{title}</small>
       </li>)}</ol>
     </div>
     <div className="guided-step-heading"><h3 ref={heading} tabIndex={-1}>{titles[step]}</h3><p>{captions[step]}</p><p className="field-legend"><span><span className="field-required" aria-hidden="true">*</span> Required</span><span><Info size={14} aria-hidden="true" /> Optional — add later</span></p></div>
     {step === 0 ? <div className="form-grid">
-      {field(investor ? "Investor or organisation name" : "Startup name", "name", { required: true, max: 60, placeholder: investor ? "Your name or investment firm" : "Your startup or working name" })}
+      {field(investor ? "Investor or organisation name" : "Idea or startup name", "name", { required: true, max: 60, placeholder: investor ? "Your name or investment firm" : "Your startup or working name" })}
       {field("Your public name", "founder", { required: true, max: 80, placeholder: "The name people will see" })}
       {field("City", "city", { required: true, max: 60, placeholder: "For example: Bengaluru" })}
       {!investor ? <>

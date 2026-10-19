@@ -29,6 +29,13 @@
       "when": 1792319523750,
       "tag": "0003_owner_portal",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792339990879,
+      "tag": "0004_multiple_founder_ideas",
+      "breakpoints": true
     }
   ]
 }

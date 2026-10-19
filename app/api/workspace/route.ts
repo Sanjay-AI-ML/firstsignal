@@ -6,7 +6,7 @@ import { actionSchema } from '@/lib/validation';
 import { membersBlocked } from '@/lib/member-safety';
 export const dynamic='force-dynamic';
 type Stored={id:string;owner:string;kind:string;data:string;listed:number;updated:string;moderation_hidden?:number;moderation_reason?:string;moderation_updated?:string};
-type RequestRow={id:string;sender:string;recipient:string|null;profile_id:string;target_name:string;sender_name:string;message:string;status:string;created:string;updated:string;activity?:string;blocked?:number;proposal_status?:string;proposal_amount?:number;proposal_author?:string;proposal_version?:number;next_note?:string;next_date?:string};
+type RequestRow={id:string;sender:string;recipient:string|null;profile_id:string;source_profile_id:string|null;source_name:string|null;target_name:string;sender_name:string;message:string;status:string;created:string;updated:string;activity?:string;blocked?:number;proposal_status?:string;proposal_amount?:number;proposal_author?:string;proposal_version?:number;next_note?:string;next_date?:string};
 type Progress={id:string;profile_id:string;date:string;title:string;body:string;created:string};
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 function profile(row:Stored,userId?:string,updates:Profile['updates']=[]):Profile{const data=JSON.parse(row.data);return {...data,id:row.id,kind:row.kind,updates,demo:false,mine:row.owner===userId,listed:!!row.listed,updated:row.updated,evidenceDate:data.evidenceDate??'',...(row.owner===userId&&row.moderation_hidden?{moderation:{hidden:true,reason:row.moderation_reason??'',updated:row.moderation_updated??''}}:{})};}
@@ -45,7 +45,7 @@ async function state(userId?:string,requestedProfileId?:string){
  ]);
  const requestIds=requests.results.map(r=>r.id);
  const notes=requestIds.length?await db.prepare(`SELECT id,introduction_id,sender,sender_name,body,created FROM messages WHERE introduction_id IN (${requestIds.map(()=>'?').join(',')}) ORDER BY created ASC LIMIT 10000`).bind(...requestIds).all<{id:string;introduction_id:string;sender:string;sender_name:string;body:string;created:string}>():{results:[]};
- return {profiles:[...all,...seedProfiles],myProfiles:owned.results.map(r=>profile(r,userId,updates(r.id))),savedIds:saved.results.map(r=>r.profile_id),blockedProfiles:blocked.results.map(r=>({profileId:r.profile_id,name:r.target_name,created:r.created})),reports:reports.results.map(r=>({id:r.id,profileId:r.profile_id,reason:r.reason,status:r.status,created:r.created})),requests:requests.results.map(r=>({id:r.id,profileId:r.profile_id,targetName:r.target_name,senderName:r.sender_name,message:r.message,status:r.status,created:r.created,updated:r.activity??r.updated,blocked:!!r.blocked,proposal:r.proposal_status?{status:r.proposal_status,amount:r.proposal_amount,mine:r.proposal_author===userId,version:r.proposal_version}:undefined,nextStep:r.next_note||r.next_date?{note:r.next_note??'',date:r.next_date??''}:undefined,direction:r.recipient===userId?'incoming':'outgoing',messages:notes.results.filter(m=>m.introduction_id===r.id).map(m=>({id:m.id,body:m.body,senderName:m.sender_name,created:m.created,mine:m.sender===userId}))}))};
+ return {profiles:[...all,...seedProfiles],myProfiles:owned.results.map(r=>profile(r,userId,updates(r.id))),savedIds:saved.results.map(r=>r.profile_id),blockedProfiles:blocked.results.map(r=>({profileId:r.profile_id,name:r.target_name,created:r.created})),reports:reports.results.map(r=>({id:r.id,profileId:r.profile_id,reason:r.reason,status:r.status,created:r.created})),requests:requests.results.map(r=>({id:r.id,profileId:r.profile_id,...(r.source_profile_id?{sourceProfileId:r.source_profile_id,sourceName:r.source_name??''}:{}),targetName:r.target_name,senderName:r.sender_name,message:r.message,status:r.status,created:r.created,updated:r.activity??r.updated,blocked:!!r.blocked,proposal:r.proposal_status?{status:r.proposal_status,amount:r.proposal_amount,mine:r.proposal_author===userId,version:r.proposal_version}:undefined,nextStep:r.next_note||r.next_date?{note:r.next_note??'',date:r.next_date??''}:undefined,direction:r.recipient===userId?'incoming':'outgoing',messages:notes.results.filter(m=>m.introduction_id===r.id).map(m=>({id:m.id,body:m.body,senderName:m.sender_name,created:m.created,mine:m.sender===userId}))}))};
 }
 export async function GET(request?:Request){try{const user=await getAppUser();const id=request?new URL(request.url).searchParams.get('profile'):null;const requestedProfileId=id&&id.length>=2&&id.length<=100?id:undefined;return json(await state(user?.userId,requestedProfileId));}catch(e){console.error('Workspace read failed',e);return json({error:"We couldn't load your workspace. Please retry."},503);}}
 export async function POST(request:Request){
@@ -56,15 +56,27 @@ export async function POST(request:Request){
  let parsed;try{parsed=actionSchema.safeParse(JSON.parse(raw));}catch{return json({error:'Please submit valid form information.'},400);}if(!parsed.success)return json({error:parsed.error.issues[0]?.message??'Check your form.'},400);
  try{
  const db=database(),a=parsed.data,now=new Date().toISOString(),owner=user.userId;
+ let savedProfileId:string|undefined;
  if(a.action==='profile'){
-  // Check and write in one statement so simultaneous saves cannot add a second role.
-  // Existing profiles keep their IDs and can still be edited, including legacy accounts.
-  const result=await db.prepare(`INSERT INTO profiles (id,owner,kind,data,listed,updated)
-   SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM profiles WHERE owner=?)
-   OR EXISTS (SELECT 1 FROM profiles WHERE owner=? AND kind=?)
-   ON CONFLICT(owner,kind) DO UPDATE SET data=excluded.data,listed=excluded.listed,updated=excluded.updated`)
-   .bind(crypto.randomUUID(),owner,a.profile.kind,JSON.stringify(a.profile),a.listed?1:0,now,owner,owner,a.profile.kind).run();
-  if(!result.meta.changes)return json({error:'You already have a profile. Each account can have one founder or investor profile. Open My profile to edit yours.'},409);
+  if(a.profileId){
+   // An explicit immutable ID distinguishes editing from creating another idea.
+   // Payload ownership/IDs are stripped by validation and cannot select a row.
+   const result=await db.prepare('UPDATE profiles SET data=?,listed=?,updated=? WHERE id=? AND owner=? AND kind=?')
+    .bind(JSON.stringify(a.profile),a.listed?1:0,now,a.profileId,owner,a.profile.kind).run();
+   if(!result.meta.changes)return json({error:'This idea or profile is unavailable. You can edit only your own entries.'},404);
+   savedProfileId=a.profileId;
+  }else{
+   // The role check is part of the write, including simultaneous first saves.
+   // Founders may add independent rows; investors retain one profile per account.
+   const id=crypto.randomUUID();
+   const result=await db.prepare(`INSERT INTO profiles (id,owner,kind,data,listed,updated)
+    SELECT ?,?,?,?,?,? WHERE (NOT EXISTS (SELECT 1 FROM profiles WHERE owner=? AND kind<>?) OR EXISTS (SELECT 1 FROM profiles WHERE owner=? AND kind=?))
+    AND (?='startup' OR NOT EXISTS (SELECT 1 FROM profiles WHERE owner=? AND kind='investor'))
+    ON CONFLICT DO NOTHING`)
+    .bind(id,owner,a.profile.kind,JSON.stringify(a.profile),a.listed?1:0,now,owner,a.profile.kind,owner,a.profile.kind,a.profile.kind,owner).run();
+   if(!result.meta.changes)return json({error:'Your account uses one role: founder or investor. Founders can add multiple ideas; investors can edit their existing profile.'},409);
+   savedProfileId=id;
+  }
  }
  if(a.action==='progress'||a.action==='removeProgress'){
   const own=await db.prepare("SELECT id FROM profiles WHERE id=? AND owner=? AND kind='startup'").bind(a.profileId,owner).first();
@@ -85,7 +97,7 @@ export async function POST(request:Request){
    const intro=await db.prepare("SELECT sender,recipient,sender_name,target_name FROM introductions WHERE id=? AND status='accepted' AND recipient IS NOT NULL AND (sender=? OR recipient=?)").bind(a.id,owner,owner).first<{sender:string;recipient:string;sender_name:string;target_name:string}>();
    if(intro)target={id:`connection:${a.id}`,owner:intro.sender===owner?intro.recipient:intro.sender,name:intro.sender===owner?intro.target_name:intro.sender_name};
   }else{
-   const stored=await db.prepare(`SELECT p.* FROM profiles p WHERE p.id=? AND ((p.listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)) OR EXISTS (SELECT 1 FROM introductions i WHERE i.status='accepted' AND ((i.sender=? AND i.recipient=p.owner) OR (i.recipient=? AND i.sender=p.owner))))`).bind(a.profileId,owner,owner).first<Stored>();
+   const stored=await db.prepare(`SELECT p.* FROM profiles p WHERE p.id=? AND ((p.listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)) OR EXISTS (SELECT 1 FROM introductions i WHERE i.status='accepted' AND (i.profile_id=p.id OR i.source_profile_id=p.id) AND ((i.sender=? AND i.recipient=p.owner) OR (i.recipient=? AND i.sender=p.owner))))`).bind(a.profileId,owner,owner).first<Stored>();
    if(stored)target={id:stored.id,owner:stored.owner,name:profile(stored).name};
   }
   if(!target)return json({error:'This member profile is unavailable.'},404);
@@ -108,11 +120,21 @@ export async function POST(request:Request){
    else await db.prepare('DELETE FROM saves WHERE owner=? AND profile_id=?').bind(owner,a.profileId).run();
   }else{
    if(stored?.owner===owner)return json({error:'You cannot request an introduction to your own profile.'},400);
-   const target=seed??profile(stored!),existing=await db.prepare('SELECT id,status FROM introductions WHERE sender=? AND profile_id=?').bind(owner,a.profileId).first();if(existing)return json({error:'You already have a request for this profile. Find it in Connections.'},409);
+   const source=a.sourceProfileId?await db.prepare("SELECT p.* FROM profiles p WHERE p.id=? AND p.owner=? AND p.kind='startup' AND p.listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)").bind(a.sourceProfileId,owner).first<Stored>():null;
+   if(a.sourceProfileId&&!source)return json({error:'Choose one of your public, available ideas before sending this request.'},404);
+   const target=seed??profile(stored!),existing=await db.prepare("SELECT id,status FROM introductions WHERE sender=? AND profile_id=? AND coalesce(source_profile_id,'')=?").bind(owner,a.profileId,a.sourceProfileId??'').first();if(existing)return json({error:'You already have a request for this profile and idea. Find it in Connections.'},409);
    const count=await db.prepare('SELECT COUNT(*) AS n FROM introductions WHERE sender=? AND created>?').bind(owner,new Date(Date.now()-86400000).toISOString()).first<{n:number}>();if((count?.n??0)>=20)return json({error:"You've reached today's request limit. Try again tomorrow."},429);
    const introductionId=crypto.randomUUID();
-   const result=await db.prepare('INSERT INTO introductions (id,sender,recipient,profile_id,target_name,sender_name,message,status,created,updated) SELECT ?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?)) AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=? AND m.hidden=1) AND (?=1 OR EXISTS (SELECT 1 FROM profiles p WHERE p.id=? AND p.listed=1))').bind(introductionId,owner,stored?.owner??null,target.id,target.name,user.displayName.slice(0,120),a.message,seed?'draft':'pending',now,now,owner,stored?.owner??null,stored?.owner??null,owner,a.profileId,seed?1:0,a.profileId).run();
-   if(!result.meta.changes)return json({error:'This member connection is unavailable.'},403);
+   const result=await db.prepare(`INSERT INTO introductions (id,sender,recipient,profile_id,source_profile_id,source_name,target_name,sender_name,message,status,created,updated)
+    SELECT ?,?,?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))
+    AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=? AND m.hidden=1)
+    AND (?=1 OR EXISTS (SELECT 1 FROM profiles p WHERE p.id=? AND p.listed=1))
+    AND (? IS NULL OR EXISTS (SELECT 1 FROM profiles p WHERE p.id=? AND p.owner=? AND p.kind='startup' AND p.listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)))
+    ON CONFLICT DO NOTHING`).bind(introductionId,owner,stored?.owner??null,target.id,source?.id??null,source?profile(source).name:null,target.name,user.displayName.slice(0,120),a.message,seed?'draft':'pending',now,now,owner,stored?.owner??null,stored?.owner??null,owner,a.profileId,seed?1:0,a.profileId,source?.id??null,source?.id??null,owner).run();
+   if(!result.meta.changes){
+    if(await db.prepare("SELECT 1 FROM introductions WHERE sender=? AND profile_id=? AND coalesce(source_profile_id,'')=?").bind(owner,a.profileId,a.sourceProfileId??'').first())return json({error:'You already have a request for this profile and idea. Find it in Connections.'},409);
+    return json({error:'This member connection or selected idea is unavailable.'},403);
+   }
    await notify(stored?.owner??null,introductionId,'You have a new introduction request');
   }
  }
@@ -128,6 +150,6 @@ export async function POST(request:Request){
    const result=await db.prepare("INSERT INTO messages (id,introduction_id,sender,sender_name,body,created) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM messages WHERE introduction_id=?)<100 AND NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))").bind(crypto.randomUUID(),a.id,owner,user.displayName.slice(0,120),a.body,now,a.id,owner,other,other,owner).run();if(!result.meta.changes)return json({error:'Messaging is unavailable or this conversation has reached its message limit.'},400);await notify(other,a.id,'You have a new connection message');
   }
  }
- return json(await state(owner,a.action==='save'||a.action==='request'?a.profileId:undefined));
+ return json({...await state(owner,a.action==='save'||a.action==='request'?a.profileId:undefined),...(savedProfileId?{savedProfileId}:{})});
  }catch(e){console.error('Workspace write failed',e);return json({error:"We couldn't save that change. Your input is still here; please retry."},503);}
 }

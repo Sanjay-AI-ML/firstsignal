@@ -1,6 +1,7 @@
 import { getAppUser } from '../../auth';
 import { database } from '@/lib/database';
-import { dispatchNotifications,emailConfigured,notify } from '@/lib/notifications';
+import { dispatchNotifications,notificationSettings,setNotificationPreferences,notificationStatements } from '@/lib/notifications';
+import { notificationBody } from '@/lib/notification-security';
 import { z } from 'zod';
 import { membersBlocked } from '@/lib/member-safety';
 import { validDate } from '@/lib/validation';
@@ -12,9 +13,9 @@ const schema=z.discriminatedUnion('action',[
  z.object({action:z.literal('nextStep'),id:z.string().min(1).max(100),note:z.string().trim().max(500),date:z.string().refine(v=>v===''||validDate(v),'Choose a valid calendar date.')}),
  z.object({action:z.literal('preferences'),enabled:z.boolean()}),z.object({action:z.literal('retry')})]);
 type Current={introduction_id:string;version:number;author:string;amount:number;terms:string;status:string;event_id:string;updated:string};
-async function read(owner:string,id:string|null){
+async function read(owner:string,id:string|null,user?:{userId:string;email:string;emailVerified:boolean}){
  const db=database();
- if(!id){const pref=await db.prepare('SELECT enabled FROM notification_preferences WHERE owner=?').bind(owner).first<{enabled:number}>();const notices=await db.prepare('SELECT id,introduction_id,title,status,created FROM notifications WHERE owner=? ORDER BY created DESC LIMIT 30').bind(owner).all();return {emailEnabled:!!pref?.enabled,emailConfigured:emailConfigured(),notifications:notices.results};}
+ if(!id)return notificationSettings(user!);
  const intro=await db.prepare("SELECT sender,recipient FROM introductions WHERE id=? AND (sender=? OR recipient=?) AND status='accepted'").bind(id,owner,owner).first<{sender:string;recipient:string}>();
  if(!intro)return null;
  const current=await db.prepare('SELECT * FROM negotiations WHERE introduction_id=?').bind(id).first<Current>();
@@ -22,22 +23,20 @@ async function read(owner:string,id:string|null){
  const nextStep=await db.prepare('SELECT note,date FROM connection_next_steps WHERE owner=? AND introduction_id=?').bind(owner,id).first<{note:string;date:string}>();
  return {current:current?{version:current.version,amount:current.amount,terms:current.terms,status:current.status,mine:current.author===owner}:null,events:events.results.map(({author,...e})=>({...e,mine:author===owner})),blocked:await membersBlocked(owner,intro.sender===owner?intro.recipient:intro.sender),nextStep};
 }
-export async function GET(request:Request){try{const user=await getAppUser();if(!user)return json({error:'Sign in to view connections.'},401);const result=await read(user.userId,new URL(request.url).searchParams.get('id'));return result?json(result):json({error:'Accepted connection unavailable.'},404);}catch{return json({error:'Connections are temporarily unavailable.'},503);}}
+export async function GET(request:Request){try{const user=await getAppUser();if(!user)return json({error:'Sign in to view connections.'},401);const result=await read(user.userId,new URL(request.url).searchParams.get('id'),user);return result?json(result):json({error:'Accepted connection unavailable.'},404);}catch{return json({error:'Connections are temporarily unavailable.'},503);}}
 export async function POST(request:Request){
  try{
  const user=await getAppUser();if(!user)return json({error:'Sign in to continue.'},401);
  if(request.headers.get('origin')!==new URL(request.url).origin)return json({error:'Request origin could not be verified.'},403);
- if(Number(request.headers.get('content-length')||0)>12000)return json({error:'Request too large.'},413);
- const raw=await request.text();if(raw.length>12000)return json({error:'Request too large.'},413);
+ const raw=await notificationBody(request,12000);if(raw===null)return json({error:'Request too large.'},413);
  let parsed;try{parsed=schema.safeParse(JSON.parse(raw));}catch{return json({error:'Invalid request.'},400);}
  if(!parsed.success)return json({error:parsed.error.issues[0]?.message||'Check your input.'},400);
  const a=parsed.data, db=database(), owner=user.userId;
  if(a.action==='preferences'){
-  if(a.enabled&&(!user.email||!user.emailVerified))return json({error:'Confirm your email address through sign-in before enabling email updates.'},400);
-  await db.batch([db.prepare("UPDATE notifications SET status='skipped' WHERE owner=? AND status='pending'").bind(owner),db.prepare('INSERT INTO notification_preferences (owner,email,enabled) VALUES (?,?,?) ON CONFLICT(owner) DO UPDATE SET email=excluded.email,enabled=excluded.enabled').bind(owner,user.email,a.enabled?1:0)]);
-  return json(await read(owner,null));
+  const refused=await setNotificationPreferences(user,a.enabled);if(refused)return json({error:refused.error},refused.status);
+  return json(await read(owner,null,user));
  }
- if(a.action==='retry'){await dispatchNotifications(owner);return json(await read(owner,null));}
+ if(a.action==='retry'){await dispatchNotifications(owner,1);return json(await read(owner,null,user));}
  const intro=await db.prepare("SELECT sender,recipient FROM introductions WHERE id=? AND (sender=? OR recipient=?) AND status='accepted'").bind(a.id,owner,owner).first<{sender:string;recipient:string}>();
  if(!intro)return json({error:'Only participants of an accepted connection can negotiate.'},404);
  if(a.action==='nextStep'){
@@ -56,8 +55,7 @@ export async function POST(request:Request){
  const version=a.version+1,event=crypto.randomUUID(),now=new Date().toISOString(),status=a.action==='proposal'?'open':a.status, amount=a.action==='proposal'?a.amount:current!.amount,terms=a.action==='proposal'?a.terms:current!.terms;
  const write=db.prepare('INSERT INTO negotiations (introduction_id,version,author,amount,terms,status,event_id,updated) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?)) ON CONFLICT(introduction_id) DO UPDATE SET version=excluded.version,author=excluded.author,amount=excluded.amount,terms=excluded.terms,status=excluded.status,event_id=excluded.event_id,updated=excluded.updated WHERE negotiations.version=? AND NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))').bind(a.id,version,a.action==='proposal'?owner:current!.author,amount,terms,status,event,now,owner,other,other,owner,a.version,owner,other,other,owner);
  const history=db.prepare('INSERT INTO negotiation_events (id,introduction_id,version,author,author_name,amount,terms,status,created) SELECT ?,introduction_id,version,?,?,amount,terms,status,updated FROM negotiations WHERE introduction_id=? AND event_id=?').bind(event,owner,user.displayName.slice(0,120),a.id,event);
- const results=await db.batch([write,history]);if(!results[0].meta.changes)return json({error:'Another response arrived first. Refresh your connection.'},409);
- await notify(intro.sender===owner?intro.recipient:intro.sender,a.id,a.action==='proposal'?'A new private proposal is ready to review':'Your private proposal has a response');
+ const results=await db.batch([write,history,...notificationStatements(other,a.id,a.action==='proposal'?'A new private proposal is ready to review':'Your private proposal has a response')]);if(!results[0].meta.changes)return json({error:'Another response arrived first. Refresh your connection.'},409);
  return json(await read(owner,a.id));
  }catch{console.error('Connection change failed');return json({error:'Unable to save this change. Please retry.'},503);}
 }

@@ -1,5 +1,5 @@
 import { getAppUser } from '../../auth';
-import { notify } from '@/lib/notifications';
+import { notificationStatements } from '@/lib/notifications';
 import { database } from '@/lib/database';
 import { seedProfiles,type Profile } from '@/lib/data';
 import { actionSchema } from '@/lib/validation';
@@ -164,17 +164,17 @@ export async function POST(request:Request){
    const target=seed??profile(stored!),existing=await db.prepare("SELECT id,status FROM introductions WHERE sender=? AND profile_id=? AND coalesce(source_profile_id,'')=?").bind(owner,a.profileId,a.sourceProfileId??'').first();if(existing)return json({error:'You already have a request for this profile and idea. Find it in Connections.'},409);
    const count=await db.prepare('SELECT COUNT(*) AS n FROM introductions WHERE sender=? AND created>?').bind(owner,new Date(Date.now()-86400000).toISOString()).first<{n:number}>();if((count?.n??0)>=20)return json({error:"You've reached today's request limit. Try again tomorrow."},429);
    const introductionId=crypto.randomUUID();
-   const result=await db.prepare(`INSERT INTO introductions (id,sender,recipient,profile_id,source_profile_id,source_name,target_name,sender_name,message,status,created,updated)
+   const write= db.prepare(`INSERT INTO introductions (id,sender,recipient,profile_id,source_profile_id,source_name,target_name,sender_name,message,status,created,updated)
     SELECT ?,?,?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))
     AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=? AND m.hidden=1)
     AND (?=1 OR EXISTS (SELECT 1 FROM profiles p WHERE p.id=? AND p.listed=1))
     AND (? IS NULL OR EXISTS (SELECT 1 FROM profiles p WHERE p.id=? AND p.owner=? AND p.kind='startup' AND p.listed=1 AND NOT EXISTS (SELECT 1 FROM profile_moderation m WHERE m.profile_id=p.id AND m.hidden=1)))
-    ON CONFLICT DO NOTHING`).bind(introductionId,owner,stored?.owner??null,target.id,source?.id??null,source?profile(source).name:null,target.name,user.displayName.slice(0,120),a.message,seed?'draft':'pending',now,now,owner,stored?.owner??null,stored?.owner??null,owner,a.profileId,seed?1:0,a.profileId,source?.id??null,source?.id??null,owner).run();
+    ON CONFLICT DO NOTHING`).bind(introductionId,owner,stored?.owner??null,target.id,source?.id??null,source?profile(source).name:null,target.name,user.displayName.slice(0,120),a.message,seed?'draft':'pending',now,now,owner,stored?.owner??null,stored?.owner??null,owner,a.profileId,seed?1:0,a.profileId,source?.id??null,source?.id??null,owner);
+   const [result]=await db.batch([write,...notificationStatements(stored?.owner??null,introductionId,'You have a new introduction request')]);
    if(!result.meta.changes){
     if(await db.prepare("SELECT 1 FROM introductions WHERE sender=? AND profile_id=? AND coalesce(source_profile_id,'')=?").bind(owner,a.profileId,a.sourceProfileId??'').first())return json({error:'You already have a request for this profile and idea. Find it in Connections.'},409);
     return json({error:'This member connection or selected idea is unavailable.'},403);
    }
-   await notify(stored?.owner??null,introductionId,'You have a new introduction request');
   }
  }
  if(a.action==='respond'||a.action==='message'){
@@ -183,10 +183,10 @@ export async function POST(request:Request){
   if(await membersBlocked(owner,other))return json({error:'This member is blocked. New requests, messages and proposals are disabled.'},403);
   if(a.action==='respond'){
    if(intro.status!=='pending')return json({error:'This request is no longer pending.'},409);if(a.status==='withdrawn'?intro.sender!==owner:intro.recipient!==owner)return json({error:'You cannot change this request.'},403);
-   const result=await db.prepare("UPDATE introductions SET status=?,updated=? WHERE id=? AND status='pending' AND NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))").bind(a.status,now,a.id,owner,other,other,owner).run();if(!result.meta.changes)return json({error:'The request changed. Reload to see its status.'},409);await notify(other,a.id,'Your introduction request has an update');
+   const [result]=await db.batch([db.prepare("UPDATE introductions SET status=?,updated=? WHERE id=? AND status='pending' AND NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))").bind(a.status,now,a.id,owner,other,other,owner),...notificationStatements(other,a.id,'Your introduction request has an update')]);if(!result.meta.changes)return json({error:'The request changed. Reload to see its status.'},409);
   }else{
    if(intro.status!=='accepted')return json({error:'Both parties must accept before messaging.'},403);
-   const result=await db.prepare("INSERT INTO messages (id,introduction_id,sender,sender_name,body,created) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM messages WHERE introduction_id=?)<100 AND NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))").bind(crypto.randomUUID(),a.id,owner,user.displayName.slice(0,120),a.body,now,a.id,owner,other,other,owner).run();if(!result.meta.changes)return json({error:'Messaging is unavailable or this conversation has reached its message limit.'},400);await notify(other,a.id,'You have a new connection message');
+   const [result]=await db.batch([db.prepare("INSERT INTO messages (id,introduction_id,sender,sender_name,body,created) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM messages WHERE introduction_id=?)<100 AND NOT EXISTS (SELECT 1 FROM member_blocks WHERE (owner=? AND target_owner=?) OR (owner=? AND target_owner=?))").bind(crypto.randomUUID(),a.id,owner,user.displayName.slice(0,120),a.body,now,a.id,owner,other,other,owner),...notificationStatements(other,a.id,'You have a new connection message')]);if(!result.meta.changes)return json({error:'Messaging is unavailable or this conversation has reached its message limit.'},400);
   }
  }
  return json({...await state(owner,a.action==='save'||a.action==='request'?a.profileId:undefined),...(savedProfileId?{savedProfileId}:{})});

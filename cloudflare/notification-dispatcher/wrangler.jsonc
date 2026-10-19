@@ -1,0 +1,19 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "findin-notification-dispatcher",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-19",
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    // Replace with the exact canonical HTTPS origin, without a trailing slash.
+    "FIRSTSIGNAL_ORIGIN": "https://findin.example.invalid"
+  },
+  "secrets": { "required": ["NOTIFICATION_DISPATCH_SECRET"] },
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true },
+    "traces": { "enabled": true, "head_sampling_rate": 0.1 }
+  }
+}

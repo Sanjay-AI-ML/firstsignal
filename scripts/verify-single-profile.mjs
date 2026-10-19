@@ -32,7 +32,7 @@ const data = await load('lib/data.ts', {
 });
 const validation = await load('lib/validation.ts', {zod:{z}, './data':data, './sectors':sectorModule});
 const route = await load('app/api/workspace/route.ts', {
-  '../../auth': {getAppUser: async()=>auth.getStore()}, '@/lib/notifications': {notify:async()=>{}},
+  '../../auth': {getAppUser: async()=>auth.getStore()}, '@/lib/notifications': {notificationStatements:()=>[]},
   '@/lib/database': {database:()=>db}, '@/lib/data':data, '@/lib/validation':validation,
   '@/lib/member-safety': {membersBlocked:async()=>false}, '@/lib/rate-limit': await load('lib/rate-limit.ts', {})
 });

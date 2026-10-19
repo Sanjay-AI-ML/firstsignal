@@ -1,5 +1,7 @@
 # FindIn owner portal
 
+Current release state is recorded in the [production launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md). The owner portal is implemented and its hosted owner binding is present. Earlier browser-disabled and migration-activation notes below retain their original verification context; they are not a claim that every later source change is deployed or that production Clerk authentication is activated.
+
 The dedicated `/admin/signin` page opens the `/admin` operator workspace for one configured Clerk account. It uses the existing Clerk authentication service, with a fixed admin return destination and no admin signup or signup-transfer flow. The owner can sign in without creating a founder/investor profile. A different signed-in account is offered Switch account; admin logout returns to the admin sign-in page while member logout retains its ordinary destination.
 
 The page and every API request enforce the configured immutable owner identity on the server. A hidden link, profile role, email, browser flag or Clerk user-editable metadata cannot grant access. An empty or invalid owner configuration denies everyone. A separate login entry is a dedicated administrative experience; it does not introduce a second password store or bypass Clerk verification.
@@ -42,7 +44,7 @@ Migration `drizzle/0003_owner_portal.sql` adds versioned report review fields, `
 node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_owner_portal.sql
 ```
 
-Run after the production build has emitted the local Wrangler config. Never rerun an applied `ALTER TABLE` migration, reset a database, or replace `--local` with `--remote` as part of local setup. Fresh databases need all four migrations in order. The hosted Site's managed D1 and the owner's separate direct Cloudflare D1 remain distinct.
+Run after the production build has emitted the local Wrangler config. Never rerun an applied `ALTER TABLE` migration, reset a database, or replace `--local` with `--remote` as part of local setup. This command is only the incremental portal migration. Fresh databases for the current application need all seven migrations, 0000–0006, in order; see [README.md](README.md). Later migrations add multiple ideas, Test & learn and the notification outbox. The hosted Site's managed D1 and the owner's separate direct Cloudflare D1 remain distinct. Review the [current launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) for actual hosting/migration status.
 
 Hiding a listing sets a separate moderation restriction. It does not overwrite the owner's sharing choice or delete data. Server discovery, direct links, saved-profile reads and new saves/requests respect the restriction. The owner can still edit their own profile; publishing again cannot clear the restriction. Existing accepted conversations remain available to their participants. Restoring an owner-unlisted profile lifts the restriction but leaves it private.
 

@@ -36,7 +36,7 @@ const sectors = await load('lib/sectors.ts', {});
 const data = await load('lib/data.ts', { './sectors': sectors, './seed-startups.json': JSON.parse(await fs.readFile('lib/seed-startups.json', 'utf8')), './seed-investors.json': JSON.parse(await fs.readFile('lib/seed-investors.json', 'utf8')) });
 const validation = await load('lib/validation.ts', { zod: { z }, './data': data, './sectors': sectors });
 const throttle = await load('lib/rate-limit.ts', {});
-const workspace = await load('app/api/workspace/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/notifications': { notify: async () => {} }, '@/lib/database': { database: () => db }, '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': { membersBlocked: async () => false }, '@/lib/rate-limit': throttle });
+const workspace = await load('app/api/workspace/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/notifications': { notificationStatements: () => [] }, '@/lib/database': { database: () => db }, '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': { membersBlocked: async () => false }, '@/lib/rate-limit': throttle });
 const owner = { userId: 'clerk:user_Owner123', displayName: 'Operator', email: 'owner@example.test', emailVerified: true };
 const member = { ...owner, userId: 'clerk:user_Member123', displayName: 'Member' };
 const origin = 'https://findin.example';

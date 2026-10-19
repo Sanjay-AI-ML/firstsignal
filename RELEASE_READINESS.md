@@ -1,6 +1,14 @@
 # FindIn release status
 
-17 October 2026. The public Site is a working pilot with Clerk development authentication. It is not yet a fully activated production service.
+## Current status — 19 October 2026
+
+The public Site remains a pilot with Clerk development authentication, not a fully activated production service. The [production launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) is the current source of launch gates, responsibilities and acceptance evidence. The sections below retain earlier implementation checks and release history; a dated passing test or GitHub push does not establish deployment.
+
+Existing Sites access has recovered. The retained public Site was observed at version 32 with the owner binding present, no custom domain or live email settings, and no experiment/outbox tables. New source still needs reviewed pending migrations 0005 and 0006 and a matching release. Do not create a replacement Site or transfer the serving database implicitly.
+
+The current source supports multiple independent founder ideas, one investor profile, a dedicated server-protected owner portal, per-idea Test & learn and transactional email outbox/receipt handling. The separate five-minute dispatcher source is available but has not been activated. Production Clerk/domain, verified sender, webhook and job secrets, consenting real delivery tests, security/abuse, browser/performance, recovery and operator/support gates remain open. See [email activation](EMAIL_SETUP.md) for the actual implemented behavior.
+
+Browser access briefly recovered for local notification loading/error/opt-in scenarios and 320px/390px checks, then became disabled again. The final focus-preservation change has not been rechecked in the browser; there is no new screenshot. The user deferred further browser checks and the requested checklist email. No real product email or checklist email was sent, and no new hosted release was made. Older project-not-found/browser-disabled observations below describe their dated checks, not proof of current hosting failure or complete later-code QA.
 
 ## Multiple founder ideas — 19 October 2026
 
@@ -24,7 +32,7 @@ Rename validation: TypeScript and the production build passed. Homepage, workspa
 
 Sector update validation: production build, TypeScript, sector validation/filter/comparison checks, custom-sector API persistence/edit checks, the one-profile rule, existing profile-fit/suggestion checks, and D1 query bounds passed. Local browser checks covered broad founder choices, required Other text and focus recovery, custom labels in founder/investor review, mixed investor interests, custom discovery filtering, and a 320px layout without horizontal overflow. No browser errors were observed. The temporary fixture was removed before building. These checks do not establish production OAuth or independent validation of startup claims.
 
-- One founder OR investor profile per account, enforced by an atomic server write and UI entry guards. Existing records and related progress remain intact; older accounts with both profiles retain editing access. Conflict responses refresh stale workspace state. Required fields use accessible stars; optional fields have keyboard/touch info buttons. Product and marketing copy uses clearer terms while retaining fictional, unverified and non-binding labels.
+- One founder OR investor role per account, enforced by an atomic server write and UI entry guards. Founders can now manage multiple independent ideas; investors retain one investment profile. Existing records and related progress remain intact; older accounts with both roles retain editing access. Conflict responses refresh stale workspace state. Required fields use accessible stars; optional fields have keyboard/touch info buttons. Product and marketing copy uses clearer terms while retaining fictional, unverified and non-binding labels.
 
 17 October validation: TypeScript, production build and `scripts/verify-single-profile.mjs` passed. The isolated SQLite/route test covers unauthenticated writes, consent, second-role rejection in both directions, simultaneous saves, stable IDs, ownership, progress preservation and legacy accounts. Local browser checks covered founder/investor forms, required-field errors, private defaults, required consent, optional-help keyboard opening/Escape/focus return, existing-founder editing and 390px/320px layouts without horizontal overflow. No browser errors were observed. The temporary fixture was removed before the production build. These checks do not establish production OAuth or full accessibility conformance.
 
@@ -53,7 +61,7 @@ Marketing update validation: TypeScript passed; template endpoints returned all 
 1. Choose and attach an owned domain. The owner deferred that decision; none has been purchased or attached by this work. Recheck student-benefit eligibility, checkout price and renewal cost when selecting one.
 2. Configure Clerk's production instance, DNS, production OAuth settings and keys. Switch origin and keys together, then verify browser sign-in/sign-out, reload, expiry and cross-account access on the chosen domain. Keep the development instance's truthful label until activation.
 3. Activate a verified sender domain and secure Resend runtime settings, then test a consenting real recipient, opt-out and provider failures. Confirming an account email is separate from checking investment or founder claims. See [EMAIL_SETUP.md](EMAIL_SETUP.md).
-4. Establish an operator and process for reviewing submitted reports, investigating abuse, responding to users and enforcing decisions. The current product records reports but has no administration UI or automatic moderation. Reporting does not automatically remove a listing, and blocking does not make an otherwise public listing private.
+4. Establish an operator and process for reviewing submitted reports, investigating abuse, responding to users and enforcing decisions. The owner portal implements report review, reversible listing restrictions and audit history; automatic moderation is absent. Reporting does not automatically remove a listing, and blocking does not make an otherwise public listing private.
 5. Establish support/contact, data deletion, operating terms, monitoring/alerts and a tested database backup/restore. Pilot quotas, validation and account authorization do not replace a broader traffic-abuse response or independent release assessment.
 6. If moving to the selected direct Cloudflare stack, configure the own-account Worker, production secrets and D1 binding explicitly. Sites D1 and the owner's separate D1 database are distinct. Any identity/data transfer needs an explicit mapping; never reassign ownership by matching email alone.
 
@@ -65,7 +73,7 @@ Private proposal amounts and terms are discussion records available only to acce
 
 Each participant's next-step note and date stay private to that person. Dates do not schedule reminders. Saving a real startup follows its visible progress in the workspace; progress updates do not trigger email broadcasts.
 
-Connection emails contain generic event notices, not private message content or proposal terms. Provider acceptance is labelled submitted, not delivered. There is no background retry scheduler or delivery webhook. Blocks suppress further connection notifications between the accounts; historical notices and accepted conversation records remain account-scoped.
+Connection emails contain generic event notices, not private message content or proposal terms. Provider acceptance is distinguished from receiving-server acceptance, which does not prove reading or inbox placement. The current source has a durable outbox, signed delivery webhook and separately deployable background retry caller; their live configuration and real delivery verification remain pending. Blocks suppress further connection notifications between the accounts; historical notices and accepted conversation records remain account-scoped. See [EMAIL_SETUP.md](EMAIL_SETUP.md).
 
 Examples remain labelled fictional. Stock marketing photographs imply no member, partner or investor endorsement. Review this document alongside [HANDOFF.md](HANDOFF.md) when expanding advertised behaviour.
 
@@ -76,7 +84,7 @@ The public landing page now demonstrates profile drafting/listing, stated stage 
 
 ## Integrated design update — 18 October 2026
 
-Shared semantic tokens, consistent Manrope, compact overview, profile list/card layouts, composed discovery filters, local workspace search and local conversation search are implemented. The public preview uses fictional profiles and truthful planning-budget labels. Neither search changes account visibility or sends messages. Existing one-profile, custom-sector, consent, saved/direct access and private proposal workflows are retained.
+Shared semantic tokens, consistent Manrope, compact overview, profile list/card layouts, composed discovery filters, local workspace search and local conversation search are implemented. The public preview uses fictional profiles and truthful planning-budget labels. Neither search changes account visibility or sends messages. Account-role controls, custom-sector, consent, saved/direct access and private proposal workflows are retained; the later multiple-idea update supersedes the original single-founder-profile limit.
 
 Scoped lint for the new components passes. The two modified legacy workflow files retain 11 pre-existing lint errors with no added errors; this is not a clean-lint release. Manual browser checks cover key keyboard, narrow-screen and privacy-sensitive interactions; see [the dated audit](DESIGN_AUDIT_2026-10-18.md) for exact scope and limits. Production Clerk/domain, email activation and launch operations above still apply.
 

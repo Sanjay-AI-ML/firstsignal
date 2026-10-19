@@ -16,7 +16,7 @@ Admin entry: [FindIn administration](https://firstsignal-founder-network.diviner
 - Private, non-binding INR bids, counteroffers, decisions and versioned negotiation history.
 - Dated founder progress updates and a recent-progress feed for saved real startups.
 - Profile reporting and account blocking with server-enforced contact restrictions.
-- In-app notifications and optional verified-email notifications through Resend.
+- In-app notifications and opt-in verified-email alerts through Resend, with a durable D1 outbox, signed delivery receipts and separately deployable retry dispatcher. Live sending still requires activation.
 - Responsive marketing pages and reduced-motion support.
 - A chapter-based marketing journey with native section navigation, persistent pause controls, framed image transitions and a fictional Test & learn walkthrough. See [scroll research and verification](SCROLL_COMPLETION_2026-10-19.md).
 - Dedicated owner admin sign-in, reported-content review, searchable founder/investor listings, reversible removal/restoration and an activity log. See [admin access and setup](ADMIN_PORTAL.md).
@@ -25,7 +25,7 @@ Admin entry: [FindIn administration](https://firstsignal-founder-network.diviner
 
 Marketing templates are writing prompts, not imported fictional evidence. A new founder or investor entry opens an empty private form; an existing profile is offered for explicit resume. Progress-template entry opens a blank update composer on an existing founder profile, or starts founder setup first. Each account keeps its founder or investor role. Founders can create and manage multiple independent ideas; investors have one investment profile. Creation makes a new record, while edits target the exact ID and authenticated owner. The server atomically rejects a new opposite role, including simultaneous requests. Older accounts that already have both profiles retain access to edit them. Marketing entry links cannot create a second role. No template action saves or publishes a record by itself.
 
-Sample profiles are labelled, and real member claims/updates are self-reported. This pilot does not process investments, payments or binding agreements. Follow-up dates do not send reminders, progress updates do not broadcast emails, and submitted reports require manual operator handling. Production Clerk/domain activation, live email configuration and operational work remain pending; see [release status](RELEASE_READINESS.md).
+Sample profiles are labelled, and real member claims/updates are self-reported. This pilot does not process investments, payments or binding agreements. Follow-up dates do not send reminders, progress updates do not broadcast emails, and submitted reports require manual operator handling. Production Clerk/domain activation, live email configuration and operational work remain pending; see the current [production launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) and [release history](RELEASE_READINESS.md).
 
 The [implementation audit](IMPLEMENTATION_AUDIT_2026-10-19.md) distinguishes connected frontend demonstrations from server-backed functionality. Public funding/equity/co-investment tools are local planning worksheets, not approved legal documents or commitments. Member Diligence contains personal checklists, not uploaded confidential files. Monthly updates start blank and require sharing confirmation. Workspace JSON export is owner-scoped; account erasure is unavailable.
 
@@ -36,7 +36,7 @@ Requires Node.js 22.13 or later. Clean clones use the portable execution profile
 1. Run `npm ci`.
 2. Copy `.env.example` to `.env.local` and fill in your own Clerk development keys. Set the origin to `http://127.0.0.1:5173`.
 3. Run `npm run build` to generate the local Worker configuration.
-4. Initialize a fresh local database with all six migration commands below, in order.
+4. Initialize a fresh local database with all seven migration commands below, in order.
 5. Run `npm run dev` and open the printed loopback URL.
 
 ```sh
@@ -46,9 +46,10 @@ npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_owner_portal.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0004_multiple_founder_ideas.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0005_test_and_learn.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0006_notification_outbox.sql
 ```
 
-Run all six initialization commands only on a fresh local database. For an existing local database, check which migrations have been applied and run only the missing ones in order; never rerun an applied `ALTER TABLE` migration. These commands never initialize the live database. [HANDOFF.md](HANDOFF.md) also gives direct Node.js entrypoints for this Windows host.
+Run all seven initialization commands only on a fresh local database. For an existing local database, check which migrations have been applied and run only the missing ones in order; never rerun an applied `ALTER TABLE` migration. These commands never initialize the live database. [HANDOFF.md](HANDOFF.md) also gives direct Node.js entrypoints for this Windows host.
 
 ## Validation
 
@@ -58,6 +59,7 @@ node scripts/verify-profile-fit.mjs
 node scripts/verify-profile-suggestions.mjs
 node scripts/verify-workspace-bounds.mjs
 node scripts/verify-notifications.mjs
+node cloudflare/notification-dispatcher/verify.mjs
 node scripts/verify-admin.mjs
 node scripts/verify-admin-entry.mjs
 node scripts/verify-multiple-ideas.mjs
@@ -82,7 +84,7 @@ Upload the application source, assets, lockfile, migrations and documentation. N
 
 `/admin/signin` is the dedicated sign-in entry for `/admin`, a server-protected operator portal for one configured existing Clerk user. It provides real aggregate status, report review, filtered founder/investor listings, listed-idea/progress inspection, reversible removal/restoration and an audit history. Private drafts, messages, proposals and follow-up notes are excluded. Missing owner configuration denies everyone. See [ADMIN_PORTAL.md](ADMIN_PORTAL.md) before activating or deploying this update.
 
-The app now requires migration `0003_owner_portal.sql` in addition to the previous three migrations. Apply only unapplied migrations in order; do not reset existing data. This task applied 0003 to the existing local database only. Sites access was recovered on 18 October 2026 and hosted owner identity is configured securely. The existing Sites deployment flow applies pending migrations before Worker upload; confirm the resulting native deployment status.
+The portal was introduced by `0003_owner_portal.sql`; the current full app also requires 0004 (multiple ideas), 0005 (Test & learn) and 0006 (notification outbox). Fresh local setup uses all seven migrations above. Apply only unapplied migrations in order; do not reset existing data. The current hosted Site was observed at version 32 with owner access configured, but pending source/migrations still require release and verification. See the [current launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) before publishing.
 
 ```powershell
 node scripts/verify-admin.mjs

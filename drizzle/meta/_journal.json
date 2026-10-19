@@ -43,6 +43,13 @@
       "when": 1792391898321,
       "tag": "0005_test_and_learn",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792428535592,
+      "tag": "0006_notification_outbox",
+      "breakpoints": true
     }
   ]
 }

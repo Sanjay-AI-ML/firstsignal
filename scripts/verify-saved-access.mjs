@@ -25,8 +25,8 @@ const db = { prepare(sql) {
     if (sql.includes('FROM progress_updates')) progressBatches.push(args.length);
     if (sql.includes('LIMIT 1') && (sql.includes('WHERE p.id=') || sql.includes('WHERE id='))) requestedLookups++;
     return { results: query.all(...args) };
-  } }; return statement;
-}, async batch(statements) { return Promise.all(statements.map(statement => statement.all())); } };
+  },execute(){if(sql.includes('FROM progress_updates'))progressBatches.push(args.length);if(sql.includes('LIMIT 1')&&(sql.includes('WHERE p.id=')||sql.includes('WHERE id=')))requestedLookups++;return query.columns().length?{results:query.all(...args),meta:{changes:0}}:{results:[],meta:{changes:query.run(...args).changes}}} }; return statement;
+}, async batch(statements) {sqlite.exec('BEGIN IMMEDIATE');try{const result=statements.map(statement=>statement.execute());sqlite.exec('COMMIT');return result;}catch(error){sqlite.exec('ROLLBACK');throw error;}} };
 async function load(file, modules) {
   const { code } = await transform(await fs.readFile(file, 'utf8'), { loader: 'ts', format: 'cjs' });
   const context = { module: { exports: {} }, exports: {}, require: id => {
@@ -44,7 +44,7 @@ const validation = await load('lib/validation.ts', { zod: { z }, './data': data,
 const safety = await load('lib/member-safety.ts', { './database': { database: () => db } });
 const route = await load('app/api/workspace/route.ts', {
   '../../auth': { getAppUser: async () => auth.getStore() },
-  '@/lib/notifications': { notify: async () => {} }, '@/lib/database': { database: () => db },
+  '@/lib/notifications': { notificationStatements: () => [] }, '@/lib/database': { database: () => db },
   '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': safety, '@/lib/rate-limit': await load('lib/rate-limit.ts', {}),
 });
 const base = { kind: 'startup', name: 'Saved member', founder: 'Local founder', city: 'Chennai',

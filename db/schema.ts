@@ -25,3 +25,17 @@ export const ideaExperiments=sqliteTable("idea_experiments",{
   status:text("status").notNull().default("draft"),shared:integer("shared").notNull().default(0),version:integer("version").notNull().default(0),
   created:text("created").notNull(),startedAt:text("started_at").notNull().default(""),completedAt:text("completed_at").notNull().default(""),updated:text("updated").notNull(),
 },t=>[index("idea_experiments_profile_created").on(t.profileId,t.created)]);
+export const notificationEmails=sqliteTable("notification_emails",{
+  notificationId:text("notification_id").primaryKey().references(()=>notifications.id),kind:text("kind").notNull(),state:text("state").notNull().default("pending"),
+  providerId:text("provider_id").notNull().default(""),recipient:text("recipient").notNull().default(""),requestBody:text("request_body").notNull().default(""),consentVersion:text("consent_version").notNull().default(""),
+  attempts:integer("attempts").notNull().default(0),firstAttemptAt:text("first_attempt_at").notNull().default(""),nextAttemptAt:text("next_attempt_at").notNull().default(""),leaseUntil:text("lease_until").notNull().default(""),leaseToken:text("lease_token").notNull().default(""),lastError:text("last_error").notNull().default(""),eventAt:text("event_at").notNull().default(""),eventId:text("event_id").notNull().default(""),created:text("created").notNull(),updated:text("updated").notNull(),
+},t=>[uniqueIndex("notification_emails_provider").on(t.providerId).where(sql`${t.providerId} <> ''`),index("notification_emails_due").on(t.state,t.nextAttemptAt)]);
+export const notificationEmailControls=sqliteTable("notification_email_controls",{
+  owner:text("owner").primaryKey(),consentVersion:text("consent_version").notNull(),suppressedEmail:text("suppressed_email").notNull().default(""),suppressionReason:text("suppression_reason").notNull().default(""),updated:text("updated").notNull(),
+});
+export const notificationEmailEvents=sqliteTable("notification_email_events",{
+  id:text("id").primaryKey(),notificationId:text("notification_id").notNull().references(()=>notifications.id),providerId:text("provider_id").notNull(),type:text("type").notNull(),eventAt:text("event_at").notNull(),received:text("received").notNull(),
+},t=>[index("notification_email_events_notification").on(t.notificationId)]);
+export const notificationDispatchLease=sqliteTable("notification_dispatch_lease",{
+  id:text("id").primaryKey(),token:text("token").notNull(),expires:text("expires").notNull(),updated:text("updated").notNull(),
+});

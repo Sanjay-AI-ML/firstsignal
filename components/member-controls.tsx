@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import type { Intro, Profile, WorkspaceData } from "@/lib/data";
+import { Download } from "lucide-react";
 
 type Write = (payload: unknown) => Promise<unknown>;
 const reasons = [
@@ -46,13 +47,44 @@ export function MemberControls({ profile, connection, onWrite, busy, onBlocked }
 
 export function SafetySettings({ data, onWrite, busy }: { data: WorkspaceData; onWrite: Write; busy: boolean }) {
   const [error, setError] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [exporting, setExporting] = useState(false);
   const unblock = async (profileId: string) => {
     try { await onWrite({ action: "block", profileId, blocked: false }); setError(""); }
     catch (e) { setError(e instanceof Error ? e.message : "Unable to unblock member."); }
   };
-  return <section className="safety-settings"><h2>Your safety controls</h2><p className="subtle">Manage blocks and see the reports you submitted. Reports are private to your account and the service operator.</p>
+  const exportArchive = async () => {
+    if (busy || exporting) return;
+    setError(""); setFeedback(""); setExporting(true);
+    try {
+      const response = await onWrite({ action: "exportData" }) as { dataArchive?: Record<string, unknown> };
+      if (!response?.dataArchive) throw new Error("The archive was not returned. Please try again.");
+      const blob = new Blob([JSON.stringify(response.dataArchive, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      try {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `findin-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link); link.click(); link.remove();
+      } finally { URL.revokeObjectURL(url); }
+      setFeedback("Your workspace download has started. Keep this archive private; it includes your conversations.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Unable to export your workspace."); }
+    finally { setExporting(false); }
+  };
+  return <section className="safety-settings">
+    <h2>Your safety & privacy controls</h2>
+    <p className="subtle">Manage blocks and see the reports you submitted. Reports are private to your account and the service operator.</p>
     {error ? <p className="notice error-notice" role="alert">{error}</p> : null}
-    <div className="safety-columns"><div><h3>Blocked members</h3>{data.blockedProfiles?.length ? <ul>{data.blockedProfiles.map(b => <li key={b.profileId}><span>{b.name}</span><button type="button" className="text-button" disabled={busy} onClick={() => void unblock(b.profileId)}>Unblock</button></li>)}</ul> : <p className="subtle">You haven’t blocked anyone.</p>}</div>
-    <div><h3>Your reports</h3>{data.reports?.length ? <ul>{data.reports.map(r => <li key={r.id}><span>{reasons.find(([id]) => id === r.reason)?.[1] || r.reason}</span><span className="tag">{r.status === "submitted" ? "Submitted" : r.status}</span></li>)}</ul> : <p className="subtle">No reports submitted.</p>}</div></div>
+    {feedback ? <p className="notice" role="status">{feedback}</p> : null}
+    <div className="safety-columns">
+      <div><h3>Blocked members</h3>{data.blockedProfiles?.length ? <ul>{data.blockedProfiles.map(b => <li key={b.profileId}><span>{b.name}</span><button type="button" className="text-button" disabled={busy} onClick={() => void unblock(b.profileId)}>Unblock</button></li>)}</ul> : <p className="subtle">You haven’t blocked anyone.</p>}</div>
+      <div><h3>Your reports</h3>{data.reports?.length ? <ul>{data.reports.map(r => <li key={r.id}><span>{reasons.find(([id]) => id === r.reason)?.[1] || r.reason}</span><span className="tag">{r.status === "submitted" ? "Submitted" : r.status}</span></li>)}</ul> : <p className="subtle">No reports submitted.</p>}</div>
+    </div>
+    <div className="workspace-data-controls" style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--fi-border)" }}>
+      <h3>Your workspace archive</h3>
+      <p className="subtle">Download your saved profiles, progress, tests, shortlist, blocks, submitted reports, notification settings and conversation history as JSON. Your private follow-up notes are included; other members’ private notes and operator-only reviews are excluded. Clerk-managed sign-in records are not included.</p>
+      <button type="button" className="outline-button" disabled={busy || exporting} onClick={() => void exportArchive()}><Download size={15} aria-hidden="true" />{exporting ? "Preparing archive…" : "Export workspace (.json)"}</button>
+      <p className="subtle" style={{ marginTop: "14px" }}>Account deletion is not available in this version. You can edit or unlist your ideas to change what others see. This does not delete your sign-in account or conversation history.</p>
+    </div>
   </section>;
 }

@@ -4,6 +4,7 @@ import { database } from '@/lib/database';
 import { seedProfiles,type Profile } from '@/lib/data';
 import { actionSchema } from '@/lib/validation';
 import { membersBlocked } from '@/lib/member-safety';
+import { checkRateLimit, anonymousThrottleKey } from '@/lib/rate-limit';
 export const dynamic='force-dynamic';
 type Stored={id:string;owner:string;kind:string;data:string;listed:number;updated:string;moderation_hidden?:number;moderation_reason?:string;moderation_updated?:string};
 type RequestRow={id:string;sender:string;recipient:string|null;profile_id:string;source_profile_id:string|null;source_name:string|null;target_name:string;sender_name:string;message:string;status:string;created:string;updated:string;activity?:string;blocked?:number;proposal_status?:string;proposal_amount?:number;proposal_author?:string;proposal_version?:number;next_note?:string;next_date?:string};
@@ -47,15 +48,53 @@ async function state(userId?:string,requestedProfileId?:string){
  const notes=requestIds.length?await db.prepare(`SELECT id,introduction_id,sender,sender_name,body,created FROM messages WHERE introduction_id IN (${requestIds.map(()=>'?').join(',')}) ORDER BY created ASC LIMIT 10000`).bind(...requestIds).all<{id:string;introduction_id:string;sender:string;sender_name:string;body:string;created:string}>():{results:[]};
  return {profiles:[...all,...seedProfiles],myProfiles:owned.results.map(r=>profile(r,userId,updates(r.id))),savedIds:saved.results.map(r=>r.profile_id),blockedProfiles:blocked.results.map(r=>({profileId:r.profile_id,name:r.target_name,created:r.created})),reports:reports.results.map(r=>({id:r.id,profileId:r.profile_id,reason:r.reason,status:r.status,created:r.created})),requests:requests.results.map(r=>({id:r.id,profileId:r.profile_id,...(r.source_profile_id?{sourceProfileId:r.source_profile_id,sourceName:r.source_name??''}:{}),targetName:r.target_name,senderName:r.sender_name,message:r.message,status:r.status,created:r.created,updated:r.activity??r.updated,blocked:!!r.blocked,proposal:r.proposal_status?{status:r.proposal_status,amount:r.proposal_amount,mine:r.proposal_author===userId,version:r.proposal_version}:undefined,nextStep:r.next_note||r.next_date?{note:r.next_note??'',date:r.next_date??''}:undefined,direction:r.recipient===userId?'incoming':'outgoing',messages:notes.results.filter(m=>m.introduction_id===r.id).map(m=>({id:m.id,body:m.body,senderName:m.sender_name,created:m.created,mine:m.sender===userId}))}))};
 }
-export async function GET(request?:Request){try{const user=await getAppUser();const id=request?new URL(request.url).searchParams.get('profile'):null;const requestedProfileId=id&&id.length>=2&&id.length<=100?id:undefined;return json(await state(user?.userId,requestedProfileId));}catch(e){console.error('Workspace read failed',e);return json({error:"We couldn't load your workspace. Please retry."},503);}}
+export async function GET(request?:Request){try{const user=await getAppUser();const rate=checkRateLimit('get:'+(user?.userId??anonymousThrottleKey(request)),300);if(!rate.success)return json({error:'Too many refreshes. Please wait a minute before trying again.'},429);const id=request?new URL(request.url).searchParams.get('profile'):null;const requestedProfileId=id&&id.length>=2&&id.length<=100?id:undefined;return json(await state(user?.userId,requestedProfileId));}catch(e){console.error('Workspace read failed',e);return json({error:"We couldn't load your workspace. Please retry."},503);}}
 export async function POST(request:Request){
  let user;try{user=await getAppUser();}catch{console.error('Authentication service unavailable');return json({error:'Sign-in is temporarily unavailable. Please retry.'},503);}if(!user)return json({error:'Sign in to save changes.'},401);
  if(request.headers.get('origin')!==new URL(request.url).origin)return json({error:"This request couldn't be verified. Reload and try again."},403);
+ if(!checkRateLimit('post:'+user.userId,120).success)return json({error:'Too many actions submitted. Please wait a minute before trying again.'},429);
  if(Number(request.headers.get('content-length')??0)>20000)return json({error:'This request is too large.'},413);
  let raw:string;try{raw=await request.text();}catch{return json({error:'Unable to read your request.'},400);}if(raw.length>20000)return json({error:'This request is too large.'},413);
  let parsed;try{parsed=actionSchema.safeParse(JSON.parse(raw));}catch{return json({error:'Please submit valid form information.'},400);}if(!parsed.success)return json({error:parsed.error.issues[0]?.message??'Check your form.'},400);
+ // Refuse the old local-only wipe: it removed other members' safety records
+ // without deleting or revoking the active Clerk identity.
+ if(parsed.data.action==='deleteAccount')return json({error:'Account deletion is not available in this version. No records were changed. You can unlist your ideas to hide them from discovery.'},409);
  try{
  const db=database(),a=parsed.data,now=new Date().toISOString(),owner=user.userId;
+ if(a.action==='exportData'){
+  // Explicit owner-scoped projections prevent private notes and operator-only
+  // report fields leaking. Joins keep binding counts constant at any idea count.
+  const [userProfiles,updates,userSaves,userBlocks,userReports,userIntros,userExperiments,notes,negotiations,events,nextSteps,preferences,notices,restrictions]=await Promise.all([
+   db.prepare('SELECT id,kind,data,listed,updated FROM profiles WHERE owner=? ORDER BY updated,id').bind(owner).all<Omit<Stored,'owner'>>(),
+   db.prepare('SELECT u.id,u.profile_id AS profileId,u.date,u.title,u.body,u.created FROM progress_updates u INNER JOIN profiles p ON p.id=u.profile_id WHERE p.owner=? ORDER BY u.created,u.id').bind(owner).all<{id:string;profileId:string;date:string;title:string;body:string;created:string}>(),
+   db.prepare('SELECT profile_id AS profileId,created FROM saves WHERE owner=? ORDER BY created,profile_id').bind(owner).all(),
+   db.prepare('SELECT profile_id AS profileId,target_name AS name,created FROM member_blocks WHERE owner=? ORDER BY created,profile_id').bind(owner).all(),
+   db.prepare('SELECT id,profile_id AS profileId,reason,details,status,created,updated FROM member_reports WHERE owner=? ORDER BY created,id').bind(owner).all(),
+   db.prepare("SELECT id,profile_id AS profileId,source_profile_id AS sourceProfileId,source_name AS sourceName,target_name AS targetName,sender_name AS senderName,message,status,created,updated,CASE WHEN sender=? THEN 'outgoing' ELSE 'incoming' END AS direction FROM introductions WHERE sender=? OR recipient=? ORDER BY created,id").bind(owner,owner,owner).all<{id:string;profileId:string;sourceProfileId:string|null;sourceName:string|null;targetName:string;senderName:string;message:string;status:string;created:string;updated:string;direction:string}>(),
+   db.prepare('SELECT e.id,e.profile_id AS profileId,e.plan,e.result,e.status,e.shared,e.version,e.created,e.started_at AS startedAt,e.completed_at AS completedAt,e.updated FROM idea_experiments e INNER JOIN profiles p ON p.id=e.profile_id WHERE p.owner=? ORDER BY e.created,e.id').bind(owner).all<{id:string;profileId:string;plan:string;result:string;status:string;shared:number;version:number;created:string;startedAt:string;completedAt:string;updated:string}>(),
+   db.prepare('SELECT m.id,m.introduction_id AS introductionId,m.sender_name AS senderName,m.body,m.created,CASE WHEN m.sender=? THEN 1 ELSE 0 END AS mine FROM messages m INNER JOIN introductions i ON i.id=m.introduction_id WHERE i.sender=? OR i.recipient=? ORDER BY m.created,m.id').bind(owner,owner,owner).all<{id:string;introductionId:string;senderName:string;body:string;created:string;mine:number}>(),
+   db.prepare('SELECT n.introduction_id AS introductionId,n.version,n.amount,n.terms,n.status,n.updated,CASE WHEN n.author=? THEN 1 ELSE 0 END AS mine FROM negotiations n INNER JOIN introductions i ON i.id=n.introduction_id WHERE i.sender=? OR i.recipient=?').bind(owner,owner,owner).all<{introductionId:string;version:number;amount:number;terms:string;status:string;updated:string;mine:number}>(),
+   db.prepare('SELECT e.id,e.introduction_id AS introductionId,e.version,e.author_name AS authorName,e.amount,e.terms,e.status,e.created,CASE WHEN e.author=? THEN 1 ELSE 0 END AS mine FROM negotiation_events e INNER JOIN introductions i ON i.id=e.introduction_id WHERE i.sender=? OR i.recipient=? ORDER BY e.created,e.id').bind(owner,owner,owner).all<{id:string;introductionId:string;version:number;authorName:string;amount:number;terms:string;status:string;created:string;mine:number}>(),
+   db.prepare('SELECT n.introduction_id AS introductionId,n.note,n.date,n.updated FROM connection_next_steps n INNER JOIN introductions i ON i.id=n.introduction_id WHERE n.owner=? AND (i.sender=? OR i.recipient=?)').bind(owner,owner,owner).all<{introductionId:string;note:string;date:string;updated:string}>(),
+   db.prepare('SELECT email,enabled FROM notification_preferences WHERE owner=?').bind(owner).all<{email:string;enabled:number}>(),
+   db.prepare('SELECT id,introduction_id AS introductionId,title,status,created FROM notifications WHERE owner=? ORDER BY created,id').bind(owner).all(),
+   db.prepare('SELECT m.profile_id AS profileId,m.hidden,m.reason,m.updated FROM profile_moderation m INNER JOIN profiles p ON p.id=m.profile_id WHERE p.owner=?').bind(owner).all<{profileId:string;hidden:number;reason:string;updated:string}>()
+  ]);
+  const dataArchive={
+   formatVersion:1,exportedAt:now,
+   scope:"Your currently stored FindIn workspace records and conversations you participate in. This is not a copy of Clerk-managed authentication records, operator-only reviews, or other members' private follow-up notes. Records can change while the archive is generated.",
+   user:{id:owner,name:user.displayName,email:user.email},
+   profiles:userProfiles.results.map(r=>({id:r.id,kind:r.kind,listed:!!r.listed,data:JSON.parse(r.data),updated:r.updated,progressUpdates:updates.results.filter(u=>u.profileId===r.id),restriction:restrictions.results.filter(m=>m.profileId===r.id).map(m=>({...m,hidden:!!m.hidden}))[0]??null})),
+   experiments:userExperiments.results.map(e=>({...e,plan:JSON.parse(e.plan),result:JSON.parse(e.result),shared:!!e.shared})),
+   shortlist:userSaves.results,
+   memberBlocks:userBlocks.results,
+   memberReports:userReports.results,
+   notificationPreferences:preferences.results.map(p=>({...p,enabled:!!p.enabled}))[0]??null,
+   notifications:notices.results,
+   connections:userIntros.results.map(i=>({...i,messages:notes.results.filter(m=>m.introductionId===i.id).map(m=>({...m,mine:!!m.mine})),negotiation:negotiations.results.filter(n=>n.introductionId===i.id).map(n=>({...n,mine:!!n.mine}))[0]??null,negotiationHistory:events.results.filter(e=>e.introductionId===i.id).map(e=>({...e,mine:!!e.mine})),nextStep:nextSteps.results.find(ns=>ns.introductionId===i.id)??null}))
+  };
+  return json({dataArchive,...await state(owner)});
+ }
  let savedProfileId:string|undefined;
  if(a.action==='profile'){
   if(a.profileId){

@@ -9,6 +9,14 @@ import MarketingTemplates from "../components/marketing-templates";
 import MarketingEvidenceBrief from "../components/marketing-evidence-brief";
 import MarketingDiscoveryPreview from "../components/marketing-discovery-preview";
 import MarketingConnectionMap from "../components/marketing-connection-map";
+import MarketingPitchCanvas from "../components/marketing-pitch-canvas";
+import PitchAudit from "../components/pitch-audit";
+import RunwaySimulator from "../components/runway-simulator";
+import ThesisRadar from "../components/thesis-radar";
+import CustomerSignals from "../components/customer-signals";
+import MarketingSignalTicker from "../components/marketing-signal-ticker";
+import MarketingSignalVsDeck from "../components/marketing-signal-vs-deck";
+import FloatingVentureToolkit from "../components/floating-venture-toolkit";
 import { setupSignIn } from "../lib/onboarding-intent";
 import LegacyWorkspaceLinks from "../components/legacy-workspace-links";
 import "./marketing.css";
@@ -53,6 +61,7 @@ export default function Home() {
         </div>
         <div className="marketing-hero-product"><MarketingDiscoveryPreview /></div>
       </section>
+      <MarketingSignalTicker />
       <section className="marketing-editorial marketing-section" aria-labelledby="ideas-everywhere-title">
         <div className="marketing-editorial-heading">
           <div><span className="marketing-kicker">ROOM FOR YOUR KIND OF IDEA</span><h2 id="ideas-everywhere-title">Good ideas don’t fit<br /><em>one category.</em></h2></div>
@@ -69,6 +78,7 @@ export default function Home() {
 
       <MarketingScrollScene><MarketingSpecialties /></MarketingScrollScene>
       <MarketingProductTour />
+      <MarketingSignalVsDeck />
 
       <section className="marketing-audience marketing-section" id="founders" aria-labelledby="founders-title" tabIndex={-1}>
         <div className="marketing-audience-copy marketing-reveal"><span className="marketing-kicker"><span className="marketing-section-number">01 /</span> FOR FOUNDERS</span><h2 id="founders-title">Start with the idea.<br /><em>Show how it grows.</em></h2><p>You don’t need a launch to tell a useful story. Bring your ideology, proposed solution and the next question worth answering.</p>
@@ -77,6 +87,10 @@ export default function Home() {
         </div>
         <div className="marketing-audience-visual marketing-reveal"><figure className="marketing-audience-art marketing-story-art" data-story-direction="founder"><div className="marketing-story-frame"><img src="/images/founder-work-photo.webp" width="1400" height="788" loading="lazy" decoding="async" alt="A woman working on a laptop beside project notes in an office" /></div><figcaption className="marketing-photo-credit">Stock photo · <a href="https://unsplash.com/photos/woman-working-on-laptop-in-modern-office-setting-O9PEo38zOss" target="_blank" rel="noreferrer">Vitaly Gariev / Unsplash</a></figcaption></figure>
           <div className="marketing-learning-note"><span className="marketing-example-label">FICTIONAL TEST & LEARN</span><time dateTime="2026-10-06">06 Oct 2026</time><h3>Tracegrid tried a smaller handover.</h3><dl className="marketing-test-example"><div><dt>Before the test</dt><dd>Can both workshop leads complete a handover without help?</dd></div><div><dt>What happened</dt><dd>One completed it. One needed help finding unfinished work.</dd></div><div><dt>Next decision</dt><dd>Change the layout and test again. Willingness to pay is still unknown.</dd></div></dl><span className="marketing-note-footer">Illustrative founder-reported learning. No FindIn verification.</span></div>
+        </div>
+        <div style={{ gridColumn: "1 / -1", width: "100%", marginTop: "1.5rem" }}>
+          <div className="venture-tool-target" id="tool-pitch" tabIndex={-1}><PitchAudit /></div>
+          <div className="venture-tool-target" id="tool-runway" tabIndex={-1}><RunwaySimulator /></div>
         </div>
       </section>
 
@@ -89,10 +103,13 @@ export default function Home() {
           <div className="marketing-audience-visual marketing-reveal"><figure className="marketing-audience-art marketing-conversation-art marketing-story-art" data-story-direction="investor"><div className="marketing-story-frame"><img src="/images/findin-first-conversation-1080.webp" srcSet="/images/findin-first-conversation-640.webp 640w, /images/findin-first-conversation-1080.webp 1080w, /images/findin-first-conversation-1672.webp 1672w" sizes="(max-width: 760px) calc(100vw - 48px), (max-width: 1100px) 45vw, 570px" width="1672" height="941" loading="lazy" decoding="async" alt="Concept illustration of a founder and two investors discussing an early clean-energy prototype and project notes" /></div><figcaption className="marketing-photo-credit">AI-generated concept illustration · An early conversation</figcaption></figure>
             <div className="marketing-fit-note"><span className="marketing-example-label">FICTIONAL FIT COMPARISON</span><h3>Clear reasons to explore.</h3><div><span>Manufacturing SaaS</span><strong><Check size={15} aria-hidden="true" />Sector matches</strong></div><div><span>Pre-product</span><strong><Check size={15} aria-hidden="true" />Stage matches</strong></div><p>Availability and evidence quality? Ask about this.</p></div>
           </div>
+          <div style={{ gridColumn: "1 / -1", width: "100%", marginTop: "1.5rem" }}>
+            <div className="venture-tool-target" id="tool-thesis" tabIndex={-1}><ThesisRadar /></div>
+          </div>
         </div>
       </section>
 
-      <section className="marketing-context marketing-section" id="learning" aria-labelledby="context-title" tabIndex={-1}><div className="marketing-context-copy marketing-reveal"><span className="marketing-kicker">CONTEXT BEFORE CONVICTION</span><h2 id="context-title">The learning matters.<br /><em>So do the unknowns.</em></h2><p>An interview is a beginning. A prototype is a test. Neither is a promise of success. Put the useful detail and the unanswered questions in the same place.</p><ol className="marketing-context-points"><li><span>01</span><div><strong>What have you learned?</strong><p>Describe the observation and where it came from.</p></div></li><li><span>02</span><div><strong>What remains uncertain?</strong><p>Make room for the questions a pitch can leave out.</p></div></li><li><span>03</span><div><strong>What will you test next?</strong><p>Share a concrete next step and what you hope to learn.</p></div></li></ol><a href="#templates" className="marketing-text-link">Build your own brief<ArrowRight size={17} aria-hidden="true" /></a><p className="marketing-context-note">Member claims are self-reported. FindIn does not independently verify startup evidence.</p></div><MarketingEvidenceBrief /></section>
+      <section className="marketing-context marketing-section" id="learning" aria-labelledby="context-title" tabIndex={-1}><div className="marketing-context-copy marketing-reveal"><span className="marketing-kicker">CONTEXT BEFORE CONVICTION</span><h2 id="context-title">The learning matters.<br /><em>So do the unknowns.</em></h2><p>An interview is a beginning. A prototype is a test. Neither is a promise of success. Put the useful detail and the unanswered questions in the same place.</p><ol className="marketing-context-points"><li><span>01</span><div><strong>What have you learned?</strong><p>Describe the observation and where it came from.</p></div></li><li><span>02</span><div><strong>What remains uncertain?</strong><p>Make room for the questions a pitch can leave out.</p></div></li><li><span>03</span><div><strong>What will you test next?</strong><p>Share a concrete next step and what you hope to learn.</p></div></li></ol><a href="#templates" className="marketing-text-link">Build your own brief<ArrowRight size={17} aria-hidden="true" /></a><p className="marketing-context-note">Member claims are self-reported. FindIn does not independently verify startup evidence.</p></div><MarketingEvidenceBrief /><MarketingPitchCanvas /><div style={{ gridColumn: "1 / -1", width: "100%", marginTop: "1.5rem" }}><CustomerSignals example /></div></section>
 
       <MarketingTemplates />
 
@@ -104,5 +121,6 @@ export default function Home() {
       <section className="marketing-closing" id="your-next-step" tabIndex={-1}><span className="marketing-kicker">YOUR NEXT CHAPTER IS STILL UNWRITTEN</span><h2>Start with an idea.<br /><em>See who it brings you to.</em></h2><p>Bring what you know. Be clear about what comes next.</p><div className="marketing-actions"><a className="marketing-primary" href={profileEntry}>Create your profile<ArrowRight size={16} aria-hidden="true" /></a><a className="marketing-secondary" href="/app#discover">Explore the network</a></div><span className="marketing-closing-note">Discovery and discussion. No funding guarantee.</span></section>
     </main>
     <footer className="marketing-footer"><div><Link className="marketing-brand" href="/"><img src="/illustrations/findin-mark-64.webp" srcSet="/illustrations/findin-mark-64.webp 64w, /illustrations/findin-mark-128.webp 128w" sizes="32px" width="32" height="32" loading="lazy" decoding="async" alt="" />FindIn</Link><p>Early ideas. Meaningful connections.</p></div><nav aria-label="Footer navigation"><a href="#templates">Starter templates</a><a href="#how-it-works">Inside the product</a><a href="#founders">For founders</a><a href="#investors">For investors</a><a href="/signin?return_to=%2Fapp">Sign in</a><a href="/privacy">Privacy</a></nav><small>© {new Date().getFullYear()} FindIn · Discovery and discussion. No funding guarantee.</small></footer>
+    <FloatingVentureToolkit />
   </div>;
 }

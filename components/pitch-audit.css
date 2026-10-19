@@ -1,0 +1,351 @@
+/* Pitch Audit Component CSS */
+
+.pitch-audit-card {
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.75rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px -2px rgba(109, 93, 160, 0.05);
+}
+
+.pitch-audit-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.audit-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.audit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ede9fe;
+  color: #6d28d9;
+  flex-shrink: 0;
+}
+
+.audit-kicker {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7c3aed;
+  margin-bottom: 0.15rem;
+}
+
+.audit-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1528;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.audit-subtitle {
+  font-size: 0.9375rem;
+  color: #4a5568;
+  line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+}
+
+.audit-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  min-height: 32px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4a5568;
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.audit-reset-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* Score Banner */
+.audit-score-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.audit-score-banner.pill-high {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.audit-score-banner.pill-medium {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.audit-score-banner.pill-low {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.grade-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-right: 1.5rem;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  min-width: 80px;
+}
+
+.grade-letter {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #1e1b4b;
+  line-height: 1;
+}
+
+.grade-points {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.grade-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.grade-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.grade-status {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e1b4b;
+}
+
+.grade-signal-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #334155;
+}
+
+.grade-summary {
+  font-size: 0.875rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Questions Grid */
+.audit-questions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .audit-questions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.audit-question-card {
+  background: #fbfbfe;
+  border: 1px solid #e8e5f2;
+  border-radius: 12px;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.question-cat {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #7c3aed;
+}
+
+.question-text {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.question-options-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.audit-option-pill {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.audit-option-pill:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.audit-option-pill.is-signal {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.audit-option-pill.is-trap {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.opt-indicator {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.opt-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+}
+
+.opt-body {
+  flex: 1;
+}
+
+.opt-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.15rem;
+}
+
+.opt-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.35;
+  font-style: italic;
+}
+
+/* Insights Panel */
+.audit-insights-panel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .audit-insights-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.insight-column {
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+}
+
+.red-flags-col {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.strengths-col {
+  background: #fbfbfe;
+  border: 1px solid #ddd6fe;
+}
+
+.insight-col-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  margin-bottom: 0.5rem;
+}
+
+.insight-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+/* Footer Action */
+.audit-footer-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
+}
+
+.audit-cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.audit-cta-note {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}

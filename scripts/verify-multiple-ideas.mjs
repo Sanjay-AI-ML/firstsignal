@@ -64,7 +64,8 @@ const data = await load('lib/data.ts', { './sectors': sectors, './seed-startups.
 const validation = await load('lib/validation.ts', { zod: { z }, './data': data, './sectors': sectors });
 const safety = await load('lib/member-safety.ts', { './database': { database: () => db } });
 const notifications = { notify: async () => {}, dispatchNotifications: async () => {}, emailConfigured: () => false };
-const workspace = await load('app/api/workspace/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/notifications': notifications, '@/lib/database': { database: () => db }, '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': safety });
+const throttle = await load('lib/rate-limit.ts', {});
+const workspace = await load('app/api/workspace/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/notifications': notifications, '@/lib/database': { database: () => db }, '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': safety, '@/lib/rate-limit': throttle });
 const connections = await load('app/api/connections/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/database': { database: () => db }, '@/lib/notifications': notifications, zod: { z }, '@/lib/member-safety': safety, '@/lib/validation': validation });
 const origin = 'http://localhost';
 async function request(owner, payload, expected = 200, route = workspace, id = '') {

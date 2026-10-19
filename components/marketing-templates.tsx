@@ -5,6 +5,10 @@ import { Check, Copy, Download, FileText, Handshake, Sprout } from "lucide-react
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { starterTemplates, type StarterTemplate } from "@/lib/starter-templates";
 import { setupSignIn } from "@/lib/onboarding-intent";
+import ValuationCalculator from "./valuation-calculator";
+import EquityCalculator from "./equity-calculator";
+import TermSheetGenerator from "./term-sheet-generator";
+import SyndicateRoom from "./syndicate-room";
 import "./marketing-templates.css";
 
 function TemplateCard({ template, index }: { template: StarterTemplate; index: number }) {
@@ -43,6 +47,10 @@ export default function MarketingTemplates() {
   return <section className="marketing-templates marketing-section" id="templates" aria-labelledby="templates-title" tabIndex={-1}>
     <div className="starter-heading marketing-reveal"><div><span className="marketing-kicker">A USEFUL PLACE TO START</span><h2 id="templates-title">A blank page.<br /><em>A better starting point.</em></h2></div><div><p>Three practical templates for your first profile, your next update or the founders you want to meet.</p><span className="starter-free"><Check size={16} aria-hidden="true" />Free to copy and download. No account needed.</span></div></div>
     <div className="starter-grid">{starterTemplates.map((template, index) => <TemplateCard key={template.id} template={template} index={index} />)}</div>
+    <div className="venture-tool-target" id="tool-valuation" tabIndex={-1}><ValuationCalculator /></div>
+    <div className="venture-tool-target" id="tool-equity" tabIndex={-1}><EquityCalculator /></div>
+    <div className="venture-tool-target" id="tool-termsheet" tabIndex={-1}><TermSheetGenerator /></div>
+    <div className="venture-tool-target" id="tool-syndicate" tabIndex={-1}><SyndicateRoom /></div>
     <p className="starter-disclosure">Writing prompts, not verified evidence. Add your own observations and choose what to share.</p>
   </section>;
 }

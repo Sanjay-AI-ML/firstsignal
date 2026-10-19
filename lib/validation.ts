@@ -17,5 +17,7 @@ z.object({action:z.literal("removeProgress"),profileId:required(100),updateId:re
 z.object({action:z.literal("block"),profileId:required(100),blocked:z.boolean()}),
 z.object({action:z.literal("report"),profileId:required(100),reason:z.enum(["misleading","impersonation","harassment","spam","other"]),details:z.string().trim().min(10).max(1500)}),
 z.object({action:z.literal("blockConnection"),id:required(100),blocked:z.boolean()}),
-z.object({action:z.literal("reportConnection"),id:required(100),reason:z.enum(["misleading","impersonation","harassment","spam","other"]),details:z.string().trim().min(10).max(1500)})
+z.object({action:z.literal("reportConnection"),id:required(100),reason:z.enum(["misleading","impersonation","harassment","spam","other"]),details:z.string().trim().min(10).max(1500)}),
+z.object({action:z.literal("exportData")}),
+z.object({action:z.literal("deleteAccount"),consent:z.literal(true)})
 ]);

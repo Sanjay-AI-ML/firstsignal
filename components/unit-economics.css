@@ -1,0 +1,292 @@
+.unit-economics {
+  margin-top: 1.5rem;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e8e1f0);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 18px -2px rgba(113, 54, 189, 0.04);
+  font-family: inherit;
+  color: var(--text-primary, #1f1929);
+}
+
+.econ-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.econ-title-wrap {
+  max-width: 680px;
+}
+
+.econ-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-purple, #7136bd);
+  background: rgba(113, 54, 189, 0.08);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  margin-bottom: 0.5rem;
+}
+
+.econ-header h4 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.35rem 0;
+  color: var(--text-primary, #1f1929);
+}
+
+.econ-subtitle {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-secondary, #6e647c);
+  margin: 0;
+}
+
+.econ-actions-top {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.econ-btn-primary,
+.econ-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 38px;
+}
+
+.econ-btn-primary {
+  background: var(--accent-purple, #7136bd);
+  color: #ffffff;
+  border: 1px solid var(--accent-purple, #7136bd);
+}
+
+.econ-btn-primary:hover {
+  background: #5d28a1;
+}
+
+.econ-btn-secondary {
+  background: #ffffff;
+  color: var(--text-primary, #1f1929);
+  border: 1px solid var(--border, #e8e1f0);
+}
+
+.econ-btn-secondary:hover {
+  background: #faf8fc;
+  border-color: #d4c8e3;
+}
+
+.econ-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.econ-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.econ-field {
+  background: #faf8fc;
+  border: 1px solid #ebdff5;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.field-row label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f1929);
+}
+
+.field-row strong {
+  font-size: 0.9375rem;
+  color: var(--accent-purple, #7136bd);
+}
+
+.econ-range {
+  width: 100%;
+  accent-color: var(--accent-purple, #7136bd);
+  height: 6px;
+  border-radius: 3px;
+  margin: 0.35rem 0;
+  cursor: pointer;
+}
+
+.range-subtext {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--text-secondary, #6e647c);
+}
+
+/* Results Card */
+.econ-results-card {
+  background: #faf8fc;
+  border: 1px solid #ebdff5;
+  border-radius: 14px;
+  padding: 1.5rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.econ-score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #ebdff5;
+  padding-bottom: 1rem;
+}
+
+.rating-kicker {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #6e647c);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.rating-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.rating-title.exceptional { color: #1b7a4f; }
+.rating-title.healthy { color: #7136bd; }
+.rating-title.concerning { color: #b45309; }
+.rating-title.critical { color: #dc2626; }
+
+.rating-pill {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid #ebdff5;
+  color: var(--text-primary, #1f1929);
+  flex-shrink: 0;
+}
+
+.econ-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.metric-box {
+  background: #ffffff;
+  border: 1px solid #e8e1f0;
+  border-radius: 10px;
+  padding: 0.85rem;
+}
+
+.box-sub {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--text-secondary, #6e647c);
+  margin-bottom: 0.15rem;
+}
+
+.box-val {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--text-primary, #1f1929);
+  line-height: 1.2;
+}
+
+.box-note {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--text-secondary, #6e647c);
+  margin-top: 0.2rem;
+}
+
+.text-purple { color: #7136bd; }
+.text-emerald { color: #1b7a4f; }
+.text-amber { color: #b45309; }
+
+.econ-summary-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e8e1f0;
+  border-radius: 10px;
+  padding: 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-secondary, #6e647c);
+}
+
+.econ-summary-alert p {
+  margin: 0;
+}
+
+.econ-footer-note {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border, #e8e1f0);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6e647c);
+}
+
+.econ-tag {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: #f1eafc;
+  color: #7136bd;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 800px) {
+  .econ-layout {
+    grid-template-columns: 1fr;
+  }
+  .econ-header {
+    flex-direction: column;
+  }
+  .econ-actions-top {
+    width: 100%;
+  }
+  .econ-btn-primary,
+  .econ-btn-secondary {
+    flex: 1;
+    justify-content: center;
+  }
+}

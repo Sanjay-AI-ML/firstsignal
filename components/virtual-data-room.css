@@ -1,0 +1,17 @@
+.virtual-data-room{min-width:0;border:1px solid var(--fi-border);border-radius:var(--fi-radius-card);background:var(--fi-surface);padding:22px;margin-top:24px;color:var(--fi-text);font-family:var(--fi-font-family)}
+.vdr-preparation-heading{display:flex;align-items:flex-start;gap:11px}.vdr-preparation-heading>svg{color:var(--fi-primary);flex-shrink:0;margin-top:4px}
+.vdr-preparation-heading span{font-size:.625rem;letter-spacing:.07em;font-weight:650;line-height:1.8;color:var(--fi-primary)}
+.vdr-preparation-heading h3{font-size:1.125rem;font-weight:650;line-height:1.5;margin-top:5px}
+.vdr-preparation-intro{font-size:.875rem;line-height:1.8;color:var(--fi-text-secondary);margin:16px 0 11px;overflow-wrap:anywhere}
+.vdr-context-note{font-size:.75rem;line-height:1.8;padding:11px 13px;background:var(--fi-surface-muted);border-radius:var(--fi-radius-control);color:var(--fi-text-secondary)}
+.vdr-stated-context{display:grid;gap:15px;border-block:1px solid var(--fi-border);padding-block:18px;margin-top:20px}
+.vdr-stated-context dt{font-size:.75rem;line-height:1.7;font-weight:650;color:var(--fi-text-muted);margin-bottom:5px}
+.vdr-stated-context dd{font-size:.875rem;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}
+.vdr-preparation-topics{list-style:none;padding:0;margin:10px 0 0}.vdr-preparation-topics>li+li{border-top:1px solid var(--fi-border)}
+.vdr-preparation-topics label{display:flex;align-items:flex-start;gap:11px;min-height:44px;padding:17px 0;cursor:pointer}
+.vdr-preparation-topics input{appearance:auto;width:19px;height:19px;flex-shrink:0;margin-top:3px;accent-color:var(--fi-primary)}
+.vdr-preparation-topics label>span{min-width:0}.vdr-preparation-topics strong{display:block;font-size:.8125rem;font-weight:650;line-height:1.7}
+.vdr-preparation-topics label>span>span{display:block;margin-top:4px;font-size:.75rem;line-height:1.8;color:var(--fi-text-muted)}
+.vdr-preparation-limit{display:flex;gap:8px;align-items:flex-start;font-size:.75rem;line-height:1.8;color:var(--fi-text-muted);border-top:1px solid var(--fi-border);padding-top:17px}
+.vdr-preparation-limit>svg{flex-shrink:0;color:var(--fi-primary);margin-top:3px}.vdr-preparation-topics input:focus-visible{outline:3px solid var(--fi-focus);outline-offset:4px}
+@media(max-width:380px){.virtual-data-room{padding:17px}.vdr-preparation-heading h3{font-size:1.0625rem}}

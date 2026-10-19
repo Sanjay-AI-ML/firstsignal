@@ -34,7 +34,7 @@ const validation = await load('lib/validation.ts', {zod:{z}, './data':data, './s
 const route = await load('app/api/workspace/route.ts', {
   '../../auth': {getAppUser: async()=>auth.getStore()}, '@/lib/notifications': {notify:async()=>{}},
   '@/lib/database': {database:()=>db}, '@/lib/data':data, '@/lib/validation':validation,
-  '@/lib/member-safety': {membersBlocked:async()=>false}
+  '@/lib/member-safety': {membersBlocked:async()=>false}, '@/lib/rate-limit': await load('lib/rate-limit.ts', {})
 });
 const base = {kind:'startup', name:'Profile policy test', founder:'Test Founder', city:'Chennai', sector:data.sectors[0], stage:data.stages[0], tagline:'A profile used only in local tests', problem:'Testing role policy and independent ideas without touching real data.', solution:'A proposed service to test with early customers.',fundingIntentINR:0};
 async function save(owner, profile, extras={}) {

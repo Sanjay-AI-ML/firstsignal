@@ -1,0 +1,21 @@
+.floating-toolkit-wrapper { position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); right: 24px; z-index: 40; font-family: inherit; }
+.toolkit-pill-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--paper, #fff); border: 1px solid var(--line, #e4ddec); box-shadow: 0 8px 28px #3b1e661a; min-height: 48px; padding: 8px 14px; border-radius: 999px; cursor: pointer; color: var(--ink, #282134); }
+.toolkit-pill-btn:hover { border-color: var(--accent, #6934b5); }
+.toolkit-sparkle-dot, .tool-icon-box { display: grid; place-items: center; flex-shrink: 0; color: var(--accent, #6934b5); background: var(--lavender, #f1eafc); }
+.toolkit-sparkle-dot { width: 28px; height: 28px; border-radius: 50%; }
+.toolkit-btn-text { font-size: .8125rem; font-weight: 700; }
+.toolkit-count-badge { font-size: .6875rem; font-weight: 700; background: var(--accent, #6934b5); color: #fff; padding: 3px 7px; border-radius: 99px; }
+.toolkit-expanded-panel { width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); overflow-y: auto; background: var(--paper, #fff); border-color: var(--line, #e4ddec); border-radius: 16px; padding: 24px; }
+.toolkit-expanded-panel .header-badge { font-size: .6875rem; letter-spacing: .07em; color: var(--accent, #6934b5); font-weight: 700; }
+.toolkit-items-list { display: grid; gap: 6px; margin-top: 6px; }
+.toolkit-item-row { display: flex; align-items: center; gap: 12px; padding: 10px; min-height: 58px; border-radius: 10px; border: 1px solid var(--line, #e4ddec); text-decoration: none; }
+.toolkit-item-row:hover { background: var(--lavender, #f1eafc); }
+.tool-icon-box { width: 36px; height: 36px; border-radius: 8px; }
+.tool-item-info { flex: 1; min-width: 0; }
+.tool-item-info strong { display: block; font-size: .8125rem; color: var(--ink, #282134); line-height: 1.5; }
+.tool-item-info > span { display: block; font-size: .75rem; color: var(--muted, #6b6176); line-height: 1.5; }
+.toolkit-panel-footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; border-top: 1px solid var(--line, #e4ddec); padding-top: 12px; font-size: .75rem; color: var(--muted, #6b6176); }
+.toolkit-open-app { min-height: 44px; display: inline-flex; align-items: center; color: var(--accent, #6934b5); text-decoration: underline; }
+.venture-tool-target { scroll-margin-top: 160px; min-width: 0; }
+@media (max-width: 600px) { .floating-toolkit-wrapper { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); } .toolkit-expanded-panel { padding: 20px 16px; } }
+@media print { .floating-toolkit-wrapper { display: none; } }

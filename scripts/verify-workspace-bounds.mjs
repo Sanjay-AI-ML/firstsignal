@@ -31,7 +31,7 @@ const source=(await fs.readFile(new URL('../app/api/workspace/route.ts',import.m
 const {code}=await transform(source,{loader:'ts',format:'cjs'});
 const modules={
  '../../auth':{getAppUser:async()=>null},'@/lib/notifications':{notify:async()=>{}},'@/lib/database':{database},
- '@/lib/data':{seedProfiles:[]},'@/lib/validation':{actionSchema:{}},'@/lib/member-safety':{membersBlocked:async()=>false}
+ '@/lib/data':{seedProfiles:[]},'@/lib/validation':{actionSchema:{}},'@/lib/member-safety':{membersBlocked:async()=>false},'@/lib/rate-limit':{}
 };
 const context={module:{exports:{}},exports:{},require:id=>{assert.ok(id in modules,`Unexpected dependency ${id}`);return modules[id];},console,Response};
 vm.runInNewContext(code,context);

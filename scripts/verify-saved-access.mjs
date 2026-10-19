@@ -45,7 +45,7 @@ const safety = await load('lib/member-safety.ts', { './database': { database: ()
 const route = await load('app/api/workspace/route.ts', {
   '../../auth': { getAppUser: async () => auth.getStore() },
   '@/lib/notifications': { notify: async () => {} }, '@/lib/database': { database: () => db },
-  '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': safety,
+  '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': safety, '@/lib/rate-limit': await load('lib/rate-limit.ts', {}),
 });
 const base = { kind: 'startup', name: 'Saved member', founder: 'Local founder', city: 'Chennai',
   sector: data.sectors[0], stage: data.stages[0], tagline: 'An isolated test opportunity',

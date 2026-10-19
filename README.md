@@ -27,6 +27,8 @@ Marketing templates are writing prompts, not imported fictional evidence. A new 
 
 Sample profiles are labelled, and real member claims/updates are self-reported. This pilot does not process investments, payments or binding agreements. Follow-up dates do not send reminders, progress updates do not broadcast emails, and submitted reports require manual operator handling. Production Clerk/domain activation, live email configuration and operational work remain pending; see [release status](RELEASE_READINESS.md).
 
+The [implementation audit](IMPLEMENTATION_AUDIT_2026-10-19.md) distinguishes connected frontend demonstrations from server-backed functionality. Public funding/equity/co-investment tools are local planning worksheets, not approved legal documents or commitments. Member Diligence contains personal checklists, not uploaded confidential files. Monthly updates start blank and require sharing confirmation. Workspace JSON export is owner-scoped; account erasure is unavailable.
+
 ## Local setup
 
 Requires Node.js 22.13 or later. Clean clones use the portable execution profile.

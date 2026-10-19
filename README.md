@@ -9,6 +9,7 @@ Admin entry: [FindIn administration](https://firstsignal-founder-network.diviner
 - All startup industries, with broad sector choices and an Other field for a named custom sector or service. Custom sectors are saved, displayed and searchable; investors can add a custom interest alongside listed sectors. Existing SaaS categories retain their meaning.
 
 - Multiple independent ideas per founder, with Add/Edit/Preview, per-idea progress and sharing, meaningful category icons and idea-specific introductions. See [implementation and verification](MULTIPLE_IDEAS_2026-10-19.md).
+- Per-idea Test & learn: private planning prompts, a fixed plan once started, recorded observations and decisions, and explicit sharing of completed founder-reported learnings. See [research and verification](TEST_AND_LEARN_2026-10-19.md).
 - Guided founder and investor forms, completion checklists and private/public sharing controls.
 - Discovery, saved opportunities and explainable suggestions using stated sector, stage and check-size preferences.
 - Mutual-consent introductions, private messaging and a connections dashboard with private follow-up notes/dates.
@@ -32,7 +33,7 @@ Requires Node.js 22.13 or later. Clean clones use the portable execution profile
 1. Run `npm ci`.
 2. Copy `.env.example` to `.env.local` and fill in your own Clerk development keys. Set the origin to `http://127.0.0.1:5173`.
 3. Run `npm run build` to generate the local Worker configuration.
-4. Initialize a fresh local database with all four migration commands below, in order.
+4. Initialize a fresh local database with all six migration commands below, in order.
 5. Run `npm run dev` and open the printed loopback URL.
 
 ```sh
@@ -40,9 +41,11 @@ npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_whole_king_bedlam.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_glossy_cable.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_owner_portal.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0004_multiple_founder_ideas.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0005_test_and_learn.sql
 ```
 
-Run all four initialization commands only on a fresh local database. For an existing local database, check which migrations have been applied and run only the missing ones in order; never rerun an applied `ALTER TABLE` migration. These commands never initialize the live database. [HANDOFF.md](HANDOFF.md) also gives direct Node.js entrypoints for this Windows host.
+Run all six initialization commands only on a fresh local database. For an existing local database, check which migrations have been applied and run only the missing ones in order; never rerun an applied `ALTER TABLE` migration. These commands never initialize the live database. [HANDOFF.md](HANDOFF.md) also gives direct Node.js entrypoints for this Windows host.
 
 ## Validation
 
@@ -54,6 +57,8 @@ node scripts/verify-workspace-bounds.mjs
 node scripts/verify-notifications.mjs
 node scripts/verify-admin.mjs
 node scripts/verify-admin-entry.mjs
+node scripts/verify-multiple-ideas.mjs
+node scripts/verify-experiments.mjs
 npm run build
 ```
 

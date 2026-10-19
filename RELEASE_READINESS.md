@@ -104,3 +104,11 @@ Published version31 on the existing public Site, source 9dbab35f721082d5cae34a69
 239 isolated multi-idea checks, existing role/saved-direct/privacy/bounds/workbench/sector/fit/suggestion and157 admin checks passed. Final TypeScript, production build, CSS parsing and15-file scoped lint passed (one native-image warning; existing legacy workflow lint findings remain). Browser testing created and edited two ideas through the actual editor against an isolated real-handler/SQLite memory server; IDs survived reload, progress remained per idea, same-investor practice threads stayed distinct, and320/390px layouts had no horizontal overflow. Test route removed before build and live /qa-ideas returns404; anonymous profile writes and admin API return401/no-store.
 
 Live signed-in My ideas loads the existing owner's one public idea without error. Add an idea opens a blank name field and cancels cleanly, leaving the existing record unchanged; no real idea/account was created or edited by verification. Live sample icons use distinct handover/documents SVG marks, updated role explanation is present, and no client error was observed. Proof of the two-idea flow is outputs/findin-multiple-ideas-local-qa-2026-10-19.png, explicitly labelled LOCAL QA. Existing domain/production-Clerk/email/operations limits remain separate.
+
+# Test & learn implementation — 19 October 2026
+
+Implemented a per-idea private testing workspace, fixed plans after start, immutable recorded learning, explicit sharing/unsharing and public founder-reported results. Additive migration `0005_test_and_learn.sql` is required. See [research, checks and limitations](TEST_AND_LEARN_2026-10-19.md).
+
+455 experiment-route/SQLite checks, existing multi-idea/admin/workbench/saved-access regressions, TypeScript, scoped feature lint and production build pass. Local browser checks reached planning, failure recovery and idea-switch protection before browser use was disabled in Work settings. Full final lifecycle/mobile browser QA remains incomplete.
+
+**Not deployed:** the existing Site connection began returning `Sites project not found`, and the currently connected account returned no Sites. The last observed published version was 32. Existing hosting identity and audience have been preserved; no substitute Site was created and no production migration was applied for this feature.

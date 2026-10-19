@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, Bookmark, Check, FileText, Handshake, LockKeyhole, MessageCircle, SlidersHorizontal, Sprout } from "lucide-react";
+import { ArrowDown, ArrowRight, Bookmark, Check, FileText, Handshake, LockKeyhole, MessageCircle, SlidersHorizontal, Sprout } from "lucide-react";
 import MarketingMotion from "../components/marketing-motion";
 import MarketingSpecialties from "../components/marketing-specialties";
+import MarketingScrollScene from "../components/marketing-scroll-scene";
 import MarketingProductTour from "../components/marketing-product-tour";
 import MarketingEntry from "../components/marketing-entry";
 import MarketingTemplates from "../components/marketing-templates";
@@ -13,6 +14,7 @@ import LegacyWorkspaceLinks from "../components/legacy-workspace-links";
 import "./marketing.css";
 import "./marketing-tour-motion.css";
 import "./marketing-motion.css";
+import "./marketing-scroll-scene.css";
 
 const profileEntry = "/signin?return_to=%2Fapp%23profiles";
 const founderEntry = setupSignIn("founder");
@@ -20,6 +22,7 @@ const investorEntry = setupSignIn("investor");
 const questions = [
   { q: "Is FindIn only for software startups?", a: "No. Founders from any industry can create a profile, including food, healthcare, education, consumer products, hardware and services. Choose a sector, or select Other and enter your own. Investors choose the industries they want to explore." },
   { q: "Do I need a finished product?", a: "No. Start with an idea, a prototype or early traction. Explain what you know, what remains uncertain and what you will test next." },
+  { q: "How does Test & learn work?", a: "Open My ideas and choose Test & learn for an idea. Plan a customer test and define what a useful result would look like. Starting the test keeps that plan fixed. Record what happened and your next decision, then choose whether to share the completed learning. Tests are private by default; shared results remain founder-reported." },
   { q: "Do I sign up as a founder or an investor?", a: "Choose your role when you first save. Founders can create and manage multiple ideas, each with its own details, progress and sharing settings. Investors have one investment profile." },
   { q: "What happens after an introduction?", a: "The recipient accepts or declines. Acceptance opens private messaging and non-binding proposals. Each participant can also keep a private next-step note." },
   { q: "Can I follow a startup before connecting?", a: "Yes. Save a listed startup to revisit its profile and recent progress updates in your shortlist. Saving does not contact the founder or send progress emails." },
@@ -44,6 +47,7 @@ export default function Home() {
           <p>A workspace for early founders and investors. Share your thinking and find a reason to talk.</p>
           <MarketingEntry />
           <div className="marketing-hero-footnote"><span>Any industry.</span><span>Idea to early traction.</span><span>Your pace.</span></div>
+          <a className="marketing-scroll-cue" href="#why-firstsignal"><ArrowDown size={16} aria-hidden="true" />See what makes FindIn different</a>
         </div>
         <div className="marketing-hero-product"><MarketingDiscoveryPreview /></div>
       </section>
@@ -59,16 +63,16 @@ export default function Home() {
       </section>
       <MarketingConnectionMap />
 
-      <MarketingSpecialties />
+      <MarketingScrollScene><MarketingSpecialties /></MarketingScrollScene>
       <MarketingProductTour />
 
       <section className="marketing-audience marketing-section" id="founders" aria-labelledby="founders-title" tabIndex={-1}>
         <div className="marketing-audience-copy marketing-reveal"><span className="marketing-kicker"><span className="marketing-section-number">01 /</span> FOR FOUNDERS</span><h2 id="founders-title">Start with the idea.<br /><em>Show how it grows.</em></h2><p>You don’t need a launch to tell a useful story. Bring your ideology, proposed solution and the next question worth answering.</p>
-          <ul className="marketing-feature-list"><li><FileText size={20} aria-hidden="true" /><div><strong>One clear step at a time</strong><span>Guided fields and a completion checklist help you tell the useful parts of your story.</span></div></li><li><LockKeyhole size={20} aria-hidden="true" /><div><strong>Your pace. Your visibility.</strong><span>Work on a private draft, then list it when you’re comfortable sharing.</span></div></li><li><Sprout size={20} aria-hidden="true" /><div><strong>Keep the learning visible</strong><span>Post dated progress updates so people can revisit how your idea develops.</span></div></li></ul>
+          <ul className="marketing-feature-list"><li><FileText size={20} aria-hidden="true" /><div><strong>One clear step at a time</strong><span>Guided fields and a completion checklist help you tell the useful parts of your story.</span></div></li><li><LockKeyhole size={20} aria-hidden="true" /><div><strong>Your pace. Your visibility.</strong><span>Work on a private draft, then list it when you’re comfortable sharing.</span></div></li><li><Sprout size={20} aria-hidden="true" /><div><strong>Turn a question into learning</strong><span>Plan a small test for each idea. Record the result and next decision. Share completed learnings when you choose.</span></div></li></ul>
           <a className="marketing-primary" href={founderEntry}>Create your founder profile<ArrowRight size={16} aria-hidden="true" /></a>
         </div>
         <div className="marketing-audience-visual marketing-reveal"><figure className="marketing-audience-art"><img src="/images/founder-work-photo.webp" width="1400" height="788" loading="lazy" decoding="async" alt="A woman working on a laptop beside project notes in an office" /><figcaption className="marketing-photo-credit">Stock photo · <a href="https://unsplash.com/photos/woman-working-on-laptop-in-modern-office-setting-O9PEo38zOss" target="_blank" rel="noreferrer">Vitaly Gariev / Unsplash</a></figcaption></figure>
-          <div className="marketing-learning-note"><span className="marketing-example-label">FICTIONAL PROGRESS UPDATE</span><time dateTime="2026-10-06">06 Oct 2026</time><h3>We simplified the handover.</h3><p>Three walkthroughs pointed to a shorter unresolved-items list. Whether owners will pay remains untested.</p><span className="marketing-note-footer">What changed, what is still unknown, and what comes next.</span></div>
+          <div className="marketing-learning-note"><span className="marketing-example-label">FICTIONAL TEST & LEARN</span><time dateTime="2026-10-06">06 Oct 2026</time><h3>A smaller test. A clearer next step.</h3><dl className="marketing-test-example"><div><dt>Before the test</dt><dd>Can two workshop leads complete a handover without help?</dd></div><div><dt>What happened</dt><dd>One completed it. One needed help finding unfinished work.</dd></div><div><dt>Next decision</dt><dd>Change the layout and test again. Willingness to pay is still unknown.</dd></div></dl><span className="marketing-note-footer">Illustrative founder-reported learning. No FindIn verification.</span></div>
         </div>
       </section>
 

@@ -33,6 +33,7 @@
 .founder-idea-actions button, .founder-idea-progress button, .founder-ideas-heading > button, .founder-ideas-empty button { min-height: 44px; min-width: 44px; font-size: .875rem; }
 .founder-idea-actions .text-button, .founder-idea-progress-heading .text-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
 .founder-idea-actions [aria-expanded="true"] { color: var(--fi-primary); text-decoration: underline; text-underline-offset: 4px; }
+.founder-idea-actions .founder-idea-test-action { gap: 6px; color: var(--fi-primary); }
 .founder-idea-restriction { display: flex; align-items: flex-start; gap: 8px; background: var(--fi-warning-surface); color: var(--fi-warning); border-radius: 8px; padding: 12px; margin: 0 0 18px; font-size: .8125rem; line-height: 1.7; overflow-wrap: anywhere; }
 .founder-idea-restriction svg { flex-shrink: 0; margin-top: 3px; }
 .founder-idea-restriction strong { font-weight: var(--fi-weight-semibold); }
@@ -45,6 +46,8 @@
 .founder-idea-progress-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--fi-border); }
 .founder-idea-progress-heading > div { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 180px; }
 .founder-idea-progress-heading h3 { font-size: 1rem; font-weight: var(--fi-weight-semibold); line-height: 1.5; overflow-wrap: anywhere; }
+.founder-idea-progress-heading h3:focus { outline: none; }
+.founder-idea-progress-heading h3:focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 4px; }
 .founder-idea-progress .progress-editor { border: 0; padding: 0; background: transparent; }
 .founder-idea-progress .progress-editor-heading { flex-wrap: wrap; }
 .founder-idea-draft-guard { padding: 15px; background: var(--fi-warning-surface); color: var(--fi-warning); border: 1px solid #e7d1ae; border-radius: 10px; margin-bottom: 18px; font-size: .875rem; line-height: 1.7; }

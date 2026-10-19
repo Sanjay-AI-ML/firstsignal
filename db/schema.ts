@@ -19,3 +19,9 @@ export const progressUpdates=sqliteTable("progress_updates",{id:text("id").prima
 export const connectionNextSteps=sqliteTable("connection_next_steps",{owner:text("owner").notNull(),introductionId:text("introduction_id").notNull().references(()=>introductions.id),note:text("note").notNull(),date:text("date").notNull().default(""),updated:text("updated").notNull()},t=>[primaryKey({columns:[t.owner,t.introductionId]})]);
 export const profileModeration=sqliteTable("profile_moderation",{profileId:text("profile_id").primaryKey().references(()=>profiles.id),hidden:integer("hidden").notNull().default(0),reason:text("reason").notNull(),version:integer("version").notNull(),eventId:text("event_id").notNull(),updated:text("updated").notNull()});
 export const adminAudit=sqliteTable("admin_audit",{id:text("id").primaryKey(),actor:text("actor").notNull(),action:text("action").notNull(),targetId:text("target_id").notNull(),reason:text("reason").notNull(),previousState:text("previous_state").notNull(),nextState:text("next_state").notNull(),created:text("created").notNull()},t=>[index("admin_audit_created").on(t.created)]);
+export const ideaExperiments=sqliteTable("idea_experiments",{
+  id:text("id").primaryKey(),profileId:text("profile_id").notNull().references(()=>profiles.id),
+  plan:text("plan").notNull(),result:text("result").notNull().default("{}"),
+  status:text("status").notNull().default("draft"),shared:integer("shared").notNull().default(0),version:integer("version").notNull().default(0),
+  created:text("created").notNull(),startedAt:text("started_at").notNull().default(""),completedAt:text("completed_at").notNull().default(""),updated:text("updated").notNull(),
+},t=>[index("idea_experiments_profile_created").on(t.profileId,t.created)]);

@@ -1,0 +1,54 @@
+/* One continuous visual story. Static, uncropped framing is always the baseline. */
+.marketing-story-frame { position: relative; overflow: clip; isolation: isolate; }
+.marketing-story-frame > img { display: block; width: 100%; height: auto; transform-origin: 50% 55%; }
+.marketing .marketing-story-art:hover .marketing-story-frame > img { transform: none; }
+.marketing-story-art figcaption { position: relative; z-index: 1; }
+.marketing .marketing-nav { gap: 16px; }
+@media (max-width: 1200px) {
+  .marketing .marketing-nav > nav { display: none; }
+}
+@media (max-width: 520px) {
+  .marketing .marketing-nav { padding-inline: 16px; gap: 8px; }
+  .marketing .marketing-nav-cta { width: 44px; min-width: 44px; min-height: 44px; padding: 0; justify-content: center; }
+  .marketing .marketing-nav-cta > span { display: none; }
+}
+.marketing #start:focus, .marketing #learning:focus, .marketing #questions:focus,
+.marketing #your-next-step:focus, .marketing #why-firstsignal:focus { outline: none; }
+.marketing #start:focus-visible, .marketing #learning:focus-visible, .marketing #questions:focus-visible,
+.marketing #your-next-step:focus-visible, .marketing #why-firstsignal:focus-visible { outline: 2px solid var(--fi-focus); outline-offset: -4px; }
+
+/* Move the artwork, never the caption or a clickable control. A named parent
+   timeline keeps the frame's scale independent of its transformed child. */
+@supports (animation-timeline: view()) and (animation-range: entry 0% cover 40%) {
+  @media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
+    .marketing[data-motion="full"] .marketing-story-art { view-timeline-name: --findin-artwork; view-timeline-axis: block; }
+    .marketing[data-motion="full"] .marketing-story-art .marketing-story-frame {
+      animation: findin-frame-open linear both;
+      animation-timeline: --findin-artwork;
+      animation-range: entry 0% cover 42%;
+    }
+    .marketing[data-motion="full"] .marketing-story-art .marketing-story-frame > img {
+      animation: findin-artwork-travel linear both;
+      animation-timeline: --findin-artwork;
+      animation-range: entry 0% exit 100%;
+    }
+    .marketing[data-motion="full"] .marketing-story-art[data-story-direction="investor"] .marketing-story-frame > img { animation-name: findin-conversation-travel; }
+    @keyframes findin-frame-open {
+      from { clip-path: inset(0 4% round 26px); }
+      to { clip-path: inset(0 0 round 12px); }
+    }
+    @keyframes findin-artwork-travel {
+      from { transform: translateY(-1.25%) scale(1.07); }
+      to { transform: translateY(1.25%) scale(1.035); }
+    }
+    @keyframes findin-conversation-travel {
+      from { transform: translateY(1%) scale(1.055); }
+      to { transform: translateY(-1%) scale(1.025); }
+    }
+  }
+}
+.marketing[data-motion="paused"] .marketing-story-frame,
+.marketing[data-motion="paused"] .marketing-story-frame > img { animation: none; clip-path: none; transform: none; }
+@media (max-width: 1100px), (prefers-reduced-motion: reduce) {
+  .marketing .marketing-story-frame, .marketing .marketing-story-frame > img { animation: none; clip-path: none; transform: none; }
+}

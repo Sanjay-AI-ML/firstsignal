@@ -3,6 +3,9 @@
 .marketing-tour-scroll-control[hidden]{display:none}
 .marketing-tour-scroll-control{min-height:58px;padding:8px 23px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--fi-border);font-size:var(--fi-type-caption,.75rem);line-height:1.6;color:var(--fi-text-muted)}
 .marketing-tour-scroll-control button{flex-shrink:0;min-height:44px;padding:8px 0;font:inherit;font-weight:650;color:var(--fi-primary);text-decoration:underline;text-underline-offset:4px}
+/* Native disclosure expands in normal flow. ResizeObserver rechecks the whole
+   preview and releases the sticky story if its original plan no longer fits. */
+.marketing-tour-stage .tour-original-plan{overflow:visible}
 
 /* Compact the actual content before measuring fit, so laptop windows can
    participate without an inner scrollbar or clipped controls. */
@@ -40,20 +43,20 @@
   .marketing .tour-action-feedback{margin-top:10px}
 }
 
-@media(min-width:1101px) and (min-height:680px) and (prefers-reduced-motion:no-preference){
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-workspace{min-height:0;height:min(205vh,2200px);align-items:start}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-controls{height:100%;display:flex;flex-direction:column;min-width:0}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-steps{flex:1;width:100%;display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:0;align-self:stretch;position:relative}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-steps::before{content:"";position:absolute;left:29px;top:12.5%;bottom:12.5%;width:1px;background:var(--fi-border)}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-steps::after{content:"";position:absolute;left:28px;top:12.5%;bottom:12.5%;width:3px;background:var(--fi-primary);transform:scaleY(var(--tour-scroll-progress,0));transform-origin:top;border-radius:2px}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-steps>button{align-self:center;position:relative;z-index:1;width:100%;padding:24px 18px;min-height:132px;border:0;border-radius:0;background:var(--tour-surface);box-shadow:none;color:var(--fi-text-muted);transition:color var(--fi-duration-normal,180ms) var(--fi-ease-out,ease-out)}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-steps>button[aria-selected=true]{color:var(--fi-primary-hover);background:var(--tour-surface)}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-number{width:25px;flex-shrink:0;color:inherit}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-steps strong{font-size:1.125rem;line-height:1.45;letter-spacing:-.025em}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-steps small{font-size:.875rem;line-height:1.75;margin-top:9px;max-width:27ch}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-steps>button>svg{display:block}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-entry{margin:0 0 20px;align-self:flex-start}
-  .marketing:not([data-motion=paused]) .marketing-tour[data-tour-story=active] .marketing-tour-stage{position:sticky;top:var(--tour-sticky-top,100px);align-self:start;width:100%}
+@media(min-width:1101px) and (min-height:680px){
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-workspace{min-height:0;height:min(205vh,2200px);align-items:start}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-controls{height:100%;display:flex;flex-direction:column;min-width:0}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-steps{flex:1;width:100%;display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:0;align-self:stretch;position:relative}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-steps::before{content:"";position:absolute;left:29px;top:12.5%;bottom:12.5%;width:1px;background:var(--fi-border)}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-steps::after{content:"";position:absolute;left:28px;top:12.5%;bottom:12.5%;width:3px;background:var(--fi-primary);transform:scaleY(var(--tour-scroll-progress,0));transform-origin:top;border-radius:2px}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-steps>button{align-self:center;position:relative;z-index:1;width:100%;padding:24px 18px;min-height:132px;border:0;border-radius:0;background:var(--tour-surface);box-shadow:none;color:var(--fi-text-muted);transition:color var(--fi-duration-normal,180ms) var(--fi-ease-out,ease-out)}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-steps>button[aria-selected=true]{color:var(--fi-primary-hover);background:var(--tour-surface)}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-number{width:25px;flex-shrink:0;color:inherit}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-steps strong{font-size:1.125rem;line-height:1.45;letter-spacing:-.025em}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-steps small{font-size:.875rem;line-height:1.75;margin-top:9px;max-width:27ch}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-steps>button>svg{display:block}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-entry{margin:0 0 20px;align-self:flex-start}
+  .marketing .marketing-tour[data-tour-story=active] .marketing-tour-stage{position:sticky;top:var(--tour-sticky-top,100px);align-self:start;width:100%}
 }
 
 @media(prefers-reduced-motion:reduce){.marketing-tour-scroll-control{display:none}}

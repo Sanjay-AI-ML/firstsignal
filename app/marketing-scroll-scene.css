@@ -47,11 +47,14 @@
   .marketing-specialty-scene:not([data-scene="active"]):not([data-scene-expanded="true"]) .marketing-scene-caption { visibility: hidden; }
 }
 
-@media (min-width: 1101px) and (min-height: 680px) and (prefers-reduced-motion: no-preference) {
-  .marketing:not([data-motion="paused"]) .marketing-specialty-scene[data-scene="active"] {
+/* JS switches the layout phase after capturing the reader's visible anchor.
+   Keeping reserved space until that switch also avoids pre-collapsing it when
+   a manual or OS motion preference changes before its event is delivered. */
+@media (min-width: 1101px) {
+  .marketing .marketing-specialty-scene[data-scene="active"] {
     height: calc(var(--scene-height) + var(--scene-travel));
   }
-  .marketing:not([data-motion="paused"]) .marketing-specialty-scene[data-scene="active"] .marketing-specialty-pin {
+  .marketing .marketing-specialty-scene[data-scene="active"] .marketing-specialty-pin {
     position: sticky; top: var(--scene-top); padding-top: 0;
   }
   .marketing .marketing-specialty-scene[data-scene="active"] .specialty-card {

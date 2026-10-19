@@ -19,16 +19,88 @@
 .marketing .marketing-primary:active,
 .marketing .marketing-secondary:active { transform: translateY(1px); }
 .marketing .marketing-tour-panel { animation-duration: 240ms; animation-timing-function: var(--motion-ease); }
-.marketing-motion-settings { display: flex; align-items: center; }
+.marketing-motion-settings { display: flex; align-items: center; position: static; min-width: 0; }
+.marketing-motion-dock {
+  position: static; display: flex; align-items: center; gap: 5px;
+  width: max-content; max-width: 100%; padding: 3px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--fi-surface, #fff);
+  color: var(--ink);
+}
+.marketing-journey-menu { min-width: 0; position: static; }
+.marketing-journey-menu > summary {
+  display: flex; align-items: center; gap: 11px; list-style: none; min-height: 44px;
+  padding: 9px 11px; cursor: pointer; font-size: .8125rem; line-height: 1.6; border-radius: 7px;
+}
+.marketing-journey-menu > summary::-webkit-details-marker { display: none; }
+.marketing-journey-menu > summary:hover { background: var(--lavender); }
+.marketing-journey-count { color: var(--accent-dark); font-size: .6875rem; font-variant-numeric: tabular-nums; font-weight: 750; white-space: nowrap; }
+.marketing-journey-count > span { color: var(--muted); font-weight: 550; }
+.marketing-journey-current { min-width: 100px; font-weight: 650; }
+.marketing-journey-short, .marketing-journey-menu-icon { display: none; }
+.marketing-journey-menu > summary > svg { color: var(--muted); transition: rotate var(--motion-feedback) var(--motion-ease); }
+.marketing-journey-menu[open] > summary > svg { rotate: 180deg; }
+.marketing-journey-menu nav {
+  position: absolute; top: calc(100% + 10px); right: 16px; left: auto; bottom: auto; width: 360px; max-width: calc(100vw - 32px);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px;
+  padding: 11px; border: 1px solid var(--line); border-radius: 12px; background: var(--fi-surface, #fff);
+  box-shadow: var(--fi-shadow-floating); max-height: min(460px, calc(100dvh - 140px)); overflow-y: auto;
+}
+.marketing-journey-menu:not([open]) nav { display: none; }
+.marketing-journey-menu nav > p { grid-column: 1 / -1; padding: 6px 9px 10px; font-size: .6875rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.marketing .marketing-journey-menu nav > a {
+  display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 9px;
+  border-radius: 6px; color: var(--ink); font-size: .75rem; line-height: 1.6;
+}
+.marketing-journey-menu nav > a > span { color: var(--muted); font-size: .625rem; font-variant-numeric: tabular-nums; }
+.marketing-journey-menu nav > a > svg { margin-left: auto; }
+.marketing .marketing-journey-menu nav > a:hover, .marketing .marketing-journey-menu nav > a[aria-current="location"] { color: var(--accent-dark); background: var(--lavender); }
+.marketing .marketing-nav .marketing-journey-menu nav > a:visited { color: var(--ink); }
+.marketing .marketing-nav .marketing-journey-menu nav > a[aria-current="location"] { color: var(--accent-dark); }
+.marketing .marketing-nav .marketing-journey-menu nav > a::after { display: none; }
+.marketing-journey-arrows { display: flex; align-items: center; border-inline: 1px solid var(--line); }
+.marketing .marketing-journey-arrows > a, .marketing-journey-arrows > span { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 7px; color: var(--ink); }
+.marketing .marketing-journey-arrows > a:hover { color: var(--accent-dark); background: var(--lavender); }
+.marketing-journey-arrows > .is-unavailable { color: var(--fi-disabled-text); opacity: .45; }
 .marketing-motion-toggle {
   display: inline-flex; align-items: center; gap: 7px; min-height: 44px;
   border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
   background: var(--fi-surface); color: var(--muted); font: inherit; font-size: .75rem;
   cursor: pointer; transition: border-color var(--motion-feedback), color var(--motion-feedback);
 }
+.marketing-motion-dock .marketing-motion-toggle { border: 0; min-width: 44px; font-size: .75rem; color: var(--ink); white-space: nowrap; }
 .marketing-motion-toggle:hover { border-color: var(--accent); color: var(--accent); }
 .marketing-motion-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .marketing-motion-toggle:disabled { cursor: default; color: var(--muted); }
+.marketing-motion-dock :is(summary, a, button):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.marketing :is(#start, #why-firstsignal, #how-it-works, #founders, #investors, #learning, #templates, #questions, #your-next-step):focus { outline: none; }
+.marketing :is(#start, #why-firstsignal, #how-it-works, #founders, #investors, #learning, #templates, #questions, #your-next-step):focus-visible { outline: 3px solid var(--accent); outline-offset: -5px; }
+@media (max-width: 1320px) {
+  .marketing-journey-current { display: none; }
+  .marketing-journey-short { display: inline; font-weight: 650; }
+}
+@media (max-width: 700px) {
+  .marketing-journey-menu > summary { gap: 7px; padding-inline: 7px; font-size: .75rem; }
+  .marketing-journey-count > span { display: none; }
+  .marketing-journey-count { display: none; }
+  .marketing-motion-dock .marketing-motion-toggle { width: 44px; flex-shrink: 0; padding: 10px; justify-content: center; }
+  .marketing-motion-dock .marketing-motion-toggle > span { display: none; }
+}
+@media (max-width: 760px) {
+  .marketing-journey-arrows { display: none; }
+}
+@media (max-width: 520px) {
+  .marketing-motion-dock { width: 88px; gap: 0; padding: 0; border: 0; flex-shrink: 0; }
+  .marketing-journey-menu > summary { width: 44px; padding-inline: 0; gap: 5px; justify-content: center; }
+  .marketing-journey-count { font-size: .6875rem; }
+  .marketing-journey-short { display: none; }
+  .marketing-journey-menu-icon { display: block; }
+  .marketing-journey-arrows { display: none; }
+  .marketing-journey-menu nav { width: 360px; max-width: calc(100vw - 32px); right: 16px; }
+}
+@media (forced-colors: active) {
+  .marketing-motion-dock, .marketing-journey-menu nav { border-color: ButtonText; }
+  .marketing-journey-menu nav > a[aria-current="location"] { outline: 1px solid Highlight; }
+}
 .marketing .specialty-card { --card-rotation: 0deg; transition: transform var(--motion-feedback) var(--motion-ease); }
 .marketing[data-motion="full"] .illustration-reveal > img {
   animation: findin-illustration-settle 760ms var(--motion-ease) both;

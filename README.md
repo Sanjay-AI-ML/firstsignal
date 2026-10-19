@@ -18,6 +18,7 @@ Admin entry: [FindIn administration](https://firstsignal-founder-network.diviner
 - Profile reporting and account blocking with server-enforced contact restrictions.
 - In-app notifications and optional verified-email notifications through Resend.
 - Responsive marketing pages and reduced-motion support.
+- A chapter-based marketing journey with native section navigation, persistent pause controls, framed image transitions and a fictional Test & learn walkthrough. See [scroll research and verification](SCROLL_COMPLETION_2026-10-19.md).
 - Dedicated owner admin sign-in, reported-content review, searchable founder/investor listings, reversible removal/restoration and an activity log. See [admin access and setup](ADMIN_PORTAL.md).
 - An interactive fictional evidence brief distinguishing reported learning, open questions and a measurable next test; founder/progress worksheets include source and experiment-planning prompts.
 - Founder/investor entry paths that preserve the selected setup through sign-in, plus three public starter worksheets with preview, copy and Markdown downloads.

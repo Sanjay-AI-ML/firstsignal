@@ -112,3 +112,9 @@ Implemented a per-idea private testing workspace, fixed plans after start, immut
 455 experiment-route/SQLite checks, existing multi-idea/admin/workbench/saved-access regressions, TypeScript, scoped feature lint and production build pass. Local browser checks reached planning, failure recovery and idea-switch protection before browser use was disabled in Work settings. Full final lifecycle/mobile browser QA remains incomplete.
 
 **Not deployed:** the existing Site connection began returning `Sites project not found`, and the currently connected account returned no Sites. The last observed published version was 32. Existing hosting identity and audience have been preserved; no substitute Site was created and no production migration was applied for this feature.
+
+## Scroll journey continuation — 19 October 2026
+
+Code and GitHub are complete for the V3 continuation: accessible header chapter controls, image framing, coherent fictional product narrative, explicit walkthrough exits and reader-position preservation. 194 motion/navigation assertions, TypeScript, scoped lint, CSS parsing, production build and compiled-page HTTP/SSR checks pass. See [current research and exact limits](SCROLL_COMPLETION_2026-10-19.md).
+
+The user chose code/GitHub first. Final browser/device/OS preference checks and screenshots are pending because local browser use is disabled. This pass is not published; the existing Sites connection still returns project-not-found. No hosting audience, identity, database or authentication configuration was changed.

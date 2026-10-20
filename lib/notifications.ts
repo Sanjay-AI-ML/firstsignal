@@ -14,6 +14,7 @@ const kindFor = (title: string): Kind => (Object.entries(titles).find(([, value]
 const due = "(e.state IN ('pending','retry') AND e.next_attempt_at<=? OR e.state='sending' AND e.lease_until<=?)";
 // Repeat this predicate inside the atomic claim and immediately before sending.
 const eligible = `(p.enabled=1 AND p.email<>'' AND e.consent_version=coalesce(c.consent_version,'')
+ AND NOT EXISTS (SELECT 1 FROM account_closures closed WHERE closed.owner=n.owner AND closed.status='requested')
  AND (e.recipient='' OR lower(e.recipient)=lower(p.email))
  AND (c.suppressed_email IS NULL OR lower(c.suppressed_email)<>lower(p.email))
  AND i.recipient IS NOT NULL AND (i.sender=n.owner OR i.recipient=n.owner)
@@ -39,7 +40,7 @@ function queueStatements(owner: string | null,introduction:string,title:string,k
   const safeKind = kind !== 'legacy' && titles[kind] === title ? kind : kindFor(title);
   return [
       db.prepare(`INSERT INTO notifications(id,owner,introduction_id,title,status,created) SELECT ?,?,?,?,'pending',? WHERE ${guard?'changes()=1 AND ':''}EXISTS (SELECT 1 FROM introductions i WHERE i.id=? AND i.recipient IS NOT NULL AND (i.sender=? OR i.recipient=?) AND NOT EXISTS(SELECT 1 FROM member_blocks b WHERE (b.owner=i.sender AND b.target_owner=i.recipient) OR (b.owner=i.recipient AND b.target_owner=i.sender)))`).bind(id, owner, introduction, title.slice(0, 200), now, introduction, owner, owner),
-      db.prepare(`INSERT INTO notification_emails(notification_id,kind,state,consent_version,created,updated) SELECT n.id,?,CASE WHEN p.enabled=1 AND ?<>'legacy' THEN 'pending' ELSE 'skipped' END,coalesce(c.consent_version,''),?,? FROM notifications n LEFT JOIN notification_preferences p ON p.owner=n.owner LEFT JOIN notification_email_controls c ON c.owner=n.owner WHERE n.id=?`).bind(safeKind, safeKind, now, now, id),
+      db.prepare(`INSERT INTO notification_emails(notification_id,kind,state,consent_version,created,updated) SELECT n.id,?,CASE WHEN p.enabled=1 AND ?<>'legacy' AND NOT EXISTS(SELECT 1 FROM account_closures closed WHERE closed.owner=n.owner AND closed.status='requested') THEN 'pending' ELSE 'skipped' END,coalesce(c.consent_version,''),?,? FROM notifications n LEFT JOIN notification_preferences p ON p.owner=n.owner LEFT JOIN notification_email_controls c ON c.owner=n.owner WHERE n.id=?`).bind(safeKind, safeKind, now, now, id),
       db.prepare("UPDATE notifications SET status=(SELECT state FROM notification_emails WHERE notification_id=?) WHERE id=?").bind(id, id),
     ];
 }
@@ -56,19 +57,22 @@ export async function notify(owner:string|null,introduction:string,title:string,
 export async function setNotificationPreferences(user: Member, enabled: boolean) {
   if (enabled && (!user.emailVerified || !user.email)) return { error: 'Confirm your primary email address through sign-in before enabling email updates.', status: 400 };
   const db = database(), now = iso(), email = user.email.trim(), owner = user.userId;
+  const closureError = { error: 'Your closure request is awaiting review. Cancel it before enabling email updates.', status: 409 };
+  const closed = () => db.prepare("SELECT 1 FROM account_closures WHERE owner=? AND status='requested'").bind(owner).first();
+  if (enabled && await closed()) return closureError;
   const old = await db.prepare('SELECT email,enabled FROM notification_preferences WHERE owner=?').bind(owner).first<{ email: string; enabled: number }>();
   const control = await db.prepare('SELECT suppressed_email FROM notification_email_controls WHERE owner=?').bind(owner).first<{ suppressed_email: string }>();
   const suppressed = enabled && await db.prepare(`SELECT 1 WHERE ${historicSuppression}`).bind(owner,email).first();
   if (enabled && (suppressed || (control?.suppressed_email && normalize(control.suppressed_email) === normalize(email)))) return { error: 'Email updates stopped because this address bounced or reported unwanted email. Use a different verified primary email address before enabling updates.', status: 409 };
-  if (old && old.enabled === Number(enabled) && normalize(old.email) === normalize(email)) return null;
+  if (old && old.enabled === Number(enabled) && normalize(old.email) === normalize(email)) return enabled && await closed() ? closureError : null;
   const consent=crypto.randomUUID();
   const result = await db.batch([
-    db.prepare(`INSERT INTO notification_preferences(owner,email,enabled) SELECT ?,?,? WHERE ?=0 OR (NOT EXISTS(SELECT 1 FROM notification_email_controls WHERE owner=? AND lower(suppressed_email)=lower(?)) AND NOT ${historicSuppression}) ON CONFLICT(owner) DO UPDATE SET email=excluded.email,enabled=excluded.enabled`).bind(owner, email, Number(enabled), Number(enabled), owner, email, owner,email),
+    db.prepare(`INSERT INTO notification_preferences(owner,email,enabled) SELECT ?,?,? WHERE ?=0 OR (NOT EXISTS(SELECT 1 FROM account_closures WHERE owner=? AND status='requested') AND NOT EXISTS(SELECT 1 FROM notification_email_controls WHERE owner=? AND lower(suppressed_email)=lower(?)) AND NOT ${historicSuppression}) ON CONFLICT(owner) DO UPDATE SET email=excluded.email,enabled=excluded.enabled WHERE excluded.enabled=0 OR NOT EXISTS(SELECT 1 FROM account_closures WHERE owner=? AND status='requested')`).bind(owner, email, Number(enabled), Number(enabled), owner, owner, email, owner,email,owner),
     db.prepare(`INSERT INTO notification_email_controls(owner,consent_version,updated) SELECT ?,?,? WHERE changes()=1 ON CONFLICT(owner) DO UPDATE SET consent_version=excluded.consent_version,suppressed_email=CASE WHEN lower(suppressed_email)<>lower(?) THEN '' ELSE suppressed_email END,suppression_reason=CASE WHEN lower(suppressed_email)<>lower(?) THEN '' ELSE suppression_reason END,updated=excluded.updated`).bind(owner, consent, now, email, email),
     db.prepare("UPDATE notification_emails SET state='skipped',last_error='preference_changed',updated=? WHERE notification_id IN(SELECT id FROM notifications WHERE owner=?) AND state IN('pending','retry') AND EXISTS(SELECT 1 FROM notification_email_controls WHERE owner=? AND consent_version=?)").bind(now, owner,owner,consent),
     db.prepare("UPDATE notifications SET status='skipped' WHERE owner=? AND status IN('pending','retry') AND EXISTS(SELECT 1 FROM notification_email_controls WHERE owner=? AND consent_version=?)").bind(owner,owner,consent),
   ]);
-  if (!result[0].meta.changes) return { error: 'Email settings changed while saving. Refresh and try again.', status: 409 };
+  if (!result[0].meta.changes) return enabled && await closed() ? closureError : { error: 'Email settings changed while saving. Refresh and try again.', status: 409 };
   return null;
 }
 export async function notificationSettings(user: Member) {
@@ -78,13 +82,14 @@ export async function notificationSettings(user: Member) {
   const notices = await db.prepare(`SELECT n.id,n.introduction_id,n.title,coalesce(e.state,n.status) AS status,n.created FROM notifications n LEFT JOIN notification_emails e ON e.notification_id=n.id WHERE n.owner=? ORDER BY n.created DESC,n.id DESC LIMIT 30`).bind(user.userId).all();
   const current = !!(user.emailVerified && user.email && pref && normalize(pref.email) === normalize(user.email));
   const suppressed = !!await db.prepare(`SELECT 1 WHERE ${historicSuppression}`).bind(user.userId,user.email).first();
-  return { ...notificationDeliveryReadiness(), emailOptedIn:!!pref?.enabled,emailEnabled: !!pref?.enabled && current && !suppressed, emailAddress: user.email, emailVerified: user.emailVerified, emailAddressChanged: !!pref?.enabled && !current, emailSuppressed: suppressed || !!control?.suppressed_email && normalize(control.suppressed_email) === normalize(user.email), notifications: notices.results };
+  const closed = !!await db.prepare("SELECT 1 FROM account_closures WHERE owner=? AND status='requested'").bind(user.userId).first();
+  return { ...notificationDeliveryReadiness(), emailOptedIn:!!pref?.enabled,emailEnabled: !!pref?.enabled && current && !suppressed && !closed, emailAddress: user.email, emailVerified: user.emailVerified, emailAddressChanged: !!pref?.enabled && !current, emailSuppressed: suppressed || !!control?.suppressed_email && normalize(control.suppressed_email) === normalize(user.email), notifications: notices.results };
 }
 // Reconcile recognized, pending legacy notices; never resubmit old submitted rows.
 async function reconcile(owner?: string) {
   const db = database(), now = iso();
   const kind = `CASE n.title ${Object.entries(titles).map(([key, value]) => `WHEN '${value}' THEN '${key}'`).join(' ')} ELSE 'legacy' END`;
-  await db.prepare(`INSERT OR IGNORE INTO notification_emails(notification_id,kind,state,consent_version,created,updated) SELECT n.id,${kind},CASE WHEN p.enabled=1 AND ${kind}<>'legacy' THEN 'pending' ELSE 'skipped' END,coalesce(c.consent_version,''),n.created,? FROM notifications n LEFT JOIN notification_preferences p ON p.owner=n.owner LEFT JOIN notification_email_controls c ON c.owner=n.owner WHERE n.status='pending' ${owner ? 'AND n.owner=?' : ''} AND NOT EXISTS(SELECT 1 FROM notification_emails e WHERE e.notification_id=n.id) ORDER BY n.created LIMIT 100`).bind(now, ...(owner ? [owner] : [])).run();
+  await db.prepare(`INSERT OR IGNORE INTO notification_emails(notification_id,kind,state,consent_version,created,updated) SELECT n.id,${kind},CASE WHEN p.enabled=1 AND ${kind}<>'legacy' AND NOT EXISTS(SELECT 1 FROM account_closures closed WHERE closed.owner=n.owner AND closed.status='requested') THEN 'pending' ELSE 'skipped' END,coalesce(c.consent_version,''),n.created,? FROM notifications n LEFT JOIN notification_preferences p ON p.owner=n.owner LEFT JOIN notification_email_controls c ON c.owner=n.owner WHERE n.status='pending' ${owner ? 'AND n.owner=?' : ''} AND NOT EXISTS(SELECT 1 FROM notification_emails e WHERE e.notification_id=n.id) ORDER BY n.created LIMIT 100`).bind(now, ...(owner ? [owner] : [])).run();
 }
 async function verifiedPrimary(owner: string): Promise<string | null> {
   if (!/^clerk:user_[A-Za-z0-9]+$/.test(owner)) return null;

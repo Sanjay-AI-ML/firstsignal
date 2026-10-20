@@ -18,6 +18,7 @@ import {
   History,
   LayoutDashboard,
   LockKeyhole,
+  Mail,
   RefreshCw,
   Search,
   Settings2,
@@ -42,6 +43,8 @@ import {
 import type {
   AdminAction,
   AdminAudit,
+  AdminEmailOperations,
+  AdminEmailState,
   AdminOverview,
   AdminPage,
   AdminProfile,
@@ -49,10 +52,10 @@ import type {
   AdminReport,
   ReportStatus,
 } from "@/lib/admin-types";
-import { reportStatuses } from "@/lib/admin-types";
+import { adminEmailStates, reportStatuses } from "@/lib/admin-types";
 import "@/app/admin/admin.css";
 
-type View = "overview" | "reports" | "profiles" | "audit" | "settings";
+type View = "overview" | "reports" | "profiles" | "emails" | "audit" | "settings";
 type ListingKind = "all" | "startup" | "investor";
 type ListingVisibility = "all" | "visible" | "removed";
 type Directory = AdminPage<AdminReport | AdminProfile | AdminAudit>;
@@ -81,6 +84,10 @@ const titles: Record<View, [string, string]> = {
     "Ideas & investor profiles",
     "Review public content, remove unsuitable listings and restore them after review.",
   ],
+  emails: [
+    "Email outbox operations",
+    "Review delivery outcomes and waiting notifications. Automatic retries keep their original safety limits.",
+  ],
   audit: [
     "Activity log",
     "A record of moderation actions, their reasons and the owner account that made them.",
@@ -100,6 +107,7 @@ const nav = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "reports", label: "Reports", icon: Flag },
   { id: "profiles", label: "Listings", icon: UsersRound },
+  { id: "emails", label: "Outbox", icon: Mail },
   { id: "audit", label: "Activity", icon: History },
   { id: "settings", label: "Settings", icon: Settings2 },
 ] as const;
@@ -278,7 +286,7 @@ function Pagination({
   data,
   onPage,
 }: {
-  data: Directory;
+  data: Pick<AdminPage<unknown>, "items" | "page" | "pageSize" | "total" | "pages">;
   onPage: (page: number) => void;
 }) {
   return (
@@ -412,7 +420,7 @@ function AuditRow({ item }: { item: AdminAudit }) {
       ? "Listing removed"
       : item.action === "profile_restored"
         ? "Listing restored"
-        : "Report updated";
+        : item.action === "email_retried" ? "Earlier email retry request" : "Report updated";
   return (
     <li className="admin-audit-row">
       <span className="admin-audit-icon" aria-hidden="true">
@@ -420,7 +428,7 @@ function AuditRow({ item }: { item: AdminAudit }) {
           <EyeOff />
         ) : item.action === "profile_restored" ? (
           <Eye />
-        ) : (
+        ) : item.action === "email_retried" ? <Mail /> : (
           <Flag />
         )}
       </span>
@@ -493,14 +501,14 @@ export default function AdminPortal({
     view === "profiles" ? "profiles" : view === "audit" ? "audit" : "reports";
   const params = new URLSearchParams({
     view: directoryView,
-    page: String(view === "overview" || view === "settings" ? 1 : page),
+    page: String(view === "overview" || view === "settings" || view === "emails" ? 1 : page),
   });
-  if (view !== "overview" && view !== "settings" && search)
+  if (view !== "overview" && view !== "settings" && view !== "emails" && search)
     params.set("q", search);
   if (directoryView === "reports")
     params.set(
       "status",
-      view === "overview" || view === "settings" ? "submitted" : status,
+      view === "overview" || view === "settings" || view === "emails" ? "submitted" : status,
     );
   if (directoryView === "profiles") {
     params.set("kind", kind);
@@ -905,6 +913,9 @@ export default function AdminPortal({
                 <Configuration configuration={overview.data.configuration} />
               )
             ))}
+          {view === "emails" && (
+            <EmailOperationsView refresh={refresh} />
+          )}
           {(view === "reports" || view === "profiles" || view === "audit") && (
             <>
               <form
@@ -1547,8 +1558,8 @@ function Configuration({
     },
     {
       label: "Email delivery",
-      help: "These moderation actions do not send email. Member notifications require a configured provider and sender.",
-      value: config.emailActive ? "Enabled" : "Inactive",
+      help: "Checks required settings only. A real delivery test is needed to confirm operation; moderation actions do not send email.",
+      value: config.emailActive ? "Settings present" : "Setup incomplete",
       tone: config.emailActive ? "success" : "warning",
     },
     {
@@ -1562,6 +1573,18 @@ function Configuration({
       help: "Presence of a sender does not confirm successful delivery or domain verification.",
       value: config.emailSenderConfigured ? "Configured" : "Not configured",
       tone: config.emailSenderConfigured ? "success" : "warning",
+    },
+    {
+      label: "Email scheduler secret",
+      help: "Presence does not confirm that the scheduled Worker has been deployed or is running.",
+      value: config.emailAutomationConfigured ? "Present" : "Not configured",
+      tone: config.emailAutomationConfigured ? "info" : "warning",
+    },
+    {
+      label: "Delivery receipt secret",
+      help: "Presence does not confirm the provider webhook is registered or delivering signed events.",
+      value: config.emailReceiptsConfigured ? "Present" : "Not configured",
+      tone: config.emailReceiptsConfigured ? "info" : "warning",
     },
   ];
   return (
@@ -1596,4 +1619,64 @@ function Configuration({
       </dl>
     </section>
   );
+}
+
+const emailStateLabels: Record<AdminEmailState, string> = {
+  all: "All states", pending: "Queued", retry: "Waiting to retry", sending: "Sending",
+  submitted: "Accepted by provider", delivered: "Accepted by recipient server", delayed: "Delivery delayed",
+  bounced: "Bounced", complained: "Reported as unwanted", suppressed: "Blocked by provider",
+  failed: "Attempts stopped", expired: "Retry window ended", skipped: "Stopped before sending",
+};
+const emailKindLabels: Record<string, string> = { introduction: "Introduction", response: "Introduction response", message: "Message", proposal: "Proposal", decision: "Proposal response", legacy: "Earlier notification" };
+function EmailOperationsView({ refresh }: { refresh: number }) {
+  const [state, setState] = useState<AdminEmailState>("all");
+  const [retryKey, setRetryKey] = useState(0);
+  const [page, setPage] = useState(1);
+  const emails = useAdminResource<AdminEmailOperations>(new URLSearchParams({ view: "emails", page: String(page), emailState: state }).toString(), refresh + retryKey);
+  return <>
+    <div className="admin-toolbar admin-email-filter">
+      <div className="admin-select-wrap">
+        <label htmlFor="admin-email-state">Delivery state</label>
+        <select id="admin-email-state" value={state} onChange={(event) => { setState(event.target.value as AdminEmailState); setPage(1); }}>
+          {adminEmailStates.map(value => <option value={value} key={value}>{emailStateLabels[value]}</option>)}
+        </select>
+      </div>
+      <Badge><LockKeyhole aria-hidden="true" /> Read only</Badge>
+    </div>
+    {emails.loading && !emails.data ? <Loading /> : emails.error ? <ErrorNotice message={emails.error} onRetry={() => setRetryKey(value => value + 1)} /> : emails.data ? <EmailOperationsPanel data={emails.data} onPage={setPage} /> : null}
+  </>;
+}
+// Pure presentation is shared by the authenticated view and isolated SSR checks.
+export function EmailOperationsPanel({ data, onPage }: { data: AdminEmailOperations; onPage: (page: number) => void }) {
+  return <div className="admin-email-operations">
+    {data.alert ? <div className="admin-feedback admin-feedback-error" role="status"><CircleAlert aria-hidden="true" />
+      <p><strong>Queue needs attention.</strong> The oldest queued, retrying or in-progress notification was created {Math.floor((data.queueAgeSeconds ?? 0) / 60)} minutes ago. Review the dispatcher and provider logs. This warning appears in this portal; it does not send an alert.</p>
+    </div> : null}
+    {data.queueAgeSeconds === null ? <p className="admin-feedback admin-feedback-error" role="status">Waiting age is unavailable. Review dispatcher logs; queue health cannot be confirmed.</p> : null}
+    <div className="admin-metrics">
+      <Metric label="Waiting or in progress" value={data.backlog} help={`${count(data.retrying)} waiting to retry · ${count(data.sending)} sending`} icon={Mail} accent={!!data.alert} />
+      <Metric label="Accepted by recipient server" value={data.delivered} help="A delivery receipt does not confirm inbox placement or reading." icon={Check} />
+      <Metric label="Attempts stopped" value={data.failed} help="Failed or expired; delivery may be unconfirmed." icon={CircleAlert} accent={data.failed > 0} />
+      <Metric label="Bounced or blocked" value={data.bounced + data.complained + data.suppressed} help={`${count(data.bounced)} bounced · ${count(data.complained)} unwanted · ${count(data.suppressed)} provider-blocked`} icon={EyeOff} />
+    </div>
+    <section className="admin-panel">
+      <div className="admin-panel-heading"><div><h2>Notification delivery history</h2><p>Counts above cover this environment. The state filter applies to the history below.</p></div><Badge>{count(data.records.total)} records</Badge></div>
+      <p className="admin-config-intro">Waiting age: {data.queueAgeSeconds === null ? "Unavailable" : data.backlog ? `${Math.floor((data.queueAgeSeconds ?? 0) / 60)} minutes` : "No waiting notifications"}. Provider accepted: {count(data.submitted)}. Retries run automatically within the original consent, attempt and time limits. Recipient addresses and private message contents are hidden.</p>
+      {data.records.items.length === 0 ? <Empty title="No matching email records" text="Try another delivery state. Records appear after eligible member activity." /> : <ul className="admin-list">
+        {data.records.items.map(item => <li className="admin-list-row admin-email-row" key={item.notificationId}>
+          <div><h3 className="admin-row-title">{Object.hasOwn(emailKindLabels, item.kind) ? emailKindLabels[item.kind] : "Notification"}</h3>
+            <div className="admin-row-meta"><code>{item.notificationId}</code></div>
+            <div className="admin-row-meta">Attempts: {count(item.attempts)} · Updated: {time(item.updated)}</div>
+            {item.state === "retry" && item.nextAttemptAt ? <p className="admin-row-meta">Next eligible attempt: {time(item.nextAttemptAt)}</p> : null}
+            {item.eventAt ? <p className="admin-row-meta">Latest provider event: {time(item.eventAt)}</p> : null}
+            {item.lastError ? <p className="admin-row-excerpt">{item.lastError}</p> : null}
+          </div>
+          <Badge tone={item.state === "delivered" ? "success" : ["failed", "expired", "bounced", "complained", "suppressed"].includes(item.state) ? "warning" : "info"}>
+            {Object.hasOwn(emailStateLabels, item.state) ? emailStateLabels[item.state as AdminEmailState] : "Unrecognized state"}
+          </Badge>
+        </li>)}
+      </ul>}
+      <Pagination data={data.records} onPage={onPage} />
+    </section>
+  </div>;
 }

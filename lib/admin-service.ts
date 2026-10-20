@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { database } from './database';
 import { isAdminConfigured } from './admin-access';
-import { adminPageSize, reportStatuses, type AdminAction, type AdminAudit, type AdminOverview, type AdminPage, type AdminProfile, type AdminProfileDetail, type AdminProfileFilters, type AdminReport, type ReportStatus } from './admin-types';
+import { adminPageSize, reportStatuses, type AdminAction, type AdminAudit, type AdminOverview, type AdminPage, type AdminProfile, type AdminProfileDetail, type AdminProfileFilters, type AdminReport, type ReportStatus, type AdminEmailOperations, type AdminEmailState } from './admin-types';
 
 type Count = { n: number };
 type PublicRow = Omit<AdminProfile, 'ownerListed' | 'hidden' | 'moderationReason' | 'moderationUpdated'> & { owner_listed: number; hidden: number; moderation_reason: string | null; moderation_updated: string | null };
@@ -50,14 +50,18 @@ export async function adminOverview(): Promise<AdminOverview> {
   const clerkKey = settings.CLERK_SECRET_KEY;
   const emailProviderConfigured = !!settings.RESEND_API_KEY;
   const emailSenderConfigured = !!settings.EMAIL_FROM;
-  const originConfigured = !!settings.FIRSTSIGNAL_ORIGIN;
+  let originConfigured = false;
+  try { const origin = new URL(settings.FIRSTSIGNAL_ORIGIN ?? ''); originConfigured = origin.protocol === 'https:' && origin.origin === settings.FIRSTSIGNAL_ORIGIN && !origin.hostname.endsWith('.invalid'); } catch { /* Missing or malformed origin is not configured. */ }
+  const dispatchLength = settings.NOTIFICATION_DISPATCH_SECRET?.length ?? 0;
+  const emailAutomationConfigured = dispatchLength >= 32 && dispatchLength <= 256;
+  const emailReceiptsConfigured = !!settings.RESEND_WEBHOOK_SECRET;
   const profileCounts = results[0].results[0] ?? {};
   return {
     profiles: { total: Number(profileCounts.total ?? 0), public: Number(profileCounts.public ?? 0), private: Number(profileCounts.private ?? 0), hidden: Number(profileCounts.hidden ?? 0), founders: Number(profileCounts.founders ?? 0), investors: Number(profileCounts.investors ?? 0) },
     introductions: groups(1),
     reports: { ...reports, open: reports.submitted + reports.reviewing, total: Object.values(reportCounts).reduce((a, b) => a + b, 0) },
     notifications: groups(3),
-    configuration: { adminConfigured: isAdminConfigured(), clerkMode: clerkKey?.startsWith('sk_live_') ? 'production' : clerkKey?.startsWith('sk_test_') ? 'development' : 'unconfigured', emailActive: emailProviderConfigured && emailSenderConfigured && originConfigured, emailProviderConfigured, emailSenderConfigured, originConfigured },
+    configuration: { adminConfigured: isAdminConfigured(), clerkMode: clerkKey?.startsWith('sk_live_') ? 'production' : clerkKey?.startsWith('sk_test_') ? 'development' : 'unconfigured', emailActive: emailProviderConfigured && emailSenderConfigured && !!clerkKey && originConfigured && !/[\r\n]/.test(settings.EMAIL_FROM ?? ''), emailProviderConfigured, emailSenderConfigured, originConfigured, emailAutomationConfigured, emailReceiptsConfigured },
   };
 }
 
@@ -171,4 +175,60 @@ export async function applyAdminAction(actor: string, action: AdminAction) {
       .bind(event, actor, action.hidden ? 'profile_hidden' : 'profile_restored', action.reason, previous.hidden ? 'hidden' : 'visible', now, action.profileId, event),
   ]);
   if (!results[0].meta.changes && !results[1].meta.changes) throw new AdminConflict('Another listing change arrived first. Reload before saving.', 409);
+}
+
+// Never return provider response bodies, recipient addresses, message contents or
+// frozen send payloads. Only known diagnostic codes can leave the service.
+function safeEmailError(code: string | null): string {
+  const labels: Record<string, string> = {
+    retry_window_ended: 'The retry window ended; delivery may be unconfirmed.',
+    attempt_limit: 'The attempt limit was reached; delivery may be unconfirmed.',
+    preference_changed: 'The member changed their email preference.',
+    permission_changed: 'Connection or email permission changed.',
+    primary_email_changed: 'The verified primary email address changed.',
+    address_suppressed: 'This address is blocked from further delivery.',
+    temporary_delivery_failure: 'A temporary delivery issue will be retried within the safety window.',
+  };
+  if (!code) return '';
+  if (Object.hasOwn(labels, code)) return labels[code];
+  return /^provider_[1-5][0-9]{2}$/.test(code) ? `Email provider returned HTTP ${code.slice(9)}.` : 'A delivery issue was recorded. Review restricted service logs.';
+}
+export async function adminEmails(page = 1, state: AdminEmailState = 'all'): Promise<AdminEmailOperations> {
+  const db = database();
+  const [counts, oldest, total] = await Promise.all([
+    db.prepare(`SELECT
+      COALESCE(SUM(state IN ('pending','retry','sending')),0) AS backlog,
+      COALESCE(SUM(state='delivered'),0) AS delivered,
+      COALESCE(SUM(state IN ('failed','expired')),0) AS failed,
+      COALESCE(SUM(state='suppressed'),0) AS suppressed,
+      COALESCE(SUM(state='retry'),0) AS retrying,
+      COALESCE(SUM(state='sending'),0) AS sending,
+      COALESCE(SUM(state='bounced'),0) AS bounced,
+      COALESCE(SUM(state='complained'),0) AS complained,
+      COALESCE(SUM(state='submitted'),0) AS submitted
+      FROM notification_emails`).first<Record<string, number>>(),
+    db.prepare("SELECT MIN(created) AS oldest FROM notification_emails WHERE state IN ('pending','retry','sending')").first<{ oldest: string | null }>(),
+    db.prepare("SELECT COUNT(*) AS n FROM notification_emails WHERE ?='all' OR state=?").bind(state, state).first<Count>(),
+  ]);
+  const safePage = Math.min(page, Math.max(1, Math.ceil((total?.n ?? 0) / adminPageSize)));
+  const recent = await db.prepare(`SELECT notification_id,kind,state,attempts,next_attempt_at,event_at,last_error,created,updated
+      FROM notification_emails WHERE ?='all' OR state=? ORDER BY updated DESC,notification_id DESC LIMIT ? OFFSET ?`)
+      .bind(state, state, adminPageSize, (safePage - 1) * adminPageSize).all<{
+        notification_id: string; kind: string; state: string; attempts: number;
+        next_attempt_at: string; event_at: string; last_error: string; created: string; updated: string;
+      }>();
+  const oldestTime = oldest?.oldest ? new Date(oldest.oldest).getTime() : NaN;
+  const queueAgeSeconds = Number(counts?.backlog ?? 0) === 0 ? 0 : Number.isFinite(oldestTime) ? Math.max(0, Math.floor((Date.now() - oldestTime) / 1000)) : null;
+  return {
+    backlog: Number(counts?.backlog ?? 0), delivered: Number(counts?.delivered ?? 0),
+    failed: Number(counts?.failed ?? 0), suppressed: Number(counts?.suppressed ?? 0),
+    retrying: Number(counts?.retrying ?? 0), sending: Number(counts?.sending ?? 0),
+    bounced: Number(counts?.bounced ?? 0), complained: Number(counts?.complained ?? 0),
+    submitted: Number(counts?.submitted ?? 0), queueAgeSeconds, alert: queueAgeSeconds === null ? null : queueAgeSeconds > 900,
+    records: pageResult((recent.results ?? []).map(row => ({
+      notificationId: row.notification_id, kind: row.kind, state: row.state, attempts: row.attempts,
+      nextAttemptAt: row.next_attempt_at, eventAt: row.event_at, lastError: safeEmailError(row.last_error),
+      created: row.created, updated: row.updated,
+    })), safePage, total?.n ?? 0),
+  };
 }

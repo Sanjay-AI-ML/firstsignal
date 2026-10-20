@@ -50,6 +50,13 @@
       "when": 1792428535592,
       "tag": "0006_notification_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792460000000,
+      "tag": "0007_hardening_and_features",
+      "breakpoints": true
     }
   ]
 }

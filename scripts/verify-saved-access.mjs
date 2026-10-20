@@ -42,10 +42,16 @@ const data = await load('lib/data.ts', {
 });
 const validation = await load('lib/validation.ts', { zod: { z }, './data': data, './sectors': sectors });
 const safety = await load('lib/member-safety.ts', { './database': { database: () => db } });
+const streaming = await load('lib/streaming-request.ts');
+const monitoring = await load('lib/monitoring.ts');
+const idempotency = await load('lib/idempotency.ts');
+const abuse = await load('lib/abuse-control.ts');
+const revisions = await load('lib/revisions.ts');
 const route = await load('app/api/workspace/route.ts', {
   '../../auth': { getAppUser: async () => auth.getStore() },
   '@/lib/notifications': { notificationStatements: () => [] }, '@/lib/database': { database: () => db },
   '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': safety, '@/lib/rate-limit': await load('lib/rate-limit.ts', {}),
+  '@/lib/streaming-request': streaming, '@/lib/monitoring': monitoring, '@/lib/idempotency': idempotency, '@/lib/abuse-control': abuse, '@/lib/revisions': revisions,
 });
 const base = { kind: 'startup', name: 'Saved member', founder: 'Local founder', city: 'Chennai',
   sector: data.sectors[0], stage: data.stages[0], tagline: 'An isolated test opportunity',

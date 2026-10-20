@@ -11,15 +11,17 @@ Admin entry: [FindIn administration](https://firstsignal-founder-network.diviner
 - Multiple independent ideas per founder, with Add/Edit/Preview, per-idea progress and sharing, meaningful category icons and idea-specific introductions. See [implementation and verification](MULTIPLE_IDEAS_2026-10-19.md).
 - Per-idea Test & learn: private planning prompts, a fixed plan once started, recorded observations and decisions, and explicit sharing of completed founder-reported learnings. See [research and verification](TEST_AND_LEARN_2026-10-19.md).
 - Guided founder and investor forms, completion checklists and private/public sharing controls.
-- Discovery, saved opportunities and explainable suggestions using stated sector, stage and check-size preferences.
-- Mutual-consent introductions, private messaging and a connections dashboard with private follow-up notes/dates.
+- Cursor-paged discovery, saved opportunities and up to 20 private saved searches, with explainable suggestions using stated sector, stage and check-size preferences. Saved-search matching emails are not available.
+- Private saved idea history with comparison and confirmed restoration as a new version. Sharing choices, progress, tests, conversations and moderation are preserved. Version checks prevent stale tabs from silently overwriting newer edits.
+- Retry-safe creation requests retain their operation ID in the current tab; server receipts commit with supported workspace and proposal mutations. A changed payload cannot reuse the same operation ID.
+- Mutual-consent introductions, cursor-paged conversations, on-demand message history, unread counts and explicit read-through-the-newest-displayed-message controls. The connections dashboard retains private follow-up notes/dates.
 - Private, non-binding INR bids, counteroffers, decisions and versioned negotiation history.
 - Dated founder progress updates and a recent-progress feed for saved real startups.
 - Profile reporting and account blocking with server-enforced contact restrictions.
 - In-app notifications and opt-in verified-email alerts through Resend, with a durable D1 outbox, signed delivery receipts and separately deployable retry dispatcher. Live sending still requires activation.
 - Responsive marketing pages and reduced-motion support.
 - A chapter-based marketing journey with native section navigation, persistent pause controls, framed image transitions and a fictional Test & learn walkthrough. See [scroll research and verification](SCROLL_COMPLETION_2026-10-19.md).
-- Dedicated owner admin sign-in, reported-content review, searchable founder/investor listings, reversible removal/restoration and an activity log. See [admin access and setup](ADMIN_PORTAL.md).
+- Dedicated owner admin sign-in, reported-content review, searchable founder/investor listings, reversible removal/restoration, an activity log and a read-only email delivery dashboard. See [admin access and setup](ADMIN_PORTAL.md).
 - An interactive fictional evidence brief distinguishing reported learning, open questions and a measurable next test; founder/progress worksheets include source and experiment-planning prompts.
 - Founder/investor entry paths that preserve the selected setup through sign-in, plus three public starter worksheets with preview, copy and Markdown downloads.
 
@@ -27,16 +29,16 @@ Marketing templates are writing prompts, not imported fictional evidence. A new 
 
 Sample profiles are labelled, and real member claims/updates are self-reported. This pilot does not process investments, payments or binding agreements. Follow-up dates do not send reminders, progress updates do not broadcast emails, and submitted reports require manual operator handling. Production Clerk/domain activation, live email configuration and operational work remain pending; see the current [production launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) and [release history](RELEASE_READINESS.md).
 
-The [implementation audit](IMPLEMENTATION_AUDIT_2026-10-19.md) distinguishes connected frontend demonstrations from server-backed functionality. Public funding/equity/co-investment tools are local planning worksheets, not approved legal documents or commitments. Member Diligence contains personal checklists, not uploaded confidential files. Monthly updates start blank and require sharing confirmation. Workspace JSON export is owner-scoped; account erasure is unavailable.
+The [implementation audit](IMPLEMENTATION_AUDIT_2026-10-19.md) distinguishes connected frontend demonstrations from server-backed functionality. Public funding/equity/co-investment tools are local planning worksheets, not approved legal documents or commitments. Member Diligence contains personal checklists, not uploaded confidential files. Monthly updates start blank and require sharing confirmation. Workspace JSON export is owner-scoped and offers full/profile/conversation categories, but each selected category is still assembled in memory. Reviewed closure requests unlist profiles, pause new activity and turn off email; they do not delete Clerk accounts or erase records automatically.
 
 ## Local setup
 
-Requires Node.js 22.13 or later. Clean clones use the portable execution profile.
+Requires Node.js 22.13 or later; Node.js 24 is used by the regression workflow. Clean clones use the portable execution profile.
 
 1. Run `npm ci`.
 2. Copy `.env.example` to `.env.local` and fill in your own Clerk development keys. Set the origin to `http://127.0.0.1:5173`.
 3. Run `npm run build` to generate the local Worker configuration.
-4. Initialize a fresh local database with all seven migration commands below, in order.
+4. Initialize a fresh local database with all eight migration commands below, in order.
 5. Run `npm run dev` and open the printed loopback URL.
 
 ```sh
@@ -47,14 +49,17 @@ npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0004_multiple_founder_ideas.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0005_test_and_learn.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0006_notification_outbox.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0007_hardening_and_features.sql
 ```
 
-Run all seven initialization commands only on a fresh local database. For an existing local database, check which migrations have been applied and run only the missing ones in order; never rerun an applied `ALTER TABLE` migration. These commands never initialize the live database. [HANDOFF.md](HANDOFF.md) also gives direct Node.js entrypoints for this Windows host.
+Run all eight initialization commands only on a fresh local database. For an existing local database, check which migrations have been applied and run only the missing ones in order; never rerun an applied `ALTER TABLE` migration. These commands never initialize the live database. [HANDOFF.md](HANDOFF.md) also gives direct Node.js entrypoints for this Windows host.
 
 ## Validation
 
 ```sh
-npx tsc --noEmit
+npm run typecheck
+npm test
+node scripts/verify-admin-email-operations.mjs
 node scripts/verify-profile-fit.mjs
 node scripts/verify-profile-suggestions.mjs
 node scripts/verify-workspace-bounds.mjs
@@ -66,6 +71,8 @@ node scripts/verify-multiple-ideas.mjs
 node scripts/verify-experiments.mjs
 npm run build
 ```
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` uses pinned official actions, Node 24, a lockfile install, TypeScript, isolated regressions, dispatcher checks and a production build. It has read-only repository permissions and no deployment or provider credentials. `npm test` discovers isolated verification scripts and excludes the three explicitly listed environment-dependent/obsolete scripts; failed suites fail the command. A workflow file does not establish that a remote run has passed or that branch protection has been enabled. See [the current hardening audit](HARDENING_FRONTEND_2026-10-20.md).
 
 For authenticated workflow checks, start the local server and run `scripts/verify-clerk-workflows.mjs` with `TEST_ORIGIN=http://127.0.0.1:5173`. It creates and deletes temporary users in your Clerk development application and writes only to local D1. Use development keys.
 
@@ -84,7 +91,7 @@ Upload the application source, assets, lockfile, migrations and documentation. N
 
 `/admin/signin` is the dedicated sign-in entry for `/admin`, a server-protected operator portal for one configured existing Clerk user. It provides real aggregate status, report review, filtered founder/investor listings, listed-idea/progress inspection, reversible removal/restoration and an audit history. Private drafts, messages, proposals and follow-up notes are excluded. Missing owner configuration denies everyone. See [ADMIN_PORTAL.md](ADMIN_PORTAL.md) before activating or deploying this update.
 
-The portal was introduced by `0003_owner_portal.sql`; the current full app also requires 0004 (multiple ideas), 0005 (Test & learn) and 0006 (notification outbox). Fresh local setup uses all seven migrations above. Apply only unapplied migrations in order; do not reset existing data. The current hosted Site was observed at version 32 with owner access configured, but pending source/migrations still require release and verification. See the [current launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) before publishing.
+The portal was introduced by `0003_owner_portal.sql`; the current full app also requires 0004 (multiple ideas), 0005 (Test & learn), 0006 (notification outbox) and 0007 (version history, retry receipts, saved searches, read positions and reviewed closure requests). Fresh local setup uses all eight migrations above. Apply only unapplied migrations in order; do not reset existing data. The current hosted Site was observed at version 32 with owner access configured, but pending source/migrations still require release and verification. See the [current launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) before publishing.
 
 ```powershell
 node scripts/verify-admin.mjs

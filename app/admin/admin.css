@@ -1489,3 +1489,16 @@
     transition: none !important;
   }
 }
+
+/* Delivery history uses the existing owner controls and spacing. */
+.admin-email-operations .admin-metrics { margin-bottom: 24px; }
+.admin-email-row > div { min-width: 0; }
+.admin-email-row code { overflow-wrap: anywhere; }
+.admin-email-row > .admin-badge { max-width: 230px; white-space: normal; }
+.admin-email-filter select { max-width: 240px; }
+@media (max-width: 600px) {
+  .admin-email-row { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .admin-email-row > .admin-badge { justify-self: start; max-width: 100%; }
+  .admin-email-filter .admin-select-wrap { flex-wrap: wrap; }
+  .admin-email-filter select { max-width: 100%; }
+}

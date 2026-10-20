@@ -65,9 +65,14 @@ const validation = await load('lib/validation.ts', { zod: { z }, './data': data,
 const safety = await load('lib/member-safety.ts', { './database': { database: () => db } });
 const notifications = { notificationStatements: () => [], dispatchNotifications: async () => {}, notificationSettings: async () => ({}), setNotificationPreferences: async () => null };
 const throttle = await load('lib/rate-limit.ts', {});
-const workspace = await load('app/api/workspace/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/notifications': notifications, '@/lib/database': { database: () => db }, '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': safety, '@/lib/rate-limit': throttle });
+const streaming = await load('lib/streaming-request.ts');
+const monitoring = await load('lib/monitoring.ts');
+const idempotency = await load('lib/idempotency.ts');
+const abuse = await load('lib/abuse-control.ts');
+const revisions = await load('lib/revisions.ts');
+const workspace = await load('app/api/workspace/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/notifications': notifications, '@/lib/database': { database: () => db }, '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': safety, '@/lib/rate-limit': throttle, '@/lib/streaming-request': streaming, '@/lib/monitoring': monitoring, '@/lib/idempotency': idempotency, '@/lib/abuse-control': abuse, '@/lib/revisions': revisions });
 const security = await load('lib/notification-security.ts', {});
-const connections = await load('app/api/connections/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/database': { database: () => db }, '@/lib/notifications': notifications, '@/lib/notification-security':security, zod: { z }, '@/lib/member-safety': safety, '@/lib/validation': validation });
+const connections = await load('app/api/connections/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/database': { database: () => db }, '@/lib/notifications': notifications, '@/lib/notification-security':security, zod: { z }, '@/lib/member-safety': safety, '@/lib/validation': validation, '@/lib/monitoring': monitoring, '@/lib/idempotency': idempotency });
 const origin = 'http://localhost';
 async function request(owner, payload, expected = 200, route = workspace, id = '') {
   const path = route === workspace ? '/api/workspace' : '/api/connections';
@@ -81,7 +86,7 @@ async function request(owner, payload, expected = 200, route = workspace, id = '
   ok(response.headers.get('cache-control')?.includes('no-store'), 'Account-specific responses are never cached');
   return { ...body, httpStatus: response.status };
 }
-const save = (owner, profile, listed = false, profileId, expected = 200) => request(owner, { action: 'profile', profile, listed, consent: true, ...(profileId ? { profileId } : {}) }, expected);
+const save = (owner, profile, listed = false, profileId, expected = 200) => request(owner, { action: 'profile', profile, listed, consent: true, ...(profileId ? { profileId, expectedVersion:sqlite.prepare('SELECT version FROM profile_versions WHERE profile_id=?').get(profileId)?.version??1 } : {}) }, expected);
 const read = (owner, id) => request(owner, null, 200, workspace, id);
 const base = { ...historical, sector: data.sectors[0], stage: data.stages[0], name: 'Foundry planning', problem: 'Small manufacturers need clearer, simpler production handovers.', solution: 'A visual production-handover service for workshop teams.', fundingIntentINR: 300000 };
 const row = id => ({ ...sqlite.prepare('SELECT * FROM profiles WHERE id=?').get(id) });
@@ -173,8 +178,8 @@ try {
   await request('founder', { action: 'message', id: introA.id, body: 'Only the manufacturing idea receives this message.' });
   await request('founder', { action: 'message', id: introB.id, body: 'Only the food exchange idea receives this message.' });
   const ownThreads = await read('founder');
-  equal(ownThreads.requests.find(item => item.id === introA.id).messages[0].body, 'Only the manufacturing idea receives this message.');
-  equal(ownThreads.requests.find(item => item.id === introB.id).messages[0].body, 'Only the food exchange idea receives this message.');
+  equal(ownThreads.requests.find(item => item.id === introA.id).latestMessage.body, 'Only the manufacturing idea receives this message.');
+  equal(ownThreads.requests.find(item => item.id === introB.id).latestMessage.body, 'Only the food exchange idea receives this message.');
   const proposal = (id, amount) => ({ action: 'proposal', id, version: 0, amount, terms: 'A non-binding discussion scoped only to the selected project.', consent: true });
   await request('investor', proposal(introA.id, 300000), 200, connections);
   await request('investor', proposal(introB.id, 800000), 200, connections);

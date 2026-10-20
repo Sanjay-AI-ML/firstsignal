@@ -49,6 +49,9 @@ export function SafetySettings({ data, onWrite, busy }: { data: WorkspaceData; o
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [archivePart, setArchivePart] = useState<'all' | 'profiles' | 'connections'>('all');
+  const [closureReason, setClosureReason] = useState(''), [closureConsent, setClosureConsent] = useState(false);
+  const controlId = useId();
   const unblock = async (profileId: string) => {
     try { await onWrite({ action: "block", profileId, blocked: false }); setError(""); }
     catch (e) { setError(e instanceof Error ? e.message : "Unable to unblock member."); }
@@ -57,19 +60,29 @@ export function SafetySettings({ data, onWrite, busy }: { data: WorkspaceData; o
     if (busy || exporting) return;
     setError(""); setFeedback(""); setExporting(true);
     try {
-      const response = await onWrite({ action: "exportData" }) as { dataArchive?: Record<string, unknown> };
+      const response = await onWrite({ action: "exportData", chunk: archivePart }) as { dataArchive?: Record<string, unknown> };
       if (!response?.dataArchive) throw new Error("The archive was not returned. Please try again.");
       const blob = new Blob([JSON.stringify(response.dataArchive, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       try {
         const link = document.createElement("a");
         link.href = url;
-        link.download = `findin-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+        link.download = `findin-${archivePart}-${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(link); link.click(); link.remove();
       } finally { URL.revokeObjectURL(url); }
       setFeedback("Your workspace download has started. Keep this archive private; it includes your conversations.");
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to export your workspace."); }
     finally { setExporting(false); }
+  };
+  const requestClosure = async (event: FormEvent) => {
+    event.preventDefault(); if (busy || !closureConsent) return; setError(''); setFeedback('');
+    try { await onWrite({ action: 'requestAccountClosure', reason: closureReason.trim(), consent: true }); setClosureConsent(false); setFeedback('Closure request saved for manual review. Your sign-in account has not been deleted.'); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to save your closure request.'); }
+  };
+  const cancelClosure = async () => {
+    if (busy) return; setError(''); setFeedback('');
+    try { await onWrite({ action: 'cancelAccountClosure' }); setFeedback('Closure request cancelled. Profiles stay private and email preferences remain off until you change them.'); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to cancel this request.'); }
   };
   return <section className="safety-settings">
     <h2>Your safety & privacy controls</h2>
@@ -83,8 +96,9 @@ export function SafetySettings({ data, onWrite, busy }: { data: WorkspaceData; o
     <div className="workspace-data-controls" style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--fi-border)" }}>
       <h3>Your workspace archive</h3>
       <p className="subtle">Download your saved profiles, progress, tests, shortlist, blocks, submitted reports, notification settings and conversation history as JSON. Your private follow-up notes are included; other members’ private notes and operator-only reviews are excluded. Clerk-managed sign-in records are not included.</p>
+      <div className="field"><label htmlFor={`${controlId}-archive`}>Archive contents</label><select id={`${controlId}-archive`} value={archivePart} disabled={busy || exporting} onChange={event => setArchivePart(event.target.value as typeof archivePart)}><option value="all">Full workspace</option><option value="profiles">Ideas, profile and account settings</option><option value="connections">Connections and conversations</option></select></div>
       <button type="button" className="outline-button" disabled={busy || exporting} onClick={() => void exportArchive()}><Download size={15} aria-hidden="true" />{exporting ? "Preparing archive…" : "Export workspace (.json)"}</button>
-      <p className="subtle" style={{ marginTop: "14px" }}>Account deletion is not available in this version. You can edit or unlist your ideas to change what others see. This does not delete your sign-in account or conversation history.</p>
+      <details className="member-controls"><summary>Request account closure</summary>{data.accountClosure ? <><p className="notice" role="status">Your request is waiting for manual review. Your profiles are private and new activity is paused. Your sign-in account and previous conversation records have not been deleted.</p><p className="subtle">Cancelling keeps profiles private and does not renew email consent or reopen withdrawn requests.</p><button type="button" className="outline-button" disabled={busy} onClick={() => void cancelClosure()}>Cancel closure request</button></> : <form onSubmit={event => void requestClosure(event)} className="dialog-form"><p className="subtle">Account deletion is not available as a self-service action. This saves a request for the operator. It makes your profiles private, withdraws your outgoing pending introductions and stops new activity and email submissions while review is pending. It does not delete your Clerk account or erase conversations. No automatic deletion date is promised.</p><div className="field"><label htmlFor={`${controlId}-closure`}>Anything the operator should know?</label><textarea id={`${controlId}-closure`} value={closureReason} onChange={event => setClosureReason(event.target.value)} maxLength={500} rows={3} placeholder="Leave out passwords, identity documents and financial details." /></div><label className="consent"><input type="checkbox" checked={closureConsent} onChange={event => setClosureConsent(event.target.checked)} /><span>I want to pause this account and request manual closure review.</span></label><button type="submit" className="outline-button" disabled={busy || !closureConsent}>Submit closure request</button></form>}</details>
     </div>
   </section>;
 }

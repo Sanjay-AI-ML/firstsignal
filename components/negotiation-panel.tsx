@@ -1,13 +1,15 @@
 "use client";
-import { useCallback,useEffect,useState,type FormEvent } from 'react';
+import { useCallback,useEffect,useRef,useState,type FormEvent } from 'react';
 import { formatINR } from '@/lib/data';
+import { createOperationTracker } from '@/lib/client-operations';
 type Proposal={version:number;amount:number;terms:string;status:string;mine:boolean};
 type Event=Proposal&{author_name:string;created:string};
 export default function NegotiationPanel({id,blocked=false,onUpdated}:{id:string;blocked?:boolean;onUpdated?:()=>void}){
  const [data,setData]=useState<{current:Proposal|null;events:Event[]}|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[editing,setEditing]=useState(false),[amount,setAmount]=useState(''),[terms,setTerms]=useState(''),[consent,setConsent]=useState(false);
+ const operations=useRef(createOperationTracker()),pending=useRef(false);
  const load=useCallback(async()=>{try{const r=await fetch(`/api/connections?id=${encodeURIComponent(id)}`);const body=await r.json() as {current:Proposal|null;events:Event[];error?:string};if(!r.ok)throw new Error(body.error || "Unable to complete this request.");setData(body);setError('');}catch(e){setError(e instanceof Error?e.message:'Unable to load proposals.');}},[id]);
  useEffect(()=>{void load()},[load]);
- const write=async(payload:unknown)=>{if(blocked){setError('Contact is blocked. Proposals cannot be changed.');return}setBusy(true);setError('');try{const r=await fetch('/api/connections',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const body=await r.json() as {current:Proposal|null;events:Event[];error?:string};if(!r.ok){if(r.status===409)await load();throw new Error(body.error || "Unable to complete this request.")}setData(body);setEditing(false);setConsent(false);onUpdated?.();}catch(e){setError(e instanceof Error?e.message:'Unable to save proposal.')}finally{setBusy(false)}};
+ const write=async(payload:unknown)=>{if(pending.current)return;if(blocked){setError('Contact is blocked. Proposals cannot be changed.');return}pending.current=true;setBusy(true);setError('');const input=payload as Record<string,unknown>;const operation=input.action==='proposal'?operations.current.prepare(input):null;try{const r=await fetch('/api/connections',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(operation?.payload??payload)});const body=await r.json() as {current:Proposal|null;events:Event[];error?:string};if(!r.ok){if(r.status===409)await load();throw new Error(body.error || "Unable to complete this request.")}if(operation)operations.current.complete(operation.fingerprint);setData(body);setEditing(false);setConsent(false);onUpdated?.();}catch(e){setError(e instanceof Error?e.message:'Unable to save proposal.')}finally{pending.current=false;setBusy(false)}};
  const proposal=data?.current;
  const start=()=>{setAmount(proposal?String(proposal.amount):'');setTerms(proposal?.terms||'');setConsent(false);setEditing(true)};
  const submit=(e:FormEvent)=>{e.preventDefault();if(!consent){setError('Confirm that this is a non-binding proposal.');return}void write({action:'proposal',id,version:proposal?.version??0,amount:Number(amount),terms,consent:true})};

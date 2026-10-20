@@ -3,12 +3,15 @@ import { sql } from "drizzle-orm";
 export const profiles = sqliteTable("profiles", {
   id:text("id").primaryKey(), owner:text("owner").notNull(), kind:text("kind").notNull(),
   data:text("data").notNull(), listed:integer("listed").notNull().default(0), updated:text("updated").notNull(),
-}, t=>[index("profiles_owner_kind_lookup").on(t.owner,t.kind),uniqueIndex("profiles_investor_owner").on(t.owner).where(sql`${t.kind} = 'investor'`),index("profiles_listed").on(t.listed)]);
-export const saves = sqliteTable("saves", {owner:text("owner").notNull(),profileId:text("profile_id").notNull(),created:text("created").notNull()},t=>[primaryKey({columns:[t.owner,t.profileId]})]);
+}, t=>[index("profiles_owner_kind_lookup").on(t.owner,t.kind),uniqueIndex("profiles_investor_owner").on(t.owner).where(sql`${t.kind} = 'investor'`),index("profiles_listed").on(t.listed),index("profiles_listed_updated").on(t.listed,t.updated)]);
+export const profileVersions = sqliteTable("profile_versions", {
+  profileId:text("profile_id").primaryKey(),version:integer("version").notNull().default(1),lastOperation:text("last_operation").notNull().default(""),updated:text("updated").notNull(),
+});
+export const saves = sqliteTable("saves", {owner:text("owner").notNull(),profileId:text("profile_id").notNull(),created:text("created").notNull()},t=>[primaryKey({columns:[t.owner,t.profileId]}),index("saves_owner_created").on(t.owner,t.created)]);
 export const introductions=sqliteTable("introductions",{
   id:text("id").primaryKey(),sender:text("sender").notNull(),recipient:text("recipient"),profileId:text("profile_id").notNull(),sourceProfileId:text("source_profile_id").references(()=>profiles.id),sourceName:text("source_name"),targetName:text("target_name").notNull(),senderName:text("sender_name").notNull(),message:text("message").notNull(),status:text("status").notNull(),created:text("created").notNull(),updated:text("updated").notNull(),
-},t=>[uniqueIndex("introductions_sender_profile_source").on(t.sender,t.profileId,sql`coalesce(${t.sourceProfileId}, '')`),index("introductions_recipient").on(t.recipient)]);
-export const messages=sqliteTable("messages",{id:text("id").primaryKey(),introductionId:text("introduction_id").notNull().references(()=>introductions.id),sender:text("sender").notNull(),senderName:text("sender_name").notNull(),body:text("body").notNull(),created:text("created").notNull()},t=>[index("messages_introduction_created").on(t.introductionId,t.created)]);
+},t=>[uniqueIndex("introductions_sender_profile_source").on(t.sender,t.profileId,sql`coalesce(${t.sourceProfileId}, '')`),index("introductions_recipient").on(t.recipient),index("introductions_sender_created").on(t.sender,t.created)]);
+export const messages=sqliteTable("messages",{id:text("id").primaryKey(),introductionId:text("introduction_id").notNull().references(()=>introductions.id),sender:text("sender").notNull(),senderName:text("sender_name").notNull(),body:text("body").notNull(),created:text("created").notNull()},t=>[index("messages_introduction_created").on(t.introductionId,t.created),index("messages_introduction_created_id").on(t.introductionId,t.created,t.id)]);
 export const negotiations=sqliteTable("negotiations",{introductionId:text("introduction_id").primaryKey().references(()=>introductions.id),version:integer("version").notNull(),author:text("author").notNull(),amount:integer("amount").notNull(),terms:text("terms").notNull(),status:text("status").notNull(),eventId:text("event_id").notNull(),updated:text("updated").notNull()});
 export const negotiationEvents=sqliteTable("negotiation_events",{id:text("id").primaryKey(),introductionId:text("introduction_id").notNull().references(()=>introductions.id),version:integer("version").notNull(),author:text("author").notNull(),authorName:text("author_name").notNull(),amount:integer("amount").notNull(),terms:text("terms").notNull(),status:text("status").notNull(),created:text("created").notNull()},t=>[uniqueIndex("negotiation_event_version").on(t.introductionId,t.version)]);
 export const notificationPreferences=sqliteTable("notification_preferences",{owner:text("owner").primaryKey(),email:text("email").notNull(),enabled:integer("enabled").notNull().default(0)});
@@ -38,4 +41,22 @@ export const notificationEmailEvents=sqliteTable("notification_email_events",{
 },t=>[index("notification_email_events_notification").on(t.notificationId)]);
 export const notificationDispatchLease=sqliteTable("notification_dispatch_lease",{
   id:text("id").primaryKey(),token:text("token").notNull(),expires:text("expires").notNull(),updated:text("updated").notNull(),
+});
+export const idempotencyKeys=sqliteTable("idempotency_keys",{
+  id:text("id").primaryKey(),owner:text("owner").notNull(),operationId:text("operation_id").notNull(),action:text("action").notNull(),resourceId:text("resource_id").notNull().default(""),response:text("response").notNull(),payloadHash:text("payload_hash").notNull().default(""),created:text("created").notNull(),
+},t=>[index("idempotency_keys_owner_created").on(t.owner,t.created)]);
+export const dailyQuotas=sqliteTable("daily_quotas",{
+  owner:text("owner").notNull(),quotaKey:text("quota_key").notNull(),dateBucket:text("date_bucket").notNull(),count:integer("count").notNull().default(0),
+},t=>[primaryKey({columns:[t.owner,t.quotaKey,t.dateBucket]})]);
+export const conversationReadPositions=sqliteTable("conversation_read_positions",{
+  introductionId:text("introduction_id").notNull().references(()=>introductions.id,{onDelete:"cascade"}),userId:text("user_id").notNull(),lastReadMessageId:text("last_read_message_id").notNull().default(""),lastReadAt:text("last_read_at").notNull(),
+},t=>[primaryKey({columns:[t.introductionId,t.userId]})]);
+export const ideaRevisions=sqliteTable("idea_revisions",{
+  id:text("id").primaryKey(),profileId:text("profile_id").notNull().references(()=>profiles.id,{onDelete:"cascade"}),version:integer("version").notNull(),data:text("data").notNull(),listed:integer("listed").notNull().default(0),changeSummary:text("change_summary").notNull(),created:text("created").notNull(),author:text("author").notNull(),
+},t=>[uniqueIndex("idea_revisions_profile_version").on(t.profileId,t.version)]);
+export const savedSearches=sqliteTable("saved_searches",{
+  id:text("id").primaryKey(),owner:text("owner").notNull(),name:text("name").notNull(),query:text("query").notNull(),filters:text("filters").notNull(),alertsEnabled:integer("alerts_enabled").notNull().default(0),created:text("created").notNull(),
+},t=>[index("saved_searches_owner_created").on(t.owner,t.created)]);
+export const accountClosures=sqliteTable("account_closures",{
+  owner:text("owner").primaryKey(),status:text("status").notNull().default("pending"),requestedAt:text("requested_at").notNull(),retentionUntil:text("retention_until").notNull(),reason:text("reason").notNull().default(""),updated:text("updated").notNull(),
 });

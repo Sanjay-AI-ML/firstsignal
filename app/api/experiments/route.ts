@@ -81,6 +81,7 @@ export async function POST(request: Request) {
     const parsed = experimentActionSchema.safeParse(input);
     if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? 'Check the test details.' }, 400);
     const action = parsed.data, owner = user.userId, db = database(), now = new Date().toISOString();
+    if(await db.prepare('SELECT 1 FROM account_closures WHERE owner=?').bind(owner).first()) return json({error:'Cancel your account closure request before changing idea tests.'},409);
     const profile = await db.prepare("SELECT id FROM profiles WHERE id=? AND owner=? AND kind='startup'").bind(action.profileId, owner).first();
     if (!profile) return unavailable();
 
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
       const result = await db.prepare(`INSERT INTO idea_experiments
         (id,profile_id,plan,result,status,shared,version,created,started_at,completed_at,updated)
         SELECT ?,p.id,?,'{}','draft',0,0,?,'','',? FROM profiles p
-        WHERE p.id=? AND p.owner=? AND p.kind='startup'
+        WHERE p.id=? AND p.owner=? AND p.kind='startup' AND NOT EXISTS(SELECT 1 FROM account_closures c WHERE c.owner=p.owner)
         AND (SELECT COUNT(*) FROM idea_experiments e WHERE e.profile_id=p.id)<?`)
         .bind(crypto.randomUUID(), JSON.stringify(action.plan), now, now, action.profileId, owner, experimentLimits.perIdea).run();
       if (!result.meta.changes) return json({ error: 'This idea has reached its 50-test limit, or the idea changed. Remove an unused draft or refresh.' }, 409);
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
       if (row.version !== action.version) return json({ error: 'This test changed in another window. Refresh before trying again.' }, 409);
       const requiredStatus = action.action === 'complete' ? 'running' : action.action === 'share' ? 'complete' : 'draft';
       if (row.status !== requiredStatus) return json({ error: action.action === 'edit' || action.action === 'remove' ? 'Only a draft can be edited or removed. Started plans and completed results stay on record.' : action.action === 'complete' ? 'Start this test before recording its result.' : action.action === 'share' ? 'Complete this test before sharing a result.' : 'This test has already started. Refresh to see its status.' }, 409);
-      const owned = "EXISTS (SELECT 1 FROM profiles p WHERE p.id=idea_experiments.profile_id AND p.owner=? AND p.kind='startup')";
+      const owned = "EXISTS (SELECT 1 FROM profiles p WHERE p.id=idea_experiments.profile_id AND p.owner=? AND p.kind='startup' AND NOT EXISTS(SELECT 1 FROM account_closures c WHERE c.owner=p.owner))";
       const identity = [action.id, action.profileId, action.version, requiredStatus, owner] as const;
       let write: D1PreparedStatement;
       if (action.action === 'remove') {

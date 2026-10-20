@@ -1,16 +1,17 @@
 import { z } from 'zod';
 import { getAppUser } from '@/app/auth';
 import { isAdminAccount } from '@/lib/admin-access';
-import { adminProfileKinds, adminProfileVisibilities, reportStatuses } from '@/lib/admin-types';
-import { adminAudit, adminOverview, adminProfile, adminProfiles, adminReports, applyAdminAction, AdminConflict } from '@/lib/admin-service';
+import { adminEmailStates, adminProfileKinds, adminProfileVisibilities, reportStatuses } from '@/lib/admin-types';
+import { adminAudit, adminEmails, adminOverview, adminProfile, adminProfiles, adminReports, applyAdminAction, AdminConflict } from '@/lib/admin-service';
 
 export const dynamic = 'force-dynamic';
 const json = (data: unknown, status = 200) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 const querySchema = z.object({
-  view: z.enum(['overview', 'profiles', 'profile', 'reports', 'audit']).default('overview'),
+  view: z.enum(['overview', 'profiles', 'profile', 'reports', 'audit', 'emails']).default('overview'),
   page: z.coerce.number().int().min(1).max(10000).default(1), q: z.string().trim().max(100).default(''),
   status: z.enum(reportStatuses).default('submitted'), kind: z.enum(adminProfileKinds).default('all'),
   visibility: z.enum(adminProfileVisibilities).default('all'), profileId: z.string().trim().min(1).max(100).optional(),
+  emailState: z.enum(adminEmailStates).default('all'),
 }).strict().superRefine((query, context) => {
   if (query.view === 'profile' && !query.profileId) context.addIssue({ code: 'custom', path: ['profileId'], message: 'Choose a listing to inspect.' });
 });
@@ -52,8 +53,8 @@ export async function GET(request: Request) {
     if (auth.response) return auth.response;
     const query = querySchema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
     if (!query.success) return json({ error: 'Check the portal filters.' }, 400);
-    const { view, page, q, status, kind, visibility, profileId } = query.data;
-    return json(view === 'profiles' ? await adminProfiles(page, q, { kind, visibility }) : view === 'profile' ? await adminProfile(profileId!) : view === 'reports' ? await adminReports(page, status, q) : view === 'audit' ? await adminAudit(page, q) : await adminOverview());
+    const { view, page, q, status, kind, visibility, profileId, emailState } = query.data;
+    return json(view === 'profiles' ? await adminProfiles(page, q, { kind, visibility }) : view === 'profile' ? await adminProfile(profileId!) : view === 'reports' ? await adminReports(page, status, q) : view === 'audit' ? await adminAudit(page, q) : view === 'emails' ? await adminEmails(page, emailState) : await adminOverview());
   } catch (error) {
     if (error instanceof AdminConflict) return json({ error: error.message }, error.status);
     console.error('Owner portal read failed');

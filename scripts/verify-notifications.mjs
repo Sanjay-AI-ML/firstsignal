@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 // Actual migrations, SQL and three API routes. Every identity and network response
 // is synthetic. Never contacts Clerk/Resend and never sends an email.
-let checks=0,dbCalls=0,clock=Date.parse('2026-10-19T10:00:00.000Z'),fail=false,beforeRun=null;
+let checks=0,dbCalls=0,clock=Date.parse('2026-10-19T10:00:00.000Z'),fail=false,beforeRun=null,afterFirst=null;
 const equal=(a,b,label)=>{assert.equal(a,b,label);checks++;};
 const ok=(a,label)=>{assert.ok(a,label);checks++;};
 const same=(a,b,label)=>{assert.deepEqual(a,b,label);checks++;};
@@ -22,7 +22,7 @@ const legacy=JSON.stringify(sql.prepare('SELECT * FROM notifications').all());
 sql.exec(await fs.readFile('drizzle/0006_notification_outbox.sql','utf8'));
 equal(JSON.stringify(sql.prepare('SELECT * FROM notifications').all()),legacy,'Additive migration preserves every legacy notice');
 equal(sql.prepare('SELECT enabled FROM notification_preferences WHERE owner=?').get('legacy').enabled,1);
-const db={prepare(query){dbCalls++;if(fail)throw new Error('Synthetic storage failure');let args=[];const statement={bind(...v){ok(v.length<=100,'D1 bound parameter limit');args=v;return statement;},execute(){if(beforeRun)beforeRun(query,args);const compiled=sql.prepare(query);return compiled.columns().length?{results:compiled.all(...args),meta:{changes:0}}:{results:[],meta:{changes:compiled.run(...args).changes}};},async run(){return statement.execute();},async all(){return statement.execute();},async first(){return statement.execute().results[0]??null;}};return statement;},async batch(statements){sql.exec('BEGIN IMMEDIATE');try{const result=statements.map(s=>s.execute());sql.exec('COMMIT');return result;}catch(e){sql.exec('ROLLBACK');throw e;}}};
+const db={prepare(query){dbCalls++;if(fail)throw new Error('Synthetic storage failure');let args=[];const statement={bind(...v){ok(v.length<=100,'D1 bound parameter limit');args=v;return statement;},execute(){if(beforeRun)beforeRun(query,args);const compiled=sql.prepare(query);return compiled.columns().length?{results:compiled.all(...args),meta:{changes:0}}:{results:[],meta:{changes:compiled.run(...args).changes}};},async run(){return statement.execute();},async all(){return statement.execute();},async first(){const result=statement.execute().results[0]??null;if(afterFirst)await afterFirst(query,args,result);return result;}};return statement;},async batch(statements){sql.exec('BEGIN IMMEDIATE');try{const result=statements.map(s=>s.execute());sql.exec('COMMIT');return result;}catch(e){sql.exec('ROLLBACK');throw e;}}};
 const environment={CLERK_SECRET_KEY:'synthetic-clerk',RESEND_API_KEY:'synthetic-resend',EMAIL_FROM:'FindIn <updates@example.test>',FIRSTSIGNAL_ORIGIN:'https://findin.example',NOTIFICATION_DISPATCH_SECRET:'synthetic-dispatch-secret-at-least-32-characters',RESEND_WEBHOOK_SECRET:`whsec_${btoa('synthetic-signing-key-with-32-bytes')}`};
 let live=new Map(),sent=[],clerkCalls=0,resendMode=null,identityMode=null;
 const network=async(url,init={})=>{
@@ -33,19 +33,24 @@ async function load(file,modules={}){const {code}=await transform(await fs.readF
 const auth=new AsyncLocalStorage();
 const security=await load('lib/notification-security.ts');
 const notifications=await load('lib/notifications.ts',{'cloudflare:workers':{env:environment},'./database':{database:()=>db}});
-const connection=await load('app/api/connections/route.ts',{'../../auth':{getAppUser:async()=>auth.getStore()},'@/lib/database':{database:()=>db},'@/lib/notifications':notifications,'@/lib/notification-security':security,zod:{z},'@/lib/member-safety':{membersBlocked:async()=>false},'@/lib/validation':{validDate:()=>true}});
+const monitoring=await load('lib/monitoring.ts');
+const idempotency=await load('lib/idempotency.ts');
+const safety=await load('lib/member-safety.ts',{'./database':{database:()=>db}});
+const connection=await load('app/api/connections/route.ts',{'../../auth':{getAppUser:async()=>auth.getStore()},'@/lib/database':{database:()=>db},'@/lib/notifications':notifications,'@/lib/notification-security':security,zod:{z},'@/lib/member-safety':safety,'@/lib/validation':{validDate:()=>true},'@/lib/monitoring':monitoring,'@/lib/idempotency':idempotency});
 const dispatch=await load('app/api/internal/notifications/dispatch/route.ts',{'cloudflare:workers':{env:environment},'@/lib/notifications':notifications,'@/lib/notification-security':security});
 const webhook=await load('app/api/webhooks/resend/route.ts',{'cloudflare:workers':{env:environment},'@/lib/notifications':notifications,'@/lib/notification-security':security});
 const sectors=await load('lib/sectors.ts');
 const data=await load('lib/data.ts',{'./sectors':sectors,'./seed-startups.json':JSON.parse(await fs.readFile('lib/seed-startups.json','utf8')),'./seed-investors.json':JSON.parse(await fs.readFile('lib/seed-investors.json','utf8'))});
 const validation=await load('lib/validation.ts',{zod:{z},'./data':data,'./sectors':sectors});
-const safety=await load('lib/member-safety.ts',{'./database':{database:()=>db}});
-const workspace=await load('app/api/workspace/route.ts',{'../../auth':{getAppUser:async()=>auth.getStore()},'@/lib/notifications':notifications,'@/lib/database':{database:()=>db},'@/lib/data':data,'@/lib/validation':validation,'@/lib/member-safety':safety,'@/lib/rate-limit':{checkRateLimit:()=>({success:true}),anonymousThrottleKey:()=>''}});
+const streaming=await load('lib/streaming-request.ts');
+const abuse=await load('lib/abuse-control.ts');
+const revisions=await load('lib/revisions.ts');
+const workspace=await load('app/api/workspace/route.ts',{'../../auth':{getAppUser:async()=>auth.getStore()},'@/lib/notifications':notifications,'@/lib/database':{database:()=>db},'@/lib/data':data,'@/lib/validation':validation,'@/lib/member-safety':safety,'@/lib/rate-limit':{checkRateLimit:()=>({success:true}),anonymousThrottleKey:()=>''},'@/lib/streaming-request':streaming,'@/lib/monitoring':monitoring,'@/lib/idempotency':idempotency,'@/lib/abuse-control':abuse,'@/lib/revisions':revisions});
 const owner='clerk:user_Alpha1',other='clerk:user_Beta2',origin=environment.FIRSTSIGNAL_ORIGIN;
 const member=(id=owner,email='founder@example.test',verified=true)=>({userId:id,email,emailVerified:verified,displayName:'Synthetic member'});
 const account=member();
 const time=()=>new Clock().toISOString();
-function reset(){sql.exec('DELETE FROM notification_email_events;DELETE FROM notification_emails;DELETE FROM notifications;DELETE FROM notification_email_controls;DELETE FROM notification_preferences;DELETE FROM notification_dispatch_lease;DELETE FROM negotiation_events;DELETE FROM negotiations;DELETE FROM messages;DELETE FROM connection_next_steps;DELETE FROM introductions;DELETE FROM profiles;DELETE FROM member_blocks');clock=Date.parse('2026-10-19T10:00:00.000Z');sent=[];clerkCalls=0;resendMode=null;identityMode=null;beforeRun=null;live=new Map([[owner,{email:account.email,verified:true}],[other,{email:'investor@example.test',verified:true}]]);sql.prepare('INSERT INTO profiles(id,owner,kind,data,listed,updated) VALUES(?,?,?,?,?,?)').run('idea',other,'startup',JSON.stringify({...data.seedProfiles[0],kind:'startup',name:'Synthetic idea'}),1,time());intro('intro');}
+function reset(){sql.exec('DELETE FROM idempotency_keys;DELETE FROM account_closures;DELETE FROM daily_quotas;DELETE FROM notification_email_events;DELETE FROM notification_emails;DELETE FROM notifications;DELETE FROM notification_email_controls;DELETE FROM notification_preferences;DELETE FROM notification_dispatch_lease;DELETE FROM negotiation_events;DELETE FROM negotiations;DELETE FROM messages;DELETE FROM connection_next_steps;DELETE FROM introductions;DELETE FROM profiles;DELETE FROM member_blocks');clock=Date.parse('2026-10-19T10:00:00.000Z');sent=[];clerkCalls=0;resendMode=null;identityMode=null;beforeRun=null;afterFirst=null;live=new Map([[owner,{email:account.email,verified:true}],[other,{email:'investor@example.test',verified:true}]]);sql.prepare('INSERT INTO profiles(id,owner,kind,data,listed,updated) VALUES(?,?,?,?,?,?)').run('idea',other,'startup',JSON.stringify({...data.seedProfiles[0],kind:'startup',name:'Synthetic idea'}),1,time());intro('intro');}
 function intro(id,status='accepted',sender=other,recipient=owner){sql.prepare('INSERT INTO introductions(id,sender,recipient,profile_id,target_name,sender_name,message,status,created,updated) VALUES(?,?,?,?,?,?,?,?,?,?)').run(id,sender,recipient,'idea','Member','Member','PRIVATE_MESSAGE_CANARY',status,time(),time());}
 const row=()=>sql.prepare('SELECT * FROM notification_emails ORDER BY rowid DESC LIMIT 1').get();
 async function callConnection(user,payload,expected=200,headers={}){const response=await auth.run(user,()=>connection.POST(new Request(`${origin}/api/connections`,{method:'POST',headers:{origin,'content-type':'application/json',...headers},body:JSON.stringify(payload)})));equal(response.status,expected,await response.clone().text());equal(response.headers.get('cache-control'),'no-store');return response.json();}
@@ -172,4 +177,123 @@ let unlockOther,otherStarted;const otherStartedPromise=new Promise(r=>otherStart
 reset();const third='clerk:user_Gamma3';live.set(third,{email:'third@example.test',verified:true});intro('third-intro','accepted',owner,third);
 for(const who of [owner,other,third]){await enable(member(who,live.get(who).email));for(let i=0;i<4;i++)await queue('message',who===third?'third-intro':'intro',who);}
 const bounded=await job();equal(bounded.processed,9);equal(bounded.submitted,9);equal(sent.length,9);equal(sql.prepare("SELECT count(*) AS n FROM notification_emails WHERE state='pending'").get().n,3);ok(JSON.stringify(bounded).length<1024);ok(!JSON.stringify(bounded).includes('@'));
+// Versioned proposals share atomic operation receipts with workspace creation.
+// The read barrier makes both requests observe an absent receipt before either
+// proceeds to its transaction: this exercises the actual competing-claim path.
+const proposalOperation={action:'proposal',id:'intro',version:0,amount:700000,terms:'A synthetic non-binding private proposal for retry tests.',consent:true,operationId:'proposal-operation'};
+const proposalCounts=()=>Object.fromEntries(['negotiations','negotiation_events','notifications','notification_emails','idempotency_keys'].map(table=>[table,sql.prepare(`SELECT count(*) AS n FROM ${table}`).get().n]));
+reset();let releaseProposalReads;const proposalReadsReady=new Promise(resolve=>releaseProposalReads=resolve);let competingReads=0;
+afterFirst=async(query,args,result)=>{if(query.startsWith('SELECT action,payload_hash,response FROM idempotency_keys')&&args[0]===`${owner}:${proposalOperation.operationId}`&&result===null){competingReads++;if(competingReads===2){afterFirst=null;releaseProposalReads();}await proposalReadsReady;}};
+const concurrentProposals=await Promise.all([callConnection(account,proposalOperation),callConnection(account,proposalOperation)]);
+equal(competingReads,2,'Both real route requests passed the absent-receipt read barrier');
+same(proposalCounts(),{negotiations:1,negotiation_events:1,notifications:1,notification_emails:1,idempotency_keys:1},'Competing operation claims create one proposal, history, in-app notice, email record and receipt');
+for(const response of concurrentProposals){equal(response.current.version,1);equal(response.events.length,1);}
+equal(sent.length,0,'Concurrent proposal creation never calls the email provider');
+await callConnection(account,{...proposalOperation,amount:proposalOperation.amount+1},409);
+await callConnection(account,{...proposalOperation,terms:proposalOperation.terms+' Changed.'},409);
+same(proposalCounts(),{negotiations:1,negotiation_events:1,notifications:1,notification_emails:1,idempotency_keys:1},'Conflicting reused proposal ID changes no durable records');
+// A committed proposal with a failed response must be safely recoverable.
+reset();beforeRun=query=>{if(query.startsWith('SELECT sender,recipient FROM introductions')&&sql.prepare('SELECT count(*) AS n FROM negotiations').get().n===1){beforeRun=null;throw new Error('Synthetic response read failure after commit');}};
+await callConnection(account,proposalOperation,503);
+same(proposalCounts(),{negotiations:1,negotiation_events:1,notifications:1,notification_emails:1,idempotency_keys:1},'Response read failure occurs after durable proposal commit');
+const recoveredProposal=await callConnection(account,proposalOperation);equal(recoveredProposal.current.version,1);equal(recoveredProposal.events.length,1);
+same(proposalCounts(),{negotiations:1,negotiation_events:1,notifications:1,notification_emails:1,idempotency_keys:1},'Retry after lost response recovers current view without another proposal or notice');
+// IDs occupy one owner namespace across APIs, not a separate namespace per route.
+reset();await workspacePost(account,{action:'message',id:'intro',body:'Synthetic message to reserve an operation ID.',operationId:'shared-operation'});
+const workspaceReceipt=sql.prepare('SELECT action,payload_hash,response FROM idempotency_keys WHERE owner=?').get(owner);equal(workspaceReceipt.action,'message');
+const sharedBefore=proposalCounts();await callConnection(account,{...proposalOperation,operationId:'shared-operation'},409);same(proposalCounts(),sharedBefore,'A workspace operation ID cannot be reused for a proposal');
+// An old successful receipt never bypasses current participant/block checks.
+for(const actor of ['blocked-owner','blocked-counterpart','outsider','removed-participant']){
+ reset();await callConnection(account,proposalOperation);const committedCounts=proposalCounts();
+ if(actor==='blocked-owner'||actor==='blocked-counterpart')sql.prepare('INSERT INTO member_blocks(owner,target_owner,profile_id,target_name,created) VALUES(?,?,?,?,?)').run(actor==='blocked-owner'?owner:other,actor==='blocked-owner'?other:owner,'idea','Synthetic member',time());
+ if(actor==='removed-participant')sql.prepare('UPDATE introductions SET recipient=? WHERE id=?').run('clerk:user_Replacement','intro');
+ await callConnection(actor==='outsider'?member('clerk:user_Stranger'):account,proposalOperation,actor.startsWith('blocked')?403:404);
+ same(proposalCounts(),committedCounts,`${actor}: replay cannot bypass current authorization or add alerts`);
+}
+// Requested closure stops contact and opt-in, while revoking old consent remains available.
+reset();await enable();await queue();
+sql.prepare('INSERT INTO account_closures(owner,status,requested_at,retention_until,reason,updated) VALUES(?,?,?,?,?,?)').run(owner,'requested',time(),'2026-11-18T10:00:00.000Z','Synthetic test request',time());
+const closureCounts=proposalCounts();
+for(const payload of [proposalOperation,{action:'decision',id:'intro',version:1,status:'acknowledged',consent:true},{action:'nextStep',id:'intro',note:'Synthetic follow-up.',date:''},{action:'retry'},{action:'preferences',enabled:true}])await callConnection(account,payload,409);
+same(proposalCounts(),closureCounts,'Closure guard blocks proposal, decision, next step, dispatch and opt-in before mutations');
+equal(sent.length,0,'Closed account cannot manually dispatch queued email');
+equal(sql.prepare('SELECT count(*) AS n FROM connection_next_steps').get().n,0,'Closed account cannot add follow-up records');
+await callConnection(account,{action:'preferences',enabled:false});equal(sql.prepare('SELECT enabled FROM notification_preferences WHERE owner=?').get(owner).enabled,0,'Closing account can revoke email consent');
+equal((await settings()).emailOptedIn,false,'Read-only notification settings remain accessible after closure');
+equal(row().state,'skipped','Closure opt-out stops its pending email');
+// Deterministic cross-tab closure race: initial check observes an active
+// account, then closure commits while the participant read is paused. Every
+// later business statement must see the newly committed requested closure.
+for(const scenario of ['first-proposal','counteroffer','acknowledge','withdraw','next-create','next-update','next-clear']){
+ reset();
+ if(['counteroffer','acknowledge','withdraw'].includes(scenario))await callConnection(scenario==='withdraw'?account:member(other,'investor@example.test'),{action:'proposal',id:'intro',version:0,amount:500000,terms:'Synthetic existing proposal before the closure race.',consent:true});
+ if(['next-update','next-clear'].includes(scenario))await callConnection(account,{action:'nextStep',id:'intro',note:'Preserve this prior private note.',date:'2026-10-25'});
+ const tables=['negotiations','negotiation_events','notifications','notification_emails','idempotency_keys','connection_next_steps'];
+ const businessSnapshot=()=>JSON.stringify(tables.map(table=>[table,sql.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
+ const snapshotBeforeClosure=businessSnapshot();let initialClosureChecks=0,barrierReached=false,releaseParticipantRead;
+ const participantBarrier=new Promise(resolve=>releaseParticipantRead=resolve);let participantPaused;
+ const pausedParticipant=new Promise(resolve=>participantPaused=resolve);
+ afterFirst=async(query,args,result)=>{
+  if(query.startsWith('SELECT 1 FROM account_closures')&&args[0]===owner&&result===null)initialClosureChecks++;
+  if(query.startsWith('SELECT sender,recipient FROM introductions')&&args[1]===owner){afterFirst=null;barrierReached=true;participantPaused();await participantBarrier;}
+ };
+ const payload=scenario==='first-proposal'?proposalOperation:scenario==='counteroffer'?{...proposalOperation,version:1}:scenario==='acknowledge'||scenario==='withdraw'?{action:'decision',id:'intro',version:1,status:scenario==='withdraw'?'withdrawn':'acknowledged',consent:true}:{action:'nextStep',id:'intro',note:scenario==='next-clear'?'':'A new private note after closure must not save.',date:''};
+ const pendingClosureAction=callConnection(account,payload,409);
+ await pausedParticipant;
+ equal(initialClosureChecks,1,`${scenario}: initial closure precheck observed no pending closure`);
+ sql.prepare('INSERT INTO account_closures(owner,status,requested_at,retention_until,reason,updated) VALUES(?,?,?,?,?,?)').run(owner,'requested',time(),'2026-11-18T10:00:00.000Z','Synthetic closure committed by another tab',time());
+ releaseParticipantRead();
+ const refused=await pendingClosureAction;
+ equal(barrierReached,true,`${scenario}: action paused after precheck before mutation`);
+ ok(refused.error.includes('closure request'),`${scenario}: explain closure conflict`);
+ same(businessSnapshot(),snapshotBeforeClosure,`${scenario}: atomic account guard preserves proposal/history/notice/receipt/private note`);
+ equal(sent.length,0,`${scenario}: no provider calls`);
+}
+// Consent enable races cannot re-enable a closing account after the route's
+// and helper's active-account checks. Exercise both a new row and an UPSERT.
+const requestClosureWithoutPreferenceCleanup=()=>sql.prepare('INSERT INTO account_closures(owner,status,requested_at,retention_until,reason,updated) VALUES(?,?,?,?,?,?)').run(owner,'requested',time(),'2026-11-18T10:00:00.000Z','Synthetic concurrent closure',time());
+for(const existingPreference of [false,true]){
+ reset();if(existingPreference)await callConnection(account,{action:'preferences',enabled:false});
+ const initialConsent=JSON.stringify(sql.prepare('SELECT * FROM notification_email_controls').all());
+ let releaseConsentRead,consentReadPaused,activePrechecks=0;
+ const consentBarrier=new Promise(resolve=>releaseConsentRead=resolve),pausedConsent=new Promise(resolve=>consentReadPaused=resolve);
+ afterFirst=async(query,args,result)=>{
+  if(query.startsWith('SELECT 1 FROM account_closures')&&args[0]===owner&&result===null)activePrechecks++;
+  if(query.startsWith('SELECT 1 WHERE EXISTS(SELECT 1 FROM notification_emails')){afterFirst=null;consentReadPaused();await consentBarrier;}
+ };
+ const savingConsent=callConnection(account,{action:'preferences',enabled:true},409);
+ await pausedConsent;ok(activePrechecks>=2,'Route and helper both initially observed an active account');
+ requestClosureWithoutPreferenceCleanup();sql.prepare('UPDATE notification_preferences SET enabled=0 WHERE owner=?').run(owner);releaseConsentRead();
+ const refused=await savingConsent;ok(refused.error.includes('closure request'));
+ equal(sql.prepare('SELECT enabled FROM notification_preferences WHERE owner=?').get(owner)?.enabled,existingPreference?0:undefined,'Atomic consent INSERT/UPSERT does not enable the closed account');
+ equal(JSON.stringify(sql.prepare('SELECT * FROM notification_email_controls').all()),initialConsent,'Refused consent cannot rotate the durable consent version');
+ equal(sql.prepare('SELECT count(*) AS n FROM notification_emails').get().n,0);equal(sent.length,0);
+}
+// Helpers must protect callers independently of the connections route. Simulate
+// old enabled preferences left behind by a historical or interrupted closure.
+reset();await enable();requestClosureWithoutPreferenceCleanup();
+const helperRefusal=await notifications.setNotificationPreferences(account,true);equal(helperRefusal.status,409);ok(helperRefusal.error.includes('closure request'));
+view=await settings();equal(view.emailOptedIn,true,'Raw stale consent remains visible so it can be explicitly revoked');equal(view.emailEnabled,false,'Closing accounts never show effective email enabled');
+await queue();equal(row().state,'skipped','New notices for closing recipients never get pending email records');
+await notifications.dispatchNotifications(owner);equal(sent.length,0);equal(clerkCalls,0,'Already closed recipient requires no live identity call');
+equal(await notifications.setNotificationPreferences(account,false),null,'The actual helper always permits opting out during closure');equal(sql.prepare('SELECT enabled FROM notification_preferences WHERE owner=?').get(owner).enabled,0);
+// Legacy notices reconciled after closure are skipped despite stale enabled prefs.
+reset();await enable();requestClosureWithoutPreferenceCleanup();
+sql.prepare('INSERT INTO notifications(id,owner,introduction_id,title,status,created) VALUES(?,?,?,?,?,?)').run('legacy-closed',owner,'intro','You have a new connection message','pending',time());
+await notifications.dispatchNotifications(owner);equal(row().state,'skipped');equal(sent.length,0);equal(clerkCalls,0);
+// A notice already queued before closure is rejected by delivery eligibility.
+for(const phase of ['pending','retry','lease-recovery']){
+ reset();await enable();await queue();
+ if(phase==='retry')sql.prepare("UPDATE notification_emails SET state='retry',attempts=1,next_attempt_at=?").run(time());
+ if(phase==='lease-recovery')sql.prepare("UPDATE notification_emails SET state='sending',lease_token='old',lease_until=?,attempts=1").run(new Clock(clock-1000).toISOString());
+ const attemptsBefore=row().attempts;requestClosureWithoutPreferenceCleanup();
+ await notifications.dispatchNotifications(owner);equal(row().state,'skipped',`${phase}: closed recipients cannot dispatch a prior queue item`);equal(row().attempts,attemptsBefore,'Closure rejection consumes no provider attempt');equal(sent.length,0);equal(clerkCalls,0);
+}
+// Closure that commits after initial eligibility still defeats atomic claiming.
+reset();await enable();await queue();beforeRun=query=>{if(query.startsWith("UPDATE notification_emails SET state='sending'")){beforeRun=null;requestClosureWithoutPreferenceCleanup();}};
+await notifications.dispatchNotifications(owner);equal(sent.length,0);equal(clerkCalls,0);equal(row().attempts,0,'Atomic lease claim rechecks requested closure');
+await notifications.dispatchNotifications(owner);equal(row().state,'skipped');
+// Closure during live identity lookup is caught by the final permission check.
+reset();await enable();await queue();identityMode=async()=>{identityMode=null;requestClosureWithoutPreferenceCleanup();return Response.json({id:'user_Alpha1',primary_email_address_id:'primary',email_addresses:[{id:'primary',email_address:account.email,verification:{status:'verified'}}]});};
+await notifications.dispatchNotifications(owner);equal(row().state,'skipped');equal(sent.length,0);equal(clerkCalls,1,'Fresh identity alone cannot override a newly closed account');
 console.log(`Notification SQLite/route verification passed: ${checks} assertions; no real provider requests or emails.`);

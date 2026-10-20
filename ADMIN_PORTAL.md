@@ -44,7 +44,7 @@ Migration `drizzle/0003_owner_portal.sql` adds versioned report review fields, `
 node node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_owner_portal.sql
 ```
 
-Run after the production build has emitted the local Wrangler config. Never rerun an applied `ALTER TABLE` migration, reset a database, or replace `--local` with `--remote` as part of local setup. This command is only the incremental portal migration. Fresh databases for the current application need all seven migrations, 0000–0006, in order; see [README.md](README.md). Later migrations add multiple ideas, Test & learn and the notification outbox. The hosted Site's managed D1 and the owner's separate direct Cloudflare D1 remain distinct. Review the [current launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) for actual hosting/migration status.
+Run after the production build has emitted the local Wrangler config. Never rerun an applied `ALTER TABLE` migration, reset a database, or replace `--local` with `--remote` as part of local setup. This command is only the incremental portal migration. Fresh databases for the current application need all eight migrations, 0000–0007, in order; see [README.md](README.md). Later migrations add multiple ideas, Test & learn and the notification outbox. The hosted Site's managed D1 and the owner's separate direct Cloudflare D1 remain distinct. Review the [current launch checklist](PRODUCTION_LAUNCH_CHECKLIST.md) for actual hosting/migration status.
 
 Hiding a listing sets a separate moderation restriction. It does not overwrite the owner's sharing choice or delete data. Server discovery, direct links, saved-profile reads and new saves/requests respect the restriction. The owner can still edit their own profile; publishing again cannot clear the restriction. Existing accepted conversations remain available to their participants. Restoring an owner-unlisted profile lifts the restriction but leaves it private.
 
@@ -75,6 +75,7 @@ An earlier Sites project-not-found error blocked publication. Access was recover
 
 Production Clerk/domain setup, email activation, support/deletion handling, monitoring and tested backup/restore still remain launch work.
 
+
 ## Published admin release — 18 October 2026
 
 Published successfully as version28 on the existing public FindIn site, with hosted owner secret environment revision2 and the pending admin schema migration applied by the Sites deployment flow. Source: d7da3ed1cbb3c199ad7b2fb2b3863fe064fec368. Deployment: appgdep_6ad4e18e05408191acdca1bd7229f4bc. Admin entry: https://firstsignal-founder-network.divineridge.chatgpt.site/admin/signin . Earlier project-not-found and unpublished notes describe the recovered blocker, not the current release.
@@ -82,3 +83,15 @@ Published successfully as version28 on the existing public FindIn site, with hos
 Live HTTP checks confirm admin sign-in200, anonymous admin redirect to its dedicated entry, admin API401/no-store and working workspace queries. Both new marketing artworks return200 with bytes matching the checked source files. Full owner OAuth and browser visual/interaction QA remain unverified because browser automation is disabled in Work settings. No real member moderation or account changes were used for testing.
 
 Static-asset header limit: public/_headers declares correct WebP/WOFF2 types and retains content-hashed caching rules, but Sites still returns application/octet-stream for these media types after deployment. Contents match their originals; do not claim the hosted MIME header is corrected. This remains a platform delivery limitation.
+
+## Read-only email operations — 20 October 2026
+
+The Outbox navigation opens the exact-owner-only email operations API. It shows global pending/retry/sending backlog, recipient-server receipts, stopped attempts, bounces, complaints and provider suppression. All twelve delivery states can be filtered, with 25 records per page and deterministic pagination. Unknown queue age is shown as unavailable; a failed query returns an error rather than a healthy zero. The queue-age warning is a portal warning, not a configured email, pager or external alert destination.
+
+The history excludes member email addresses, provider identifiers, frozen email bodies and private message/proposal content. Known internal diagnostic codes become fixed operator-friendly descriptions; raw provider or SQL exception text is not returned. Configuration checks distinguish settings presence from a working scheduler or webhook. A recipient-server receipt does not prove inbox placement or reading.
+
+There is no force-retry action. Failed, expired, bounced, suppressed, complained or delivered records cannot have their attempts reset through the portal. Automatic retries retain the original consent, recipient, idempotency payload, attempt limit and retry window. Moderation actions still do not send emails.
+
+Actual isolated API/SQLite and React-render checks cover the outbox owner gate, authorization before database access, all states, metrics, private-field canaries, paging and immutable send safety state. Local browser checks covered the read-only tab, filter and pagination controls. These do not verify a real production sender, scheduler, receipts or hosted owner session. The new source requires applicable pending migrations, including 0006 for the outbox and 0007 for the wider hardening features; no hosted release is claimed here.
+
+Account closure requests are stored and paused by member controls. This portal does not contain a closure-review queue, a Clerk session-revocation action or an automatic erasure job. Use the manual procedure in [the hardening audit](HARDENING_FRONTEND_2026-10-20.md#manual-account-closure-procedure) until a reviewed operational workflow is implemented.

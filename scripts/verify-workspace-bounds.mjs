@@ -19,7 +19,7 @@ const database=()=>({
     if(sql.includes('SELECT p.* FROM profiles')){assert.ok(sql.includes('member_blocks'));return {results:publicRows};}
     if(sql.includes('SELECT profile_id FROM saves'))return {results:savedRows.map(row=>({profile_id:row.id}))};
     if(sql.includes('AS moderation_hidden'))return {results:ownRows};
-    if(sql.includes('FROM introductions r')){assert.ok(sql.includes('LIMIT 100'));return {results:requestRows};}
+    if(sql.includes('FROM introductions r')){assert.ok(sql.includes('LIMIT ?'));assert.equal(args.at(-1),101);return {results:requestRows};}
     if(sql.includes('FROM messages WHERE introduction_id IN')){messageIds=args;assert.ok(sql.includes('LIMIT 10000'));return {results:args.map(id=>({id:`message-${id}`,introduction_id:id,sender:owner,sender_name:'Me',body:'Private message',created:now}))};}
     return {results:[]};
    },async first(){return null;},async run(){return {meta:{changes:1}};},values:()=>args};
@@ -31,7 +31,12 @@ const source=(await fs.readFile(new URL('../app/api/workspace/route.ts',import.m
 const {code}=await transform(source,{loader:'ts',format:'cjs'});
 const modules={
  '../../auth':{getAppUser:async()=>null},'@/lib/notifications':{notificationStatements:()=>[]},'@/lib/database':{database},
- '@/lib/data':{seedProfiles:[]},'@/lib/validation':{actionSchema:{}},'@/lib/member-safety':{membersBlocked:async()=>false},'@/lib/rate-limit':{}
+ '@/lib/data':{seedProfiles:[]},'@/lib/validation':{actionSchema:{}},'@/lib/member-safety':{membersBlocked:async()=>false},'@/lib/rate-limit':{},
+ '@/lib/streaming-request':{readBoundedBody:async()=>({ok:true,body:''})},
+ '@/lib/monitoring':{getRequestId:()=>'req-test',createTimingTracker:()=>({mark(){},header:()=>'total;dur=0'}),logSafeError(){}},
+ '@/lib/idempotency':{getExistingIdempotencyResponse:async()=>null,saveIdempotencyStatement:()=>({run:async()=>({})})},
+ '@/lib/abuse-control':{consumeAtomicDailyQuota:async()=>({allowed:true,remaining:10})},
+ '@/lib/revisions':{computeChangeSummary:()=>'',saveIdeaRevision:async()=>'rev-1',listIdeaRevisions:async()=>[],getRevisionToRestore:async()=>null}
 };
 const context={module:{exports:{}},exports:{},require:id=>{assert.ok(id in modules,`Unexpected dependency ${id}`);return modules[id];},console,Response};
 vm.runInNewContext(code,context);
@@ -41,7 +46,7 @@ assert.equal(state.profiles.length,400);
 assert.equal(state.savedIds.length,200);
 assert.equal(state.myProfiles.length,2);
 assert.ok([...state.profiles,...state.myProfiles].every(p=>p.updates.length===1),'Every visible profile must retain its updates across query batches');
-assert.deepEqual(Array.from(messageIds),requestRows.map(r=>r.id));
-assert.ok(state.requests.every(r=>r.messages.length===1));
+assert.deepEqual(Array.from(messageIds),[],'Workspace must not eagerly fetch complete message histories');
+assert.ok(state.requests.every(r=>r.messages.length===0));
 assert.ok(!JSON.stringify(state).includes('test-owner'),'Account IDs must stay private');
-console.log('Workspace 402-profile D1 parameter limits, complete saved profiles, progress batching, bounded conversation messages and private account identifiers passed.');
+console.log('Workspace 402-profile D1 parameter limits, complete saved profiles, progress batching, lazy conversation messages and private account identifiers passed.');

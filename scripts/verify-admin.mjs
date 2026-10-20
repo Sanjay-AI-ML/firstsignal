@@ -36,7 +36,12 @@ const sectors = await load('lib/sectors.ts', {});
 const data = await load('lib/data.ts', { './sectors': sectors, './seed-startups.json': JSON.parse(await fs.readFile('lib/seed-startups.json', 'utf8')), './seed-investors.json': JSON.parse(await fs.readFile('lib/seed-investors.json', 'utf8')) });
 const validation = await load('lib/validation.ts', { zod: { z }, './data': data, './sectors': sectors });
 const throttle = await load('lib/rate-limit.ts', {});
-const workspace = await load('app/api/workspace/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/notifications': { notificationStatements: () => [] }, '@/lib/database': { database: () => db }, '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': { membersBlocked: async () => false }, '@/lib/rate-limit': throttle });
+const streaming = await load('lib/streaming-request.ts');
+const monitoring = await load('lib/monitoring.ts');
+const idempotency = await load('lib/idempotency.ts');
+const abuse = await load('lib/abuse-control.ts');
+const revisions = await load('lib/revisions.ts');
+const workspace = await load('app/api/workspace/route.ts', { '../../auth': { getAppUser: async () => auth.getStore() }, '@/lib/notifications': { notificationStatements: () => [] }, '@/lib/database': { database: () => db }, '@/lib/data': data, '@/lib/validation': validation, '@/lib/member-safety': { membersBlocked: async () => false }, '@/lib/rate-limit': throttle, '@/lib/streaming-request': streaming, '@/lib/monitoring': monitoring, '@/lib/idempotency': idempotency, '@/lib/abuse-control': abuse, '@/lib/revisions': revisions });
 const owner = { userId: 'clerk:user_Owner123', displayName: 'Operator', email: 'owner@example.test', emailVerified: true };
 const member = { ...owner, userId: 'clerk:user_Member123', displayName: 'Member' };
 const origin = 'https://findin.example';
@@ -136,7 +141,7 @@ try {
   equal(sqlite.prepare('SELECT COUNT(*) n FROM admin_audit').get().n, 1);
   for (const identity of [null, owner, member]) { const current = await state(identity, 'public-one'); equal(current.profiles.some(p => p.id === 'public-one'), false); }
   const own = await state(member, 'public-one'); equal(own.myProfiles.find(p => p.id === 'public-one').moderation.hidden, true);
-  const editHidden = new Request(`${origin}/api/workspace`, { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ action: 'profile', profileId: 'public-one', profile: { ...profile, name: 'Edited while hidden' }, listed: true, consent: true }) });
+  const editHidden = new Request(`${origin}/api/workspace`, { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ action: 'profile', profileId: 'public-one', expectedVersion: 1, profile: { ...profile, name: 'Edited while hidden' }, listed: true, consent: true }) });
   const editResult = await auth.run(member, () => workspace.POST(editHidden)); equal(editResult.status, 200);
   equal((await state(null, 'public-one')).profiles.some(p => p.id === 'public-one'), false, 'Owner republish cannot bypass restriction');
   const ownAfterEdit = await state(member); equal(ownAfterEdit.myProfiles[0].moderation.hidden, true);

@@ -12,13 +12,11 @@ const sqlite = new DatabaseSync(':memory:');
 for (const file of (await fs.readdir('drizzle')).filter(file => file.endsWith('.sql')).sort()) sqlite.exec(await fs.readFile(`drizzle/${file}`, 'utf8'));
 const auth = new AsyncLocalStorage();
 const db = { prepare(sql) {
-  const query = sqlite.prepare(sql); let args = [];
-  const statement = { bind(...values) { args = values; return statement; },
-    async run() { return {meta: {changes: query.run(...args).changes}}; },
-    async first() { return query.get(...args) ?? null; },
-    async all() { return {results: query.all(...args)}; }
-  }; return statement;
-}, async batch(statements) { return Promise.all(statements.map(statement => statement.all())); } };
+  const query=sqlite.prepare(sql);let args=[];
+  const execute=()=>query.columns().length?{results:query.all(...args),meta:{changes:0}}:{results:[],meta:{changes:query.run(...args).changes}};
+  const statement={bind(...values){args=values;return statement;},execute,async run(){return execute();},async first(){return query.get(...args)??null;},async all(){return execute();}};
+  return statement;
+},async batch(statements){sqlite.exec('BEGIN IMMEDIATE');try{const results=statements.map(statement=>statement.execute());sqlite.exec('COMMIT');return results;}catch(error){sqlite.exec('ROLLBACK');throw error;}}};
 async function load(file, modules) {
   const {code} = await transform(await fs.readFile(file, 'utf8'), {loader:'ts', format:'cjs'});
   const context = {module:{exports:{}},exports:{},require:id=>{assert.ok(id in modules, `Unexpected dependency: ${id}`);return modules[id];},Response,Request,URL,crypto,console};
@@ -31,13 +29,20 @@ const data = await load('lib/data.ts', {
   './seed-investors.json': JSON.parse(await fs.readFile('lib/seed-investors.json','utf8'))
 });
 const validation = await load('lib/validation.ts', {zod:{z}, './data':data, './sectors':sectorModule});
+const streaming = await load('lib/streaming-request.ts');
+const monitoring = await load('lib/monitoring.ts');
+const idempotency = await load('lib/idempotency.ts');
+const abuse = await load('lib/abuse-control.ts');
+const revisions = await load('lib/revisions.ts');
 const route = await load('app/api/workspace/route.ts', {
   '../../auth': {getAppUser: async()=>auth.getStore()}, '@/lib/notifications': {notificationStatements:()=>[]},
   '@/lib/database': {database:()=>db}, '@/lib/data':data, '@/lib/validation':validation,
-  '@/lib/member-safety': {membersBlocked:async()=>false}, '@/lib/rate-limit': await load('lib/rate-limit.ts', {})
+  '@/lib/member-safety': {membersBlocked:async()=>false}, '@/lib/rate-limit': await load('lib/rate-limit.ts', {}),
+  '@/lib/streaming-request': streaming, '@/lib/monitoring': monitoring, '@/lib/idempotency': idempotency, '@/lib/abuse-control': abuse, '@/lib/revisions': revisions,
 });
 const base = {kind:'startup', name:'Profile policy test', founder:'Test Founder', city:'Chennai', sector:data.sectors[0], stage:data.stages[0], tagline:'A profile used only in local tests', problem:'Testing role policy and independent ideas without touching real data.', solution:'A proposed service to test with early customers.',fundingIntentINR:0};
 async function save(owner, profile, extras={}) {
+  if(extras.profileId && extras.expectedVersion===undefined)extras={...extras,expectedVersion:sqlite.prepare('SELECT version FROM profile_versions WHERE profile_id=?').get(extras.profileId)?.version??1};
   const request = new Request('http://localhost/api/workspace',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({action:'profile',profile,listed:false,consent:true,...extras})});
   const response = await auth.run(owner?{userId:owner,displayName:'Test Owner'}:null,()=>route.POST(request));
   return {status:response.status,body:await response.json()};

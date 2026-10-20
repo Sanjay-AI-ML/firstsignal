@@ -77,5 +77,3 @@ CREATE INDEX IF NOT EXISTS `introductions_sender_created` ON `introductions` (`s
 CREATE INDEX IF NOT EXISTS `saves_owner_created` ON `saves` (`owner`, `created`);
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS `messages_introduction_created_id` ON `messages` (`introduction_id`,`created`,`id`);
---> statement-breakpoint
-INSERT INTO profile_versions(profile_id,version,last_operation,updated) SELECT id,1,'',updated FROM profiles WHERE 1 ON CONFLICT(profile_id) DO NOTHING;

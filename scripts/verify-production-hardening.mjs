@@ -98,5 +98,14 @@ try{
  beforeBatch=()=>{sqlite.prepare("INSERT INTO account_closures(owner,status,requested_at,retention_until,reason,updated) VALUES(?,'requested',?,'','',?)").run('closure-race',time,time);sqlite.prepare('UPDATE profiles SET listed=0 WHERE owner=?').run('closure-race')};
  await post('closure-race',{action:'profile',profileId:raceOwner.savedProfileId,profile:{...base,name:'Forbidden concurrent relist'},listed:true,consent:true,expectedVersion:1,operationId:'closure-race-edit'},409);
  equal(sqlite.prepare('SELECT listed FROM profiles WHERE id=?').get(raceOwner.savedProfileId).listed,0);equal(sqlite.prepare('SELECT version FROM profile_versions WHERE profile_id=?').get(raceOwner.savedProfileId).version,1);equal(count('idempotency_keys','WHERE operation_id=?','closure-race-edit'),0);
+ // Pre-existing profiles have no version row: read as version one, then
+ // initialize the version and snapshot atomically on the first owned edit.
+ sqlite.prepare('INSERT INTO profiles(id,owner,kind,data,listed,updated) VALUES(?,?,?,?,?,?)').run('legacy-unversioned','legacy-owner','startup',JSON.stringify(base),1,time);
+ equal(count('profile_versions','WHERE profile_id=?','legacy-unversioned'),0);
+ equal((await get('legacy-owner')).myProfiles[0].version,1);
+ const legacyEdit=await post('legacy-owner',{action:'profile',profileId:'legacy-unversioned',profile:{...base,name:'Legacy idea updated'},listed:false,consent:true,expectedVersion:1,operationId:'legacy-first-edit'});
+ equal(legacyEdit.myProfiles[0].version,2);equal(legacyEdit.myProfiles[0].name,'Legacy idea updated');
+ const legacyHistory=await post('legacy-owner',{action:'getRevisions',profileId:'legacy-unversioned'});
+ equal(legacyHistory.revisions.length,1);equal(legacyHistory.revisions[0].version,1);equal(legacyHistory.revisions[0].data.name,base.name);
  equal(sqlite.prepare('PRAGMA foreign_key_check').all().length,0);ok(maximumBindings<=100);ok(dbCalls>0);console.log(`Production hardening: ${checks} actual route/SQLite assertions passed.`);
 }finally{sqlite.close()}
